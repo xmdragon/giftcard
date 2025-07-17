@@ -40,6 +40,18 @@
 - 管理员可禁止/解禁IP
 - IP登录历史查看
 
+### 🔒 SSL/HTTPS支持
+- 自动申请免费SSL证书
+- Let's Encrypt集成
+- 证书自动续期
+- HTTP到HTTPS重定向
+
+### 🚀 Nginx反向代理
+- 高性能请求处理
+- 静态资源缓存
+- 负载均衡支持
+- 安全性增强
+
 ## 技术栈 / Tech Stack
 
 - **后端**: Node.js + Express + Socket.IO
@@ -61,20 +73,12 @@ cd gift-card-system
 
 如果你的系统还没有安装 Docker，可以使用我们提供的自动安装脚本：
 
-#### Linux/macOS 系统：
 ```bash
 # 给脚本添加执行权限
 chmod +x install-docker.sh
 
 # 运行安装脚本
 sudo ./install-docker.sh
-```
-
-#### Windows 系统：
-```powershell
-# 以管理员身份运行 PowerShell，然后执行：
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-.\install-docker.ps1
 ```
 
 ### 3. 使用Docker启动（推荐）
@@ -217,9 +221,22 @@ NODE_ENV=production
 ### 生产环境部署
 1. 修改 `docker-compose.yml` 中的密码配置
 2. 设置强密码的JWT_SECRET
-3. 配置反向代理（Nginx）
-4. 启用HTTPS
+3. 配置反向代理（Nginx）- 已内置在Docker Compose中
+4. 启用HTTPS - 使用自动SSL证书申请脚本
 5. 配置防火墙规则
+
+### SSL证书配置
+```bash
+# 给脚本添加执行权限
+chmod +x get-ssl-cert.sh
+
+# 运行SSL证书申请脚本（需要域名已解析到服务器）
+sudo ./get-ssl-cert.sh your-domain.com your-email@example.com
+
+# 重启服务以应用SSL配置
+docker compose down
+docker compose up -d
+```
 
 ### 性能优化
 - 使用Redis缓存会话
@@ -233,6 +250,8 @@ NODE_ENV=production
 1. **数据库连接失败**: 检查MySQL服务状态和连接配置
 2. **Socket连接失败**: 检查防火墙和端口配置
 3. **礼品卡发放失败**: 检查礼品卡库存和分类配置
+4. **登录失败**: 检查IP是否被禁止或数据库连接是否正常
+5. **Nginx代理错误**: 检查Nginx配置和容器网络连接
 
 ### 日志查看
 ```bash
@@ -242,8 +261,88 @@ docker compose logs app
 # 查看数据库日志
 docker compose logs mysql
 
-# 实时查看日志
+# 查看Nginx日志
+docker compose logs nginx
+
+# 实时查看所有日志
 docker compose logs -f
+```
+
+### 诊断工具
+系统提供了自动诊断和修复工具，可以帮助快速解决常见问题：
+
+```bash
+# 给脚本添加执行权限
+chmod +x debug-and-fix.sh
+
+# 运行诊断工具
+./debug-and-fix.sh
+```
+
+诊断工具可以：
+- 检查所有服务状态
+- 验证数据库连接
+- 测试应用健康状态
+- 显示详细错误日志
+- 提供修复建议和自动修复选项
+
+## 安全性说明 / Security
+
+### 安全特性
+- 双重验证机制防止未授权访问
+- JWT 令牌认证保护 API 接口
+- IP 黑名单系统阻止恶意访问
+- Nginx 反向代理增强安全隔离
+- HTTPS 加密保护数据传输安全
+- 密码哈希存储防止泄露
+
+### 安全最佳实践
+- 定期更新管理员密码
+- 监控异常登录行为
+- 定期备份数据库
+- 保持系统组件更新到最新版本
+- 限制管理员账号数量
+
+## 高级配置 / Advanced Configuration
+
+### 自定义 Nginx 配置
+可以修改 `nginx.conf` 文件来自定义 Nginx 行为：
+- 调整缓存策略
+- 配置请求限流
+- 自定义错误页面
+- 添加安全头部
+
+### Redis 高级配置
+Redis 服务可用于：
+- 会话存储
+- 缓存频繁访问的数据
+- 实现分布式锁
+- 提高系统响应速度
+
+### 负载均衡设置
+对于高流量场景，可以配置多个应用实例：
+```yaml
+# docker-compose.yml 示例
+app:
+  deploy:
+    replicas: 3
+```
+
+## 系统架构 / Architecture
+
+### 组件关系图
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│    Nginx    │────▶│  Node.js    │────▶│   MySQL     │
+│  反向代理   │     │  应用服务   │     │  数据库     │
+└─────────────┘     └─────────────┘     └─────────────┘
+       │                   │                   │
+       │                   │                   │
+       ▼                   ▼                   ▼
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   静态资源  │     │  WebSocket  │     │   Redis     │
+│   缓存服务  │     │  实时通信   │     │  缓存服务   │
+└─────────────┘     └─────────────┘     └─────────────┘
 ```
 
 ## 开发说明 / Development
@@ -256,7 +355,10 @@ docker compose logs -f
 ├── server.js        # 主服务器文件
 ├── package.json     # 项目依赖
 ├── Dockerfile       # Docker配置
-└── docker-compose.yml # Docker编排
+├── docker-compose.yml # Docker编排
+├── nginx.conf       # Nginx配置
+├── get-ssl-cert.sh  # SSL证书申请脚本
+└── debug-and-fix.sh # 诊断修复工具
 ```
 
 ### 开发环境

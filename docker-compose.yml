@@ -5,12 +5,12 @@ services:
     container_name: gift_card_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: your_strong_root_password_here
+      MYSQL_ROOT_PASSWORD: GiftCard_Root_2024!
       MYSQL_DATABASE: gift_card_system
       MYSQL_USER: giftcard_user
-      MYSQL_PASSWORD: your_strong_password_here
+      MYSQL_PASSWORD: GiftCard_User_2024!
     ports:
-      - "3306:3306"
+      - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -23,15 +23,16 @@ services:
     build: .
     container_name: gift_card_app
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    # 移除直接端口映射，由 Nginx 代理
+    expose:
+      - "3000"
     environment:
       NODE_ENV: production
       DB_HOST: mysql
       DB_USER: giftcard_user
-      DB_PASSWORD: your_strong_password_here
+      DB_PASSWORD: GiftCard_User_2024!
       DB_NAME: gift_card_system
-      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      JWT_SECRET: GiftCard_JWT_Secret_Key_2024_Super_Complex_String
       PORT: 3000
     depends_on:
       - mysql
@@ -57,11 +58,39 @@ services:
       - gift_card_network
     volumes:
       - redis_data:/data
+      
+  # Nginx 反向代理
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: gift_card_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"  # HTTPS 端口
+      - "3000:80"  # 同时映射到 3000 端口，保持兼容性
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro  # SSL 证书目录
+      - nginx_cache:/var/cache/nginx  # Nginx 缓存
+      - nginx_logs:/var/log/nginx  # Nginx 日志
+    depends_on:
+      - app
+    networks:
+      - gift_card_network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   mysql_data:
     driver: local
   redis_data:
+    driver: local
+  nginx_cache:
+    driver: local
+  nginx_logs:
     driver: local
 
 networks:
