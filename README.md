@@ -57,7 +57,27 @@ git clone <repository-url>
 cd gift-card-system
 ```
 
-### 2. 使用Docker启动（推荐）
+### 2. 自动安装 Docker（可选）
+
+如果你的系统还没有安装 Docker，可以使用我们提供的自动安装脚本：
+
+#### Linux/macOS 系统：
+```bash
+# 给脚本添加执行权限
+chmod +x install-docker.sh
+
+# 运行安装脚本
+sudo ./install-docker.sh
+```
+
+#### Windows 系统：
+```powershell
+# 以管理员身份运行 PowerShell，然后执行：
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+.\install-docker.ps1
+```
+
+### 3. 使用Docker启动（推荐）
 ```bash
 # 启动所有服务
 docker compose up -d

@@ -5,10 +5,10 @@ services:
     container_name: gift_card_mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_ROOT_PASSWORD: your_strong_root_password_here
       MYSQL_DATABASE: gift_card_system
       MYSQL_USER: giftcard_user
-      MYSQL_PASSWORD: giftcard_password
+      MYSQL_PASSWORD: your_strong_password_here
     ports:
       - "3306:3306"
     volumes:
@@ -29,7 +29,7 @@ services:
       NODE_ENV: production
       DB_HOST: mysql
       DB_USER: giftcard_user
-      DB_PASSWORD: giftcard_password
+      DB_PASSWORD: your_strong_password_here
       DB_NAME: gift_card_system
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
       PORT: 3000
