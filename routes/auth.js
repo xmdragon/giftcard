@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const router = express.Router();
 
 module.exports = (db, io) => {
@@ -128,37 +129,53 @@ module.exports = (db, io) => {
         return res.status(500).json({ error: '数据库连接失败，请稍后重试' });
       }
       
-      console.log('准备执行数据库查询');
-      const [admins] = await db.execute('SELECT * FROM admins WHERE username = ?', [username]);
-      console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
+      // 准备SQL语句
+      const sql = 'SELECT * FROM admins WHERE username = ?';
+      const params = [username];
+      console.log(`准备执行SQL: ${sql}, 参数: ${JSON.stringify(params)}`);
       
-      if (admins.length === 0) {
-        console.log('未找到匹配的管理员账号');
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+      try {
+        const [admins] = await db.execute(sql, params);
+        console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
+        
+        if (admins.length === 0) {
+          console.log('未找到匹配的管理员账号');
+          return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+        }
+
+        const admin = admins[0];
+        console.log(`找到管理员账号: ID=${admin.id}, 用户名=${admin.username}, 密码哈希=${admin.password}`);
+        
+        // 使用MD5验证密码
+        const md5Password = crypto.createHash('md5').update(password).digest('hex');
+        console.log(`输入密码的MD5: ${md5Password}`);
+        console.log(`数据库中的密码: ${admin.password}`);
+        
+        const validPassword = (md5Password === admin.password);
+        console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
+        
+        if (!validPassword) {
+          return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+        }
+
+        console.log('生成JWT令牌');
+        const token = jwt.sign(
+          { id: admin.id, username: admin.username, role: 'admin' },
+          process.env.JWT_SECRET || 'secret',
+          { expiresIn: '24h' }
+        );
+
+        console.log('管理员登录成功');
+        res.json({
+          token,
+          admin: { id: admin.id, username: admin.username }
+        });
+      } catch (dbError) {
+        console.error(`数据库查询错误: ${dbError.message}`);
+        console.error(`执行的SQL: ${sql}, 参数: ${JSON.stringify(params)}`);
+        console.error('错误堆栈:', dbError.stack);
+        throw dbError; // 重新抛出错误以便外层catch捕获
       }
-
-      const admin = admins[0];
-      console.log('准备验证密码');
-      const validPassword = await bcrypt.compare(password, admin.password);
-      console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
-      
-      if (!validPassword) {
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
-      }
-
-      console.log('生成JWT令牌');
-      const token = jwt.sign(
-        { id: admin.id, username: admin.username, role: 'admin' },
-        process.env.JWT_SECRET || 'secret',
-        { expiresIn: '24h' }
-      );
-
-      console.log('管理员登录成功');
-      res.json({
-        token,
-        admin: { id: admin.id, username: admin.username }
-      });
-
     } catch (error) {
       console.error('管理员登录错误:', error);
       console.error('错误堆栈:', error.stack);
