@@ -6,7 +6,9 @@ const dbConfig = {
   host: process.env.DB_HOST || 'mysql',
   user: process.env.DB_USER || 'giftcard_user',
   password: process.env.DB_PASSWORD || 'GiftCard_User_2024!',
-  database: process.env.DB_NAME || 'gift_card_system'
+  database: process.env.DB_NAME || 'gift_card_system',
+  // 禁用命名占位符功能，减少lru-cache的使用
+  namedPlaceholders: false
 };
 
 /**
