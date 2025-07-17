@@ -269,22 +269,18 @@ async function startServer() {
       throw dbError;
     }
     
-    // 确保数据库连接成功后再创建路由
+    // 创建路由（不再传递数据库连接对象）
     console.log('创建认证路由...');
-    const authRoutes = createAuthRoutes(db, io);
+    const authRoutes = createAuthRoutes(io);
     console.log('创建管理员路由...');
-    const adminRoutes = createAdminRoutes(db, io);
+    const adminRoutes = createAdminRoutes(io);
     console.log('创建会员路由...');
-    const memberRoutes = createMemberRoutes(db, io);
+    const memberRoutes = createMemberRoutes(io);
     
     // 使用路由
     app.use('/api/auth', authRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/member', memberRoutes);
-    
-    // 添加新的管理员登录路由
-    const adminLoginFix = require('./admin-login-fix');
-    app.use('/api/auth', adminLoginFix);
     
     // 健康检查路由
     app.get('/health', (req, res) => {

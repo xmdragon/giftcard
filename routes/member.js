@@ -1,11 +1,15 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
+const { createConnection } = require('../utils/db');
 
-module.exports = (db, io) => {
+module.exports = (io) => {
   // 会员签到
   router.post('/checkin', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { memberId } = req.body;
       const today = new Date().toISOString().split('T')[0];
 
@@ -77,12 +81,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('签到错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取会员签到历史
   router.get('/checkin-history/:memberId', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { memberId } = req.params;
 
       const [history] = await db.execute(`
@@ -97,12 +113,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取签到历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取会员礼品卡历史
   router.get('/gift-cards/:memberId', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { memberId } = req.params;
 
       const [giftCards] = await db.execute(`
@@ -117,12 +145,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取礼品卡历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 检查会员签到资格
   router.get('/checkin-eligibility/:memberId', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { memberId } = req.params;
       const today = new Date().toISOString().split('T')[0];
 
@@ -168,6 +208,15 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('检查签到资格错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
