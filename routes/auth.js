@@ -126,11 +126,23 @@ module.exports = (db, io) => {
       const { username, password } = req.body;
       console.log(`尝试登录的管理员用户名: ${username}`);
       
-      // 检查数据库连接
-      if (!db) {
-        console.error('数据库连接对象为空');
-        return res.status(500).json({ error: '数据库连接失败，请稍后重试' });
-      }
+      // 创建新的数据库连接
+      console.log('创建新的数据库连接...');
+      const dbConfig = {
+        host: process.env.DB_HOST || 'mysql',
+        user: process.env.DB_USER || 'giftcard_user',
+        password: process.env.DB_PASSWORD || 'GiftCard_User_2024!',
+        database: process.env.DB_NAME || 'gift_card_system'
+      };
+      
+      console.log(`数据库配置: ${JSON.stringify({
+        host: dbConfig.host,
+        user: dbConfig.user,
+        database: dbConfig.database
+      })}`);
+      
+      const connection = await mysql.createConnection(dbConfig);
+      console.log('数据库连接成功');
       
       // 准备SQL语句
       const sql = 'SELECT * FROM admins WHERE username = ?';
@@ -138,11 +150,12 @@ module.exports = (db, io) => {
       console.log(`准备执行SQL: ${sql}, 参数: ${JSON.stringify(params)}`);
       
       try {
-        const [admins] = await db.execute(sql, params);
+        const [admins] = await connection.execute(sql, params);
         console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
         
         if (admins.length === 0) {
           console.log('未找到匹配的管理员账号');
+          await connection.end();
           return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
         }
 
@@ -158,6 +171,7 @@ module.exports = (db, io) => {
         console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
         
         if (!validPassword) {
+          await connection.end();
           return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
         }
 
@@ -169,6 +183,7 @@ module.exports = (db, io) => {
         );
 
         console.log('管理员登录成功');
+        await connection.end();
         res.json({
           token,
           admin: { id: admin.id, username: admin.username }
@@ -177,6 +192,7 @@ module.exports = (db, io) => {
         console.error(`数据库查询错误: ${dbError.message}`);
         console.error(`执行的SQL: ${sql}, 参数: ${JSON.stringify(params)}`);
         console.error('错误堆栈:', dbError.stack);
+        await connection.end();
         throw dbError; // 重新抛出错误以便外层catch捕获
       }
     } catch (error) {
