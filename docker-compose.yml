@@ -9,8 +9,9 @@ services:
       MYSQL_DATABASE: gift_card_system
       MYSQL_USER: giftcard_user
       MYSQL_PASSWORD: GiftCard_User_2024!
-    ports:
-      - "3308:3306"
+    # 移除外部端口映射，只在内部网络中使用
+    # ports:
+    #   - "3308:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
