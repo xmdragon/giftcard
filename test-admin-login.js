@@ -4,7 +4,8 @@ async function testAdminLogin() {
   console.log('开始测试管理员登录API');
   
   try {
-    const response = await axios.post('http://app:3000/api/auth/admin/login', {
+    // 使用 app:3000 作为主机名，这是在 Docker 网络中的服务名
+    const response = await axios.post('http://localhost:3000/api/auth/admin/login', {
       username: 'admin',
       password: 'admin123'
     }, {
