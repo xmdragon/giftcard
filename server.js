@@ -56,15 +56,30 @@ console.log(`尝试连接到数据库: ${dbConfig.host}, 用户: ${dbConfig.user
 let db;
 
 async function initDatabase() {
-  try {
-    db = await mysql.createConnection(dbConfig);
-    console.log('数据库连接成功');
-    
-    // 创建数据库表
-    await createTables();
-    await createDefaultAdmin();
-  } catch (error) {
-    console.error('数据库连接失败:', error);
+  let retries = 10;
+  let connected = false;
+  
+  while (retries > 0 && !connected) {
+    try {
+      console.log(`尝试连接到数据库: ${dbConfig.host}, 用户: ${dbConfig.user}, 数据库: ${dbConfig.database}, 剩余尝试次数: ${retries}`);
+      db = await mysql.createConnection(dbConfig);
+      connected = true;
+      console.log('数据库连接成功');
+      
+      // 创建数据库表
+      await createTables();
+      await createDefaultAdmin();
+    } catch (error) {
+      console.error('数据库连接失败:', error);
+      retries--;
+      if (retries > 0) {
+        console.log(`将在 5 秒后重试连接...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+      } else {
+        console.error('达到最大重试次数，无法连接到数据库');
+        process.exit(1);
+      }
+    }
   }
 }
 
