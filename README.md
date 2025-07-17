@@ -101,8 +101,8 @@ npm install
 # 复制环境配置
 cp .env.example .env
 
-# 启动MySQL数据库（需要本地安装）
-# 或使用Docker启动数据库
+# 启动MySQL数据库（仅用于开发环境）
+# 注意：生产环境应该使用 docker compose up -d 启动所有服务
 docker compose up -d mysql
 
 # 启动应用
