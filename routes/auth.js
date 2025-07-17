@@ -146,7 +146,7 @@ module.exports = (io) => {
   router.post('/admin/login', async (req, res) => {
     // 创建数据库连接
     let db = null;
-    //try {
+    try {
       console.log('管理员登录请求开始处理');
       const { username, password } = req.body;
       console.log(`尝试登录的管理员用户名: ${username}`);
