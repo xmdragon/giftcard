@@ -257,10 +257,24 @@ async function startServer() {
     }
     
     console.log('数据库连接对象已准备就绪，创建路由...');
+    console.log(`数据库对象类型: ${typeof db}`);
+    console.log(`数据库对象方法: ${Object.keys(db).join(', ')}`);
+    
+    // 测试数据库连接
+    try {
+      const [testResult] = await db.execute('SELECT 1 as test');
+      console.log(`数据库测试查询结果: ${JSON.stringify(testResult)}`);
+    } catch (dbError) {
+      console.error('数据库测试查询失败:', dbError);
+      throw dbError;
+    }
     
     // 确保数据库连接成功后再创建路由
+    console.log('创建认证路由...');
     const authRoutes = createAuthRoutes(db, io);
+    console.log('创建管理员路由...');
     const adminRoutes = createAdminRoutes(db, io);
+    console.log('创建会员路由...');
     const memberRoutes = createMemberRoutes(db, io);
     
     // 使用路由
