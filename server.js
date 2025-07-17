@@ -256,6 +256,26 @@ async function startServer() {
     app.use('/api/admin', adminRoutes);
     app.use('/api/member', memberRoutes);
     
+    // 健康检查路由
+    app.get('/health', (req, res) => {
+      res.status(200).json({ 
+        status: 'OK', 
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        dbConnected: !!db
+      });
+    });
+
+    // 管理员页面路由
+    app.get('/admin', (req, res) => {
+      res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    });
+
+    // 默认路由
+    app.get('/', (req, res) => {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    });
+    
     // 启动HTTP服务器
     server.listen(PORT, () => {
       console.log(`服务器运行在端口 ${PORT}`);
@@ -265,25 +285,6 @@ async function startServer() {
     process.exit(1);
   }
 }
-
-// 健康检查路由
-app.get('/health', (req, res) => {
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
-});
-
-// 管理员页面路由
-app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
-
-// 默认路由
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
 const PORT = process.env.PORT || 3000;
 
