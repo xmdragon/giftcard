@@ -36,7 +36,7 @@ i18next
     },
     detection: {
       order: ['header', 'querystring', 'cookie'],
-      caches: ['cookie']
+      caches: [] // 禁用缓存
     }
   });
 
