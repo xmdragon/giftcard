@@ -195,7 +195,7 @@ module.exports = (io) => {
       const token = jwt.sign(
         { id: admin.id, username: admin.username, role: 'admin' },
         process.env.JWT_SECRET || 'secret',
-        { expiresIn: '24h' }
+        { expiresIn: '1h' }
       );
 
       console.log('管理员登录成功');
@@ -206,7 +206,8 @@ module.exports = (io) => {
     } catch (error) {
       console.error('管理员登录错误:', error);
       console.error('错误堆栈:', error.stack);
-      res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+      //res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+      res.status(500).json(error);
     } finally {
       // 关闭数据库连接
       if (db) {
