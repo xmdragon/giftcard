@@ -217,15 +217,36 @@ io.on('connection', (socket) => {
   });
 });
 
-// 导入路由
-const authRoutes = require('./routes/auth')(db, io);
-const adminRoutes = require('./routes/admin')(db, io);
-const memberRoutes = require('./routes/member')(db, io);
+// 导入路由函数
+const createAuthRoutes = require('./routes/auth');
+const createAdminRoutes = require('./routes/admin');
+const createMemberRoutes = require('./routes/member');
 
-// 使用路由
-app.use('/api/auth', authRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/member', memberRoutes);
+// 启动服务器
+async function startServer() {
+  try {
+    // 先初始化数据库
+    await initDatabase();
+    
+    // 确保数据库连接成功后再创建路由
+    const authRoutes = createAuthRoutes(db, io);
+    const adminRoutes = createAdminRoutes(db, io);
+    const memberRoutes = createMemberRoutes(db, io);
+    
+    // 使用路由
+    app.use('/api/auth', authRoutes);
+    app.use('/api/admin', adminRoutes);
+    app.use('/api/member', memberRoutes);
+    
+    // 启动HTTP服务器
+    server.listen(PORT, () => {
+      console.log(`服务器运行在端口 ${PORT}`);
+    });
+  } catch (error) {
+    console.error('启动服务器失败:', error);
+    process.exit(1);
+  }
+}
 
 // 健康检查路由
 app.get('/health', (req, res) => {
@@ -249,10 +270,6 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 // 启动服务器
-initDatabase().then(() => {
-  server.listen(PORT, () => {
-    console.log(`服务器运行在端口 ${PORT}`);
-  });
-});
+startServer();
 
 module.exports = { app, db, io };
