@@ -50,6 +50,9 @@ const dbConfig = {
   database: process.env.DB_NAME || 'gift_card_system'
 };
 
+// 打印数据库连接信息（不包含密码）
+console.log(`尝试连接到数据库: ${dbConfig.host}, 用户: ${dbConfig.user}, 数据库: ${dbConfig.database}`);
+
 let db;
 
 async function initDatabase() {
