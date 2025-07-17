@@ -5,6 +5,9 @@ const crypto = require('crypto');
 const router = express.Router();
 
 module.exports = (db, io) => {
+  console.log('路由模块初始化');
+  console.log(`数据库连接对象: ${db ? '已定义' : '未定义'}`);
+  console.log(`Socket.IO对象: ${io ? '已定义' : '未定义'}`);
   // 会员登录
   router.post('/member/login', async (req, res) => {
     try {
