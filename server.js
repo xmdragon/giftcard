@@ -202,7 +202,8 @@ async function createTables() {
 async function createDefaultAdmin() {
   const [existing] = await db.execute('SELECT id FROM admins WHERE username = ?', ['admin']);
   if (existing.length === 0) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const crypto = require('crypto');
+    const hashedPassword = crypto.createHash('md5').update('admin123').digest('hex');
     await db.execute('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hashedPassword]);
     console.log('默认管理员账号创建完成');
   }
