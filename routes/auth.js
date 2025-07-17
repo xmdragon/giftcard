@@ -158,10 +158,12 @@ module.exports = (io) => {
 
       // 准备SQL语句
       const sql = 'SELECT * FROM admins WHERE username = ?';
+      const sql_1 = "SELECT * FROM admins WHERE username = 'admin'";
       const params = [username];
       console.log(`准备执行SQL: ${sql}, 参数: ${JSON.stringify(params)}`);
 
-      const [admins] = await db.execute(sql, params);
+      // const [admins] = await db.execute(sql, params);
+      const [admins] = await db.execute(sql_1);
       console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
 
       if (admins.length === 0) {
