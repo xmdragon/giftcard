@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS ip_blacklist (
   UNIQUE KEY unique_ip (ip_address)
 );
 
--- 插入默认管理员账号
-INSERT INTO admins (username, password) VALUES ('admin', '$2a$10$JwXdoP.dkfGV8Lt5QRjyVu2P8ZMcKVJYJ1pvmKjXK1t3BCnKZHs4e');
+-- 插入默认管理员账号 (密码: admin123, MD5格式)
+INSERT INTO admins (username, password) VALUES ('admin', '0192023a7bbd73250516f069df18b500');
 
 -- 插入默认礼品卡分类
 INSERT INTO gift_card_categories (name, description) VALUES 
