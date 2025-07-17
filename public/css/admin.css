@@ -1,0 +1,748 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f5f7;
+    color: #1d1d1f;
+    line-height: 1.47059;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+}
+
+.admin-container {
+    min-height: 100vh;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* 登录页面样式 */
+#adminLoginPage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: #f5f5f7;
+    padding: 22px;
+}
+
+.login-form {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 48px;
+    border-radius: 18px;
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 420px;
+}
+
+.login-form h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    color: #1d1d1f;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.003em;
+    line-height: 1.125;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1d1d1f;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-size: 17px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #1d1d1f;
+    transition: all 0.15s ease-in-out;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+button {
+    background: #0071e3;
+    color: white;
+    border: none;
+    padding: 16px 24px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: 400;
+    font-family: inherit;
+    letter-spacing: -0.022em;
+    transition: all 0.15s ease-in-out;
+}
+
+button:hover {
+    background: #0077ed;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 113, 227, 0.3);
+}
+
+button:active {
+    transform: translateY(0);
+    background: #006edb;
+}
+
+.login-form button {
+    width: 100%;
+}
+
+/* 管理员主页面样式 */
+.admin-header {
+    background: rgba(255, 255, 255, 0.8);
+    padding: 24px 40px;
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header h1 {
+    color: #1d1d1f;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.003em;
+    line-height: 1.14286;
+}
+
+.admin-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.admin-info span {
+    color: #86868b;
+    font-size: 17px;
+    font-weight: 400;
+    letter-spacing: -0.022em;
+}
+
+.admin-nav {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0;
+    display: flex;
+}
+
+.nav-btn {
+    background: none;
+    color: #86868b;
+    border: none;
+    padding: 16px 24px;
+    cursor: pointer;
+    font-size: 17px;
+    font-weight: 400;
+    font-family: inherit;
+    letter-spacing: -0.022em;
+    transition: all 0.15s ease-in-out;
+    border-bottom: 2px solid transparent;
+}
+
+.nav-btn:hover {
+    color: #1d1d1f;
+}
+
+.nav-btn.active {
+    color: #0071e3;
+    border-bottom-color: #0071e3;
+}
+
+.admin-main {
+    padding: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.admin-section {
+    display: none;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 18px;
+    padding: 32px;
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.section-header h2 {
+    color: #1d1d1f;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.003em;
+    line-height: 1.14286;
+}
+
+.notification-badge {
+    background: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.3);
+}
+
+.pending-tabs {
+    display: flex;
+    margin-bottom: 24px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    padding: 4px;
+}
+
+.tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    color: #86868b;
+    font-size: 17px;
+    font-weight: 400;
+    font-family: inherit;
+    letter-spacing: -0.022em;
+    transition: all 0.15s ease-in-out;
+}
+
+.tab-btn.active {
+    color: #1d1d1f;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-btn:hover:not(.active) {
+    color: #1d1d1f;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.requests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.request-item {
+    background: rgba(255, 255, 255, 0.6);
+    padding: 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: all 0.15s ease-in-out;
+}
+
+.request-item:hover {
+    background: rgba(255, 255, 255, 0.8);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.request-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.request-info h4 {
+    color: #1d1d1f;
+    margin-bottom: 8px;
+    font-size: 19px;
+    font-weight: 600;
+    letter-spacing: -0.022em;
+}
+
+.request-info p {
+    color: #86868b;
+    font-size: 17px;
+    margin: 4px 0;
+    line-height: 1.47059;
+    letter-spacing: -0.022em;
+}
+
+.request-actions {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.request-actions button {
+    padding: 8px 16px;
+    font-size: 15px;
+    border-radius: 8px;
+    min-width: 80px;
+}
+
+.approve-btn {
+    background: #34c759;
+}
+
+.approve-btn:hover {
+    background: #30d158;
+    box-shadow: 0 4px 16px rgba(52, 199, 89, 0.3);
+}
+
+.reject-btn {
+    background: #ff3b30;
+}
+
+.reject-btn:hover {
+    background: #ff453a;
+    box-shadow: 0 4px 16px rgba(255, 59, 48, 0.3);
+}
+
+.data-table {
+    overflow-x: auto;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.data-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+}
+
+.data-table th,
+.data-table td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.data-table th {
+    background: rgba(0, 0, 0, 0.02);
+    font-weight: 600;
+    color: #1d1d1f;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+}
+
+.data-table td {
+    color: #1d1d1f;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+    line-height: 1.47059;
+}
+
+.data-table tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    align-items: center;
+}
+
+.filters select {
+    padding: 12px 16px;
+    border: 1px solid #d2d2d7;
+    border-radius: 8px;
+    font-size: 17px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #1d1d1f;
+    transition: all 0.15s ease-in-out;
+}
+
+.filters select:hover {
+    border-color: #0071e3;
+}
+
+.filters select:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.status-available {
+    background: rgba(52, 199, 89, 0.1);
+    color: #1d4928;
+}
+
+.status-distributed {
+    background: rgba(255, 149, 0, 0.1);
+    color: #8b4513;
+}
+
+.status-used {
+    background: rgba(255, 59, 48, 0.1);
+    color: #8b1538;
+}
+
+/* 模态框样式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(20px);
+}
+
+.modal-content {
+    background: rgba(255, 255, 255, 0.95);
+    margin: 5% auto;
+    padding: 32px;
+    border-radius: 18px;
+    width: 90%;
+    max-width: 640px;
+    position: relative;
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    font-size: 24px;
+    font-weight: 400;
+    cursor: pointer;
+    color: #86868b;
+    transition: color 0.15s ease-in-out;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.close:hover {
+    color: #1d1d1f;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.modal h3 {
+    margin-bottom: 24px;
+    color: #1d1d1f;
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.003em;
+    line-height: 1.14286;
+}
+
+.modal .form-group {
+    margin-bottom: 20px;
+}
+
+.modal .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #1d1d1f;
+    font-size: 17px;
+    letter-spacing: -0.022em;
+}
+
+.modal input, .modal select {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-size: 17px;
+    font-family: inherit;
+    background: #ffffff;
+    color: #1d1d1f;
+    transition: all 0.15s ease-in-out;
+}
+
+.modal input:focus, .modal select:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+.modal textarea {
+    width: 100%;
+    min-height: 200px;
+    padding: 16px 20px;
+    border: 1px solid #d2d2d7;
+    border-radius: 12px;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    background: #ffffff;
+    color: #1d1d1f;
+    transition: all 0.15s ease-in-out;
+}
+
+.modal textarea:focus {
+    outline: none;
+    border-color: #0071e3;
+    box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+}
+
+.modal .form-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.modal .form-actions button {
+    width: auto;
+    padding: 12px 24px;
+    font-size: 17px;
+}
+
+.cancel-btn {
+    background: #f6f6f6;
+    color: #1d1d1f;
+    border: 1px solid #d2d2d7;
+}
+
+.cancel-btn:hover {
+    background: #e8e8ed;
+    color: #1d1d1f;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 16px;
+        padding: 20px 22px;
+    }
+    
+    .admin-header h1 {
+        font-size: 24px;
+    }
+    
+    .admin-nav {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .nav-btn {
+        flex-shrink: 0;
+        min-width: 120px;
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+    
+    .admin-main {
+        padding: 16px;
+    }
+    
+    .admin-section {
+        padding: 24px 20px;
+        border-radius: 16px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+    }
+    
+    .section-header h2 {
+        font-size: 24px;
+    }
+    
+    .filters {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .filters select {
+        min-width: 140px;
+        padding: 10px 14px;
+        font-size: 16px;
+    }
+    
+    .request-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .request-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .request-actions button {
+        padding: 10px 16px;
+        font-size: 16px;
+        min-width: 70px;
+    }
+    
+    .data-table {
+        font-size: 15px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 12px 16px;
+        font-size: 15px;
+    }
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 24px 20px;
+        width: 95%;
+        border-radius: 16px;
+    }
+    
+    .modal h3 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    
+    .modal .form-actions {
+        flex-direction: column-reverse;
+        gap: 12px;
+    }
+    
+    .modal .form-actions button {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+    
+    .login-form {
+        padding: 32px 24px;
+        margin: 0 16px;
+        border-radius: 16px;
+    }
+    
+    .login-form h2 {
+        font-size: 28px;
+        margin-bottom: 28px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-header {
+        padding: 16px 20px;
+    }
+    
+    .admin-header h1 {
+        font-size: 22px;
+    }
+    
+    .nav-btn {
+        min-width: 100px;
+        padding: 10px 16px;
+        font-size: 15px;
+    }
+    
+    .admin-main {
+        padding: 12px;
+    }
+    
+    .admin-section {
+        padding: 20px 16px;
+    }
+    
+    .section-header h2 {
+        font-size: 22px;
+    }
+    
+    .request-item {
+        padding: 20px 16px;
+    }
+    
+    .request-info h4 {
+        font-size: 17px;
+    }
+    
+    .request-info p {
+        font-size: 15px;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+    
+    .login-form {
+        padding: 28px 20px;
+        margin: 0 12px;
+    }
+    
+    .login-form h2 {
+        font-size: 24px;
+    }
+}

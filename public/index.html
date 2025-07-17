@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="site_title">礼品卡发放系统</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 data-i18n="site_title">礼品卡发放系统</h1>
+            <div class="language-selector">
+                <select id="languageSelect">
+                    <option value="zh">中文</option>
+                    <option value="en">English</option>
+                    <option value="ja">日本語</option>
+                </select>
+            </div>
+        </header>
+
+        <main>
+            <!-- 登录页面 -->
+            <div id="loginPage" class="page active">
+                <div class="form-container">
+                    <h2 data-i18n="member_login">会员登录</h2>
+                    <form id="loginForm">
+                        <div class="form-group">
+                            <label for="email" data-i18n="email">邮箱</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password" data-i18n="password">密码</label>
+                            <input type="password" id="password" required>
+                        </div>
+                        <button type="submit" data-i18n="login">登录</button>
+                    </form>
+                    <div class="admin-link">
+                        <a href="/admin" data-i18n="admin_login">管理员登录</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 等待审核页面 -->
+            <div id="waitingPage" class="page">
+                <div class="waiting-container">
+                    <div class="spinner"></div>
+                    <h2 data-i18n="waiting_approval">等待管理员审核</h2>
+                    <p data-i18n="login_pending_message">您的登录请求已提交，请等待管理员确认...</p>
+                    <div id="loginStatus" class="status-message"></div>
+                </div>
+            </div>
+
+            <!-- 二次验证页面 -->
+            <div id="verificationPage" class="page">
+                <div class="form-container">
+                    <h2 data-i18n="second_verification">二次验证</h2>
+                    <p data-i18n="enter_verification_code">请输入验证码</p>
+                    <form id="verificationForm">
+                        <div class="form-group">
+                            <label for="verificationCode" data-i18n="verification_code">验证码</label>
+                            <input type="text" id="verificationCode" required maxlength="10">
+                        </div>
+                        <button type="submit" data-i18n="submit">提交</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 等待验证审核页面 -->
+            <div id="waitingVerificationPage" class="page">
+                <div class="waiting-container">
+                    <div class="spinner"></div>
+                    <h2 data-i18n="waiting_verification_approval">等待验证审核</h2>
+                    <p data-i18n="verification_pending_message">您的验证码已提交，请等待管理员确认...</p>
+                    <div id="verificationStatus" class="status-message"></div>
+                </div>
+            </div>
+
+            <!-- 礼品卡发放页面 -->
+            <div id="giftCardPage" class="page">
+                <div class="gift-card-container">
+                    <h2 data-i18n="your_gift_card">您的礼品卡</h2>
+                    <div class="gift-card-display">
+                        <div id="giftCardCode" class="gift-card-code"></div>
+                        <p data-i18n="gift_card_message">恭喜！这是您的礼品卡代码</p>
+                    </div>
+                    <div class="actions">
+                        <button id="checkinBtn" data-i18n="daily_checkin">每日签到</button>
+                        <button id="viewHistoryBtn" data-i18n="view_history">查看历史</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 签到页面 -->
+            <div id="checkinPage" class="page">
+                <div class="checkin-container">
+                    <h2 data-i18n="daily_checkin">每日签到</h2>
+                    <div id="checkinEligibility" class="eligibility-info"></div>
+                    <button id="performCheckin" data-i18n="checkin_now">立即签到</button>
+                    <div id="checkinResult" class="result-message"></div>
+                    <button id="backToGiftCard" data-i18n="back">返回</button>
+                </div>
+            </div>
+
+            <!-- 历史记录页面 -->
+            <div id="historyPage" class="page">
+                <div class="history-container">
+                    <h2 data-i18n="history_records">历史记录</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="giftCards" data-i18n="gift_cards">礼品卡</button>
+                        <button class="tab-btn" data-tab="checkins" data-i18n="checkin_records">签到记录</button>
+                    </div>
+                    <div id="giftCardsTab" class="tab-content active">
+                        <div id="giftCardsList" class="records-list"></div>
+                    </div>
+                    <div id="checkinsTab" class="tab-content">
+                        <div id="checkinsList" class="records-list"></div>
+                    </div>
+                    <button id="backFromHistory" data-i18n="back">返回</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/i18n.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

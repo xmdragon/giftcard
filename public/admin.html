@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - 礼品卡发放系统</title>
+    <link rel="stylesheet" href="css/admin.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 登录页面 -->
+        <div id="adminLoginPage" class="page active">
+            <div class="login-form">
+                <h2>管理员登录</h2>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">密码</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <button type="submit">登录</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 管理员主页面 -->
+        <div id="adminDashboard" class="page">
+            <header class="admin-header">
+                <h1>礼品卡发放系统 - 管理后台</h1>
+                <div class="admin-info">
+                    <span id="adminUsername"></span>
+                    <button id="logoutBtn">退出</button>
+                </div>
+            </header>
+
+            <nav class="admin-nav">
+                <button class="nav-btn active" data-section="pending">待审核</button>
+                <button class="nav-btn" data-section="members">会员管理</button>
+                <button class="nav-btn" data-section="giftcards">礼品卡管理</button>
+                <button class="nav-btn" data-section="categories">分类管理</button>
+            </nav>
+
+            <main class="admin-main">
+                <!-- 待审核区域 -->
+                <section id="pendingSection" class="admin-section active">
+                    <div class="section-header">
+                        <h2>待审核请求</h2>
+                        <div class="notification-badge" id="pendingCount">0</div>
+                    </div>
+
+                    <div class="pending-tabs">
+                        <button class="tab-btn active" data-tab="loginRequests">登录请求</button>
+                        <button class="tab-btn" data-tab="verificationRequests">验证请求</button>
+                    </div>
+
+                    <div id="loginRequestsTab" class="tab-content active">
+                        <h3>待审核登录请求</h3>
+                        <div id="loginRequestsList" class="requests-list"></div>
+                    </div>
+
+                    <div id="verificationRequestsTab" class="tab-content">
+                        <h3>待审核验证请求</h3>
+                        <div id="verificationRequestsList" class="requests-list"></div>
+                    </div>
+                </section>
+
+                <!-- 会员管理区域 -->
+                <section id="membersSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>会员管理</h2>
+                        <button id="refreshMembers">刷新</button>
+                    </div>
+                    <div id="membersList" class="data-table"></div>
+                </section>
+
+                <!-- 礼品卡管理区域 -->
+                <section id="giftcardsSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>礼品卡管理</h2>
+                        <button id="addGiftCardsBtn">批量添加</button>
+                    </div>
+
+                    <div class="filters">
+                        <select id="categoryFilter">
+                            <option value="">所有分类</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="">所有状态</option>
+                            <option value="available">可用</option>
+                            <option value="distributed">已发放</option>
+                            <option value="used">已使用</option>
+                        </select>
+                        <button id="filterGiftCards">筛选</button>
+                    </div>
+
+                    <div id="giftCardsList" class="data-table"></div>
+                </section>
+
+                <!-- 分类管理区域 -->
+                <section id="categoriesSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>分类管理</h2>
+                        <button id="addCategoryBtn">添加分类</button>
+                    </div>
+                    <div id="categoriesList" class="data-table"></div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>
