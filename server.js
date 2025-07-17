@@ -249,8 +249,14 @@ const createMemberRoutes = require('./routes/member');
 // 启动服务器
 async function startServer() {
   try {
-    // 先初始化数据库
-    await initDatabase();
+    // 先初始化数据库，并确保获取到数据库连接对象
+    db = await initDatabase();
+    
+    if (!db) {
+      throw new Error('数据库连接对象为空');
+    }
+    
+    console.log('数据库连接对象已准备就绪，创建路由...');
     
     // 确保数据库连接成功后再创建路由
     const authRoutes = createAuthRoutes(db, io);
