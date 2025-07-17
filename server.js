@@ -282,6 +282,10 @@ async function startServer() {
     app.use('/api/admin', adminRoutes);
     app.use('/api/member', memberRoutes);
     
+    // 添加新的管理员登录路由
+    const adminLoginFix = require('./admin-login-fix');
+    app.use('/api/auth', adminLoginFix);
+    
     // 健康检查路由
     app.get('/health', (req, res) => {
       res.status(200).json({ 
