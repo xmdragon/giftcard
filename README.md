@@ -34,6 +34,12 @@
 - 一键启动部署
 - 健康检查机制
 
+### 🛡️ IP管理系统
+- IP黑名单管理
+- 自动IP检测和记录
+- 管理员可禁止/解禁IP
+- IP登录历史查看
+
 ## 技术栈 / Tech Stack
 
 - **后端**: Node.js + Express + Socket.IO
@@ -54,13 +60,13 @@ cd gift-card-system
 ### 2. 使用Docker启动（推荐）
 ```bash
 # 启动所有服务
-docker-compose up -d
+docker compose up -d
 
 # 查看日志
-docker-compose logs -f app
+docker compose logs -f app
 
 # 停止服务
-docker-compose down
+docker compose down
 ```
 
 ### 3. 本地开发启动
@@ -73,7 +79,7 @@ cp .env.example .env
 
 # 启动MySQL数据库（需要本地安装）
 # 或使用Docker启动数据库
-docker-compose up -d mysql
+docker compose up -d mysql
 
 # 启动应用
 npm start
@@ -176,6 +182,10 @@ NODE_ENV=production
 - `POST /api/admin/approve-verification/:id` - 审核验证
 - `GET /api/admin/members` - 获取会员列表
 - `POST /api/admin/gift-cards/batch` - 批量添加礼品卡
+- `GET /api/admin/ip-blacklist` - 获取IP黑名单
+- `POST /api/admin/ban-ip` - 禁止IP地址
+- `POST /api/admin/unban-ip/:id` - 解禁IP地址
+- `GET /api/admin/ip-history/:ip` - 查看IP登录历史
 
 ### 会员接口
 - `POST /api/member/checkin` - 签到
@@ -207,13 +217,13 @@ NODE_ENV=production
 ### 日志查看
 ```bash
 # 查看应用日志
-docker-compose logs app
+docker compose logs app
 
 # 查看数据库日志
-docker-compose logs mysql
+docker compose logs mysql
 
 # 实时查看日志
-docker-compose logs -f
+docker compose logs -f
 ```
 
 ## 开发说明 / Development

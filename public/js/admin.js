@@ -13,7 +13,7 @@ class AdminApp {
         } else {
             this.showLoginPage();
         }
-        
+
         this.bindEvents();
         this.setupSocketListeners();
     }
@@ -59,6 +59,15 @@ class AdminApp {
 
         document.getElementById('filterGiftCards').addEventListener('click', () => {
             this.loadGiftCards();
+        });
+
+        // IP管理相关事件
+        document.getElementById('banIpBtn').addEventListener('click', () => {
+            this.showBanIpModal();
+        });
+
+        document.getElementById('refreshIpList').addEventListener('click', () => {
+            this.loadIpBlacklist();
         });
 
         // 模态框关闭
@@ -109,7 +118,7 @@ class AdminApp {
                 this.token = data.token;
                 this.currentAdmin = data.admin;
                 localStorage.setItem('adminToken', this.token);
-                
+
                 this.showDashboard();
                 this.loadInitialData();
             } else {
@@ -136,7 +145,7 @@ class AdminApp {
     showDashboard() {
         document.getElementById('adminLoginPage').classList.remove('active');
         document.getElementById('adminDashboard').classList.add('active');
-        
+
         if (this.currentAdmin) {
             document.getElementById('adminUsername').textContent = this.currentAdmin.username;
         }
@@ -160,7 +169,7 @@ class AdminApp {
         };
 
         const response = await fetch(url, { ...defaultOptions, ...options });
-        
+
         if (response.status === 401) {
             this.logout();
             return null;
@@ -195,7 +204,7 @@ class AdminApp {
 
     displayLoginRequests(requests) {
         const container = document.getElementById('loginRequestsList');
-        
+
         if (requests.length === 0) {
             container.innerHTML = '<p>暂无待审核的登录请求</p>';
             return;
@@ -220,7 +229,7 @@ class AdminApp {
 
     displayVerificationRequests(requests) {
         const container = document.getElementById('verificationRequestsList');
-        
+
         if (requests.length === 0) {
             container.innerHTML = '<p>暂无待审核的验证请求</p>';
             return;
@@ -339,7 +348,7 @@ class AdminApp {
         const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
         const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
         const totalCount = loginCount + verificationCount;
-        
+
         document.getElementById('pendingCount').textContent = totalCount;
     }
 
@@ -357,7 +366,7 @@ class AdminApp {
         document.getElementById(`${section}Section`).classList.add('active');
 
         // 根据需要加载数据
-        switch(section) {
+        switch (section) {
             case 'members':
                 this.loadMembers();
                 break;
@@ -366,6 +375,9 @@ class AdminApp {
                 break;
             case 'categories':
                 this.loadCategories();
+                break;
+            case 'ipmanagement':
+                this.loadIpBlacklist();
                 break;
         }
     }
@@ -398,7 +410,7 @@ class AdminApp {
 
     displayMembers(members) {
         const container = document.getElementById('membersList');
-        
+
         if (members.length === 0) {
             container.innerHTML = '<p>暂无会员数据</p>';
             return;
@@ -412,10 +424,13 @@ class AdminApp {
                         <th>邮箱</th>
                         <th>注册时间</th>
                         <th>最后登录</th>
+                        <th>最新IP</th>
+                        <th>所有登录IP</th>
                         <th>登录次数</th>
                         <th>签到次数</th>
                         <th>礼品卡数量</th>
                         <th>状态</th>
+                        <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -424,11 +439,18 @@ class AdminApp {
                             <td>${member.id}</td>
                             <td>${member.email}</td>
                             <td>${new Date(member.created_at).toLocaleString()}</td>
-                            <td>${member.last_login ? new Date(member.last_login).toLocaleString() : '未登录'}</td>
+                            <td>${member.last_login_time ? new Date(member.last_login_time).toLocaleString() : '未登录'}</td>
+                            <td><code>${member.latest_ip || '无'}</code></td>
+                            <td class="ip-list" title="${member.login_ips || '无'}">
+                                ${member.login_ips ? member.login_ips.split(', ').slice(0, 3).join(', ') + (member.login_ips.split(', ').length > 3 ? '...' : '') : '无'}
+                            </td>
                             <td>${member.login_count}</td>
                             <td>${member.checkin_count}</td>
                             <td>${member.gift_cards_received}</td>
                             <td><span class="status-badge status-${member.status}">${member.status}</span></td>
+                            <td>
+                                ${member.latest_ip ? `<button class="ban-ip-btn" onclick="adminApp.showBanIpModal('${member.latest_ip}')">禁止IP</button>` : ''}
+                            </td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -471,12 +493,12 @@ class AdminApp {
                 </div>
             </form>
         `;
-        
+
         this.showModal('批量添加礼品卡', content);
-        
+
         // 填充分类选项
         this.populateCategorySelect('giftCardCategory');
-        
+
         // 绑定表单提交事件
         document.getElementById('addGiftCardsForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -490,7 +512,7 @@ class AdminApp {
             if (response && response.ok) {
                 const categories = await response.json();
                 const select = document.getElementById(selectId);
-                
+
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.id;
@@ -541,7 +563,7 @@ class AdminApp {
 
     displayCategories(categories) {
         const container = document.getElementById('categoriesList');
-        
+
         if (categories.length === 0) {
             container.innerHTML = '<p>暂无分类数据</p>';
             return;
@@ -574,7 +596,7 @@ class AdminApp {
     populateCategoryFilter(categories) {
         const select = document.getElementById('categoryFilter');
         select.innerHTML = '<option value="">所有分类</option>';
-        
+
         categories.forEach(category => {
             const option = document.createElement('option');
             option.value = category.id;
@@ -600,9 +622,9 @@ class AdminApp {
                 </div>
             </form>
         `;
-        
+
         this.showModal('添加分类', content);
-        
+
         document.getElementById('addCategoryForm').addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleAddCategory();
@@ -633,7 +655,7 @@ class AdminApp {
     async loadGiftCards() {
         const category = document.getElementById('categoryFilter').value;
         const status = document.getElementById('statusFilter').value;
-        
+
         const params = new URLSearchParams();
         if (category) params.append('category', category);
         if (status) params.append('status', status);
@@ -651,7 +673,7 @@ class AdminApp {
 
     displayGiftCards(giftCards) {
         const container = document.getElementById('giftCardsList');
-        
+
         if (giftCards.length === 0) {
             container.innerHTML = '<p>暂无礼品卡数据</p>';
             return;
@@ -687,6 +709,198 @@ class AdminApp {
                 </tbody>
             </table>
         `;
+    }
+
+    // IP管理相关方法
+    async loadIpBlacklist() {
+        try {
+            const response = await this.apiRequest('/api/admin/ip-blacklist');
+            if (response && response.ok) {
+                const blacklist = await response.json();
+                this.displayIpBlacklist(blacklist);
+                this.updateIpStats(blacklist);
+            }
+        } catch (error) {
+            console.error('加载IP黑名单错误:', error);
+        }
+    }
+
+    displayIpBlacklist(blacklist) {
+        const container = document.getElementById('ipBlacklistTable');
+
+        if (blacklist.length === 0) {
+            container.innerHTML = '<p>暂无被禁止的IP</p>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>IP地址</th>
+                        <th>禁止原因</th>
+                        <th>禁止时间</th>
+                        <th>操作人</th>
+                        <th>影响会员数</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${blacklist.map(item => `
+                        <tr>
+                            <td><code>${item.ip_address}</code></td>
+                            <td>${item.reason || '无'}</td>
+                            <td>${new Date(item.banned_at).toLocaleString()}</td>
+                            <td>${item.banned_by_username || '未知'}</td>
+                            <td>${item.affected_members}</td>
+                            <td><span class="status-badge status-${item.status}">${item.status === 'active' ? '已禁止' : '已解禁'}</span></td>
+                            <td>
+                                ${item.status === 'active' ?
+                `<button class="unban-btn" onclick="adminApp.unbanIp(${item.id})">解禁</button>` :
+                '<span class="text-muted">已解禁</span>'
+            }
+                                <button class="view-history-btn" onclick="adminApp.viewIpHistory('${item.ip_address}')">查看历史</button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    updateIpStats(blacklist) {
+        const activeCount = blacklist.filter(item => item.status === 'active').length;
+        document.getElementById('bannedIpCount').textContent = activeCount;
+    }
+
+    showBanIpModal(prefilledIp = '') {
+        const content = `
+            <form id="banIpForm">
+                <div class="form-group">
+                    <label for="ipAddress">IP地址</label>
+                    <input type="text" id="ipAddress" value="${prefilledIp}" placeholder="例如: 192.168.1.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="banReason">禁止原因</label>
+                    <textarea id="banReason" placeholder="请输入禁止该IP的原因" rows="3"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
+                    <button type="submit">禁止IP</button>
+                </div>
+            </form>
+        `;
+
+        this.showModal('禁止IP地址', content);
+
+        document.getElementById('banIpForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleBanIp();
+        });
+    }
+
+    async handleBanIp() {
+        const ipAddress = document.getElementById('ipAddress').value.trim();
+        const reason = document.getElementById('banReason').value.trim();
+
+        if (!ipAddress) {
+            alert('请输入IP地址');
+            return;
+        }
+
+        try {
+            const response = await this.apiRequest('/api/admin/ban-ip', {
+                method: 'POST',
+                body: JSON.stringify({ ipAddress, reason })
+            });
+
+            if (response && response.ok) {
+                const result = await response.json();
+                alert(result.message);
+                this.closeModal();
+                this.loadIpBlacklist();
+            } else {
+                const error = await response.json();
+                alert(error.error || '禁止IP失败');
+            }
+        } catch (error) {
+            console.error('禁止IP错误:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    async unbanIp(id) {
+        if (!confirm('确定要解禁这个IP地址吗？')) {
+            return;
+        }
+
+        try {
+            const response = await this.apiRequest(`/api/admin/unban-ip/${id}`, {
+                method: 'POST'
+            });
+
+            if (response && response.ok) {
+                const result = await response.json();
+                alert(result.message);
+                this.loadIpBlacklist();
+            } else {
+                const error = await response.json();
+                alert(error.error || '解禁IP失败');
+            }
+        } catch (error) {
+            console.error('解禁IP错误:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    async viewIpHistory(ip) {
+        try {
+            const response = await this.apiRequest(`/api/admin/ip-history/${encodeURIComponent(ip)}`);
+            if (response && response.ok) {
+                const history = await response.json();
+                this.showIpHistoryModal(ip, history);
+            }
+        } catch (error) {
+            console.error('获取IP历史错误:', error);
+            alert('获取历史记录失败');
+        }
+    }
+
+    showIpHistoryModal(ip, history) {
+        const content = `
+            <div class="ip-history">
+                <h4>IP地址: <code>${ip}</code> 的登录历史</h4>
+                ${history.length === 0 ? '<p>暂无登录记录</p>' : `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>会员邮箱</th>
+                                <th>登录时间</th>
+                                <th>状态</th>
+                                <th>会员注册时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.map(record => `
+                                <tr>
+                                    <td>${record.email}</td>
+                                    <td>${new Date(record.login_time).toLocaleString()}</td>
+                                    <td><span class="status-badge status-${record.status}">${record.status}</span></td>
+                                    <td>${new Date(record.member_created_at).toLocaleString()}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `}
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">关闭</button>
+                    <button type="button" class="ban-ip-btn" onclick="adminApp.closeModal(); adminApp.showBanIpModal('${ip}')">禁止此IP</button>
+                </div>
+            </div>
+        `;
+
+        this.showModal('IP登录历史', content);
     }
 }
 

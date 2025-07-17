@@ -10,6 +10,19 @@ module.exports = (db, io) => {
       const { email, password } = req.body;
       const clientIP = req.ip || req.connection.remoteAddress;
 
+      // 检查IP是否被禁止
+      const [bannedIPs] = await db.execute(
+        'SELECT * FROM ip_blacklist WHERE ip_address = ? AND status = "active"',
+        [clientIP]
+      );
+
+      if (bannedIPs.length > 0) {
+        return res.status(403).json({ 
+          error: req.t('ip_banned'),
+          reason: bannedIPs[0].reason || req.t('ip_banned_default_reason')
+        });
+      }
+
       // 检查会员是否存在，不存在则自动注册
       let [members] = await db.execute('SELECT * FROM members WHERE email = ?', [email]);
       let member;

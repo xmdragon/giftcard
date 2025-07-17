@@ -158,6 +158,20 @@ async function createTables() {
     )
   `);
 
+  // IP黑名单表
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS ip_blacklist (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      ip_address VARCHAR(45) NOT NULL,
+      reason TEXT,
+      banned_by INT,
+      banned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('active', 'inactive') DEFAULT 'active',
+      FOREIGN KEY (banned_by) REFERENCES admins(id),
+      UNIQUE KEY unique_ip (ip_address)
+    )
+  `);
+
   console.log('数据库表创建完成');
 }
 
