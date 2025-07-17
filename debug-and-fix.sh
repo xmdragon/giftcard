@@ -1,273 +1,174 @@
 #!/bin/bash
 
-# 礼品卡系统 - 故障诊断和修复脚本
+# 调试和修复管理员登录问题的脚本
 
-set -e
-
-# 颜色定义
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m'
-
-log_info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-log_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-log_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
-}
-
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# 检查 Docker 服务
-check_docker() {
-    log_info "检查 Docker 服务状态..."
-    
-    if ! command -v docker &> /dev/null; then
-        log_error "Docker 未安装"
-        return 1
-    fi
-    
-    if ! docker info &> /dev/null; then
-        log_error "Docker 服务未运行"
-        return 1
-    fi
-    
-    log_success "Docker 服务正常"
-    return 0
-}
-
-# 检查容器状态
-check_containers() {
-    log_info "检查容器状态..."
-    
-    echo "容器状态:"
-    docker compose ps
-    
-    # 检查关键容器
-    local mysql_status=$(docker compose ps mysql --format "{{.State}}")
-    local app_status=$(docker compose ps app --format "{{.State}}")
-    
-    if [[ "$mysql_status" != "running" ]]; then
-        log_error "MySQL 容器未运行: $mysql_status"
-        return 1
-    fi
-    
-    if [[ "$app_status" != "running" ]]; then
-        log_error "应用容器未运行: $app_status"
-        return 1
-    fi
-    
-    log_success "所有容器正常运行"
-    return 0
-}
+echo "开始调试和修复管理员登录问题..."
 
 # 检查数据库连接
-check_database() {
-    log_info "检查数据库连接..."
-    
-    # 等待数据库启动
-    log_info "等待数据库启动..."
-    sleep 10
-    
-    # 测试数据库连接
-    if docker compose exec -T mysql mysql -u giftcard_user -pGiftCard_User_2024! -e "SELECT 1;" &> /dev/null; then
-        log_success "数据库连接正常"
-        return 0
-    else
-        log_error "数据库连接失败"
-        return 1
-    fi
-}
-
-# 检查应用健康状态
-check_app_health() {
-    log_info "检查应用健康状态..."
-    
-    # 等待应用启动
-    local max_attempts=30
-    local attempt=0
-    
-    while [ $attempt -lt $max_attempts ]; do
-        if curl -s http://localhost:3000/health &> /dev/null; then
-            log_success "应用健康检查通过"
-            return 0
-        fi
-        
-        attempt=$((attempt + 1))
-        echo -n "."
-        sleep 2
-    done
-    
-    echo ""
-    log_error "应用健康检查失败"
-    return 1
-}
-
-# 显示日志
-show_logs() {
-    log_info "显示最近的错误日志..."
-    
-    echo ""
-    echo "=== 应用日志 ==="
-    docker compose logs --tail=20 app
-    
-    echo ""
-    echo "=== 数据库日志 ==="
-    docker compose logs --tail=10 mysql
-}
-
-# 重启服务
-restart_services() {
-    log_info "重启所有服务..."
-    
-    # 停止服务
-    docker compose down
-    
-    # 等待完全停止
-    sleep 5
-    
-    # 启动服务
-    docker compose up -d
-    
-    log_success "服务已重启"
-}
-
-# 重建应用
-rebuild_app() {
-    log_info "重建应用容器..."
-    
-    # 停止应用容器
-    docker compose stop app
-    
-    # 重建应用镜像
-    docker compose build --no-cache app
-    
-    # 启动应用容器
-    docker compose up -d app
-    
-    log_success "应用容器已重建"
-}
-
-# 清理并重新部署
-clean_deploy() {
-    log_warning "执行清理并重新部署..."
-    
-    # 停止并删除所有容器
-    docker compose down -v
-    
-    # 清理镜像（可选）
-    read -p "是否要清理 Docker 镜像？(y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        docker compose build --no-cache
-    fi
-    
-    # 重新启动
-    docker compose up -d
-    
-    log_success "清理部署完成"
-}
-
-# 主菜单
-show_menu() {
-    echo ""
-    log_info "=== 礼品卡系统故障诊断工具 ==="
-    echo ""
-    echo "1. 快速诊断"
-    echo "2. 查看日志"
-    echo "3. 重启服务"
-    echo "4. 重建应用"
-    echo "5. 清理重新部署"
-    echo "6. 退出"
-    echo ""
-}
-
-# 快速诊断
-quick_diagnosis() {
-    log_info "开始快速诊断..."
-    
-    # 检查 Docker
-    if ! check_docker; then
-        log_error "请先安装并启动 Docker"
-        return 1
-    fi
-    
-    # 检查容器状态
-    if ! check_containers; then
-        log_warning "容器状态异常，建议重启服务"
-        return 1
-    fi
-    
-    # 检查数据库
-    if ! check_database; then
-        log_warning "数据库连接异常"
-        return 1
-    fi
-    
-    # 检查应用健康
-    if ! check_app_health; then
-        log_warning "应用健康检查失败"
-        show_logs
-        return 1
-    fi
-    
-    log_success "所有检查通过！系统运行正常"
-    
-    echo ""
-    log_info "访问地址:"
-    echo "• 会员端: http://localhost:3000"
-    echo "• 管理端: http://localhost:3000/admin"
-    echo "• 健康检查: http://localhost:3000/health"
-    
-    return 0
-}
-
-# 主函数
-main() {
-    while true; do
-        show_menu
-        read -p "请选择操作 (1-6): " choice
-        
-        case $choice in
-            1)
-                quick_diagnosis
-                ;;
-            2)
-                show_logs
-                ;;
-            3)
-                restart_services
-                ;;
-            4)
-                rebuild_app
-                ;;
-            5)
-                clean_deploy
-                ;;
-            6)
-                log_info "退出诊断工具"
-                exit 0
-                ;;
-            *)
-                log_error "无效选择，请输入 1-6"
-                ;;
-        esac
-        
-        echo ""
-        read -p "按回车键继续..."
-    done
-}
-
-# 如果直接运行脚本，显示菜单
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
+echo "检查数据库连接..."
+mysql -h mysql -u giftcard_user -p'GiftCard_User_2024!' -e "SELECT 1" gift_card_system
+if [ $? -ne 0 ]; then
+  echo "数据库连接失败，请检查数据库配置"
+  exit 1
 fi
+echo "数据库连接成功"
+
+# 检查管理员账号
+echo "检查管理员账号..."
+ADMIN_COUNT=$(mysql -h mysql -u giftcard_user -p'GiftCard_User_2024!' -e "SELECT COUNT(*) FROM admins" gift_card_system 2>/dev/null | tail -n 1)
+echo "找到 $ADMIN_COUNT 个管理员账号"
+
+# 重置管理员密码为MD5格式
+echo "重置管理员密码为MD5格式..."
+MD5_PASSWORD=$(echo -n "admin123" | md5sum | cut -d ' ' -f 1)
+echo "MD5密码: $MD5_PASSWORD"
+
+mysql -h mysql -u giftcard_user -p'GiftCard_User_2024!' -e "UPDATE admins SET password='$MD5_PASSWORD' WHERE username='admin'" gift_card_system
+if [ $? -ne 0 ]; then
+  echo "更新管理员密码失败"
+  exit 1
+fi
+echo "管理员密码已更新为MD5格式"
+
+# 创建独立的管理员登录服务
+echo "创建独立的管理员登录服务..."
+cat > admin-login-service.js << EOL
+const express = require('express');
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const mysql = require('mysql2/promise');
+const bodyParser = require('body-parser');
+require('dotenv').config();
+
+const app = express();
+app.use(bodyParser.json());
+
+// 数据库配置
+const dbConfig = {
+  host: process.env.DB_HOST || 'mysql',
+  user: process.env.DB_USER || 'giftcard_user',
+  password: process.env.DB_PASSWORD || 'GiftCard_User_2024!',
+  database: process.env.DB_NAME || 'gift_card_system'
+};
+
+// 管理员登录路由
+app.post('/api/auth/admin/login', async (req, res) => {
+  try {
+    console.log('管理员登录请求开始处理');
+    const { username, password } = req.body;
+    console.log(\`尝试登录的管理员用户名: \${username}\`);
+    
+    // 连接数据库
+    console.log('尝试连接数据库...');
+    const db = await mysql.createConnection(dbConfig);
+    console.log('数据库连接成功');
+    
+    // 准备SQL语句
+    const sql = 'SELECT * FROM admins WHERE username = ?';
+    const params = [username];
+    console.log(\`准备执行SQL: \${sql}, 参数: \${JSON.stringify(params)}\`);
+    
+    try {
+      const [admins] = await db.execute(sql, params);
+      console.log(\`查询结果: 找到 \${admins.length} 个匹配的管理员账号\`);
+      
+      if (admins.length === 0) {
+        console.log('未找到匹配的管理员账号');
+        await db.end();
+        return res.status(400).json({ error: '用户名或密码错误' });
+      }
+
+      const admin = admins[0];
+      console.log(\`找到管理员账号: ID=\${admin.id}, 用户名=\${admin.username}, 密码哈希=\${admin.password}\`);
+      
+      // 使用MD5验证密码
+      const md5Password = crypto.createHash('md5').update(password).digest('hex');
+      console.log(\`输入密码的MD5: \${md5Password}\`);
+      console.log(\`数据库中的密码: \${admin.password}\`);
+      
+      const validPassword = (md5Password === admin.password);
+      console.log(\`密码验证结果: \${validPassword ? '成功' : '失败'}\`);
+      
+      if (!validPassword) {
+        await db.end();
+        return res.status(400).json({ error: '用户名或密码错误' });
+      }
+
+      console.log('生成JWT令牌');
+      const token = jwt.sign(
+        { id: admin.id, username: admin.username, role: 'admin' },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '24h' }
+      );
+
+      console.log('管理员登录成功');
+      await db.end();
+      res.json({
+        token,
+        admin: { id: admin.id, username: admin.username }
+      });
+    } catch (dbError) {
+      console.error(\`数据库查询错误: \${dbError.message}\`);
+      console.error(\`执行的SQL: \${sql}, 参数: \${JSON.stringify(params)}\`);
+      console.error('错误堆栈:', dbError.stack);
+      await db.end();
+      throw dbError;
+    }
+  } catch (error) {
+    console.error('管理员登录错误:', error);
+    console.error('错误堆栈:', error.stack);
+    res.status(500).json({ error: '服务器错误，请稍后重试' });
+  }
+});
+
+// 启动服务器
+const PORT = 3001;
+app.listen(PORT, () => {
+  console.log(\`管理员登录服务运行在端口 \${PORT}\`);
+});
+EOL
+
+echo "独立的管理员登录服务已创建"
+
+# 创建测试脚本
+echo "创建测试脚本..."
+cat > test-admin-login-service.js << EOL
+const axios = require('axios');
+
+async function testAdminLoginService() {
+  console.log('开始测试独立的管理员登录服务');
+  
+  try {
+    const response = await axios.post('http://localhost:3001/api/auth/admin/login', {
+      username: 'admin',
+      password: 'admin123'
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    
+    console.log(\`响应状态码: \${response.status}\`);
+    console.log(\`响应数据: \${JSON.stringify(response.data, null, 2)}\`);
+    console.log('管理员登录服务测试成功');
+    
+  } catch (error) {
+    console.error('API测试失败:');
+    if (error.response) {
+      console.error(\`状态码: \${error.response.status}\`);
+      console.error(\`响应数据: \${JSON.stringify(error.response.data, null, 2)}\`);
+    } else {
+      console.error(error.message);
+    }
+  }
+}
+
+setTimeout(testAdminLoginService, 1000);
+EOL
+
+echo "测试脚本已创建"
+
+echo "调试和修复完成，请运行以下命令启动独立的管理员登录服务："
+echo "node admin-login-service.js"
+echo "然后在另一个终端运行以下命令测试服务："
+echo "node test-admin-login-service.js"
