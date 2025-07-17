@@ -1,5 +1,7 @@
 const mysql = require('mysql2/promise');
 const crypto = require('crypto');
+const express = require('express');
+const bodyParser = require('body-parser');
 require('dotenv').config();
 
 async function testAdminLoginDirect() {
