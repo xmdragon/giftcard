@@ -66,9 +66,15 @@ async function initDatabase() {
       connected = true;
       console.log('数据库连接成功');
       
+      // 测试数据库连接
+      await db.execute('SELECT 1');
+      console.log('数据库连接测试成功');
+      
       // 创建数据库表
       await createTables();
       await createDefaultAdmin();
+      
+      return db; // 返回数据库连接对象
     } catch (error) {
       console.error('数据库连接失败:', error);
       retries--;
