@@ -203,21 +203,21 @@ module.exports = (io) => {
         token,
         admin: { id: admin.id, username: admin.username }
       });
-    // } catch (error) {
-    //   console.error('管理员登录错误:', error);
-    //   console.error('错误堆栈:', error.stack);
-    //   //res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
-    //   res.status(500).json({error});
-    // } finally {
-    //   // 关闭数据库连接
-    //   if (db) {
-    //     try {
-    //       await db.end();
-    //     } catch (err) {
-    //       console.error('关闭数据库连接失败:', err);
-    //     }
-    //   }
-    // }
+    } catch (error) {
+      console.error('管理员登录错误:', error);
+      console.error('错误堆栈:', error.stack);
+      //res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+      res.status(500).json({error});
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
+    }
   });
 
   return router;
