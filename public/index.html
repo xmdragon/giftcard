@@ -53,11 +53,21 @@
             <div id="verificationPage" class="page">
                 <div class="form-container">
                     <h2 data-i18n="second_verification">二次验证</h2>
-                    <p data-i18n="enter_verification_code">请输入验证码</p>
+                    <p data-i18n="enter_verification_code">请输入6位数字验证码</p>
                     <form id="verificationForm">
                         <div class="form-group">
-                            <label for="verificationCode" data-i18n="verification_code">验证码</label>
-                            <input type="text" id="verificationCode" required maxlength="10">
+                            <label data-i18n="verification_code">验证码</label>
+                            <div class="verification-code-container">
+                                <div class="verification-code-display">
+                                    <div class="code-digit" id="digit-0">-</div>
+                                    <div class="code-digit" id="digit-1">-</div>
+                                    <div class="code-digit" id="digit-2">-</div>
+                                    <div class="code-digit" id="digit-3">-</div>
+                                    <div class="code-digit" id="digit-4">-</div>
+                                    <div class="code-digit" id="digit-5">-</div>
+                                </div>
+                                <input type="tel" id="verificationCode" class="verification-input" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code">
+                            </div>
                         </div>
                         <button type="submit" data-i18n="submit">提交</button>
                     </form>

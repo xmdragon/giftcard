@@ -1,20 +1,16 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
 const router = express.Router();
-const { createConnection } = require('../utils/db');
+const db = require('../utils/db');
 
 module.exports = (io) => {
   // 会员签到
   router.post('/checkin', async (req, res) => {
-    // 创建数据库连接
-    let db = null;
     try {
-      db = await createConnection();
       const { memberId } = req.body;
       const today = new Date().toISOString().split('T')[0];
 
       // 检查今天是否已经签到
-      const [existingCheckin] = await db.execute(
+      const existingCheckin = await db.query(
         'SELECT * FROM checkin_records WHERE member_id = ? AND checkin_date = ?',
         [memberId, today]
       );
@@ -24,7 +20,7 @@ module.exports = (io) => {
       }
 
       // 检查会员是否有资格签到（之前领过礼品卡）
-      const [giftCardHistory] = await db.execute(
+      const giftCardHistory = await db.query(
         'SELECT * FROM gift_cards WHERE distributed_to = ? AND status = "distributed" LIMIT 1',
         [memberId]
       );
@@ -34,7 +30,7 @@ module.exports = (io) => {
       }
 
       // 检查7天签到期限
-      const [firstGiftCard] = await db.execute(
+      const firstGiftCard = await db.query(
         'SELECT distributed_at FROM gift_cards WHERE distributed_to = ? ORDER BY distributed_at ASC LIMIT 1',
         [memberId]
       );
@@ -46,62 +42,53 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('checkin_period_expired') });
       }
 
-      // 获取可用的签到礼品卡
-      const [availableCards] = await db.execute(
-        'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "checkin" LIMIT 1'
-      );
-
-      let giftCardId = null;
-      let giftCardCode = null;
-
-      if (availableCards.length > 0) {
-        const giftCard = availableCards[0];
-        giftCardId = giftCard.id;
-        giftCardCode = giftCard.code;
-
-        // 更新礼品卡状态
-        await db.execute(
-          'UPDATE gift_cards SET status = "distributed", distributed_to = ?, distributed_at = NOW() WHERE id = ?',
-          [memberId, giftCard.id]
+      // 使用事务处理签到和礼品卡分配
+      return await db.transaction(async (connection) => {
+        // 获取可用的签到礼品卡
+        const [availableCardsResult] = await connection.execute(
+          'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "checkin" LIMIT 1 FOR UPDATE'
         );
-      }
+        
+        let giftCardId = null;
+        let giftCardCode = null;
 
-      // 记录签到
-      await db.execute(
-        'INSERT INTO checkin_records (member_id, checkin_date, gift_card_id) VALUES (?, ?, ?)',
-        [memberId, today, giftCardId]
-      );
+        if (availableCardsResult.length > 0) {
+          const giftCard = availableCardsResult[0];
+          giftCardId = giftCard.id;
+          giftCardCode = giftCard.code;
 
-      res.json({
-        message: req.t('checkin_successful'),
-        giftCardCode,
-        hasGiftCard: !!giftCardCode
+          // 更新礼品卡状态
+          await connection.execute(
+            'UPDATE gift_cards SET status = "distributed", distributed_to = ?, distributed_at = NOW() WHERE id = ?',
+            [memberId, giftCard.id]
+          );
+        }
+
+        // 记录签到
+        await connection.execute(
+          'INSERT INTO checkin_records (member_id, checkin_date, gift_card_id) VALUES (?, ?, ?)',
+          [memberId, today, giftCardId]
+        );
+
+        return res.json({
+          message: req.t('checkin_successful'),
+          giftCardCode,
+          hasGiftCard: !!giftCardCode
+        });
       });
 
     } catch (error) {
       console.error('签到错误:', error);
       res.status(500).json({ error: req.t('server_error') });
-    } finally {
-      // 关闭数据库连接
-      if (db) {
-        try {
-          await db.end();
-        } catch (err) {
-          console.error('关闭数据库连接失败:', err);
-        }
-      }
     }
   });
 
   // 获取会员签到历史
   router.get('/checkin-history/:memberId', async (req, res) => {
-    // 创建数据库连接
-    let db = null;
     try {
-      db = await createConnection();
       const { memberId } = req.params;
 
-      const [history] = await db.execute(`
+      const history = await db.query(`
         SELECT cr.*, gc.code as gift_card_code
         FROM checkin_records cr
         LEFT JOIN gift_cards gc ON cr.gift_card_id = gc.id
@@ -113,27 +100,15 @@ module.exports = (io) => {
     } catch (error) {
       console.error('获取签到历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
-    } finally {
-      // 关闭数据库连接
-      if (db) {
-        try {
-          await db.end();
-        } catch (err) {
-          console.error('关闭数据库连接失败:', err);
-        }
-      }
     }
   });
 
   // 获取会员礼品卡历史
   router.get('/gift-cards/:memberId', async (req, res) => {
-    // 创建数据库连接
-    let db = null;
     try {
-      db = await createConnection();
       const { memberId } = req.params;
 
-      const [giftCards] = await db.execute(`
+      const giftCards = await db.query(`
         SELECT gc.*, gcc.name as category_name
         FROM gift_cards gc
         LEFT JOIN gift_card_categories gcc ON gc.category_id = gcc.id
@@ -145,35 +120,23 @@ module.exports = (io) => {
     } catch (error) {
       console.error('获取礼品卡历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
-    } finally {
-      // 关闭数据库连接
-      if (db) {
-        try {
-          await db.end();
-        } catch (err) {
-          console.error('关闭数据库连接失败:', err);
-        }
-      }
     }
   });
 
   // 检查会员签到资格
   router.get('/checkin-eligibility/:memberId', async (req, res) => {
-    // 创建数据库连接
-    let db = null;
     try {
-      db = await createConnection();
       const { memberId } = req.params;
       const today = new Date().toISOString().split('T')[0];
 
       // 检查今天是否已签到
-      const [todayCheckin] = await db.execute(
+      const todayCheckin = await db.query(
         'SELECT * FROM checkin_records WHERE member_id = ? AND checkin_date = ?',
         [memberId, today]
       );
 
       // 检查是否有礼品卡历史
-      const [giftCardHistory] = await db.execute(
+      const giftCardHistory = await db.query(
         'SELECT distributed_at FROM gift_cards WHERE distributed_to = ? ORDER BY distributed_at ASC LIMIT 1',
         [memberId]
       );
@@ -208,15 +171,6 @@ module.exports = (io) => {
     } catch (error) {
       console.error('检查签到资格错误:', error);
       res.status(500).json({ error: req.t('server_error') });
-    } finally {
-      // 关闭数据库连接
-      if (db) {
-        try {
-          await db.end();
-        } catch (err) {
-          console.error('关闭数据库连接失败:', err);
-        }
-      }
     }
   });
 

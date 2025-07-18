@@ -91,12 +91,15 @@ class GiftCardApp {
             }
         });
 
-        this.socket.on('verification-rejected', () => {
-            const statusDiv = document.getElementById('verificationStatus');
-            statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
-            setTimeout(() => {
-                this.showPage('loginPage');
-            }, 3000);
+        this.socket.on('verification-rejected', (data) => {
+            // 确保只有当verificationId匹配时才处理拒绝事件
+            if (data && data.verificationId === this.currentVerificationId) {
+                const statusDiv = document.getElementById('verificationStatus');
+                statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
+                setTimeout(() => {
+                    this.showPage('loginPage');
+                }, 3000);
+            }
         });
     }
 
@@ -133,7 +136,16 @@ class GiftCardApp {
     }
 
     async handleVerification() {
+        // 获取验证码输入框的值
         const verificationCode = document.getElementById('verificationCode').value;
+        
+        console.log('提交的验证码:', verificationCode);
+        
+        // 验证是否填写完整
+        if (verificationCode.length !== 6) {
+            this.showError('请输入完整的6位验证码');
+            return;
+        }
 
         try {
             const response = await fetch('/api/auth/member/verify', {
@@ -153,12 +165,80 @@ class GiftCardApp {
                 this.currentVerificationId = data.verificationId;
                 this.showPage('waitingVerificationPage');
             } else {
+                // 显示错误并标记输入框
                 this.showError(data.error);
+                
+                // 显示错误动画
+                const digitElements = document.querySelectorAll('.code-digit');
+                digitElements.forEach(digit => {
+                    digit.classList.add('error');
+                    setTimeout(() => digit.classList.remove('error'), 500);
+                });
             }
         } catch (error) {
             console.error('验证错误:', error);
             this.showError('网络错误，请重试');
         }
+    }
+    
+    // 设置验证码输入框的自动跳转
+    setupVerificationInputs() {
+        // 获取验证码输入框和显示数字的元素
+        const codeInput = document.getElementById('verificationCode');
+        const digitElements = document.querySelectorAll('.code-digit');
+        
+        // 清空输入框和显示
+        codeInput.value = '';
+        digitElements.forEach(digit => {
+            digit.textContent = '-';
+            digit.classList.remove('filled');
+        });
+        
+        // 聚焦输入框
+        setTimeout(() => codeInput.focus(), 100);
+        
+        // 处理输入事件
+        codeInput.addEventListener('input', (e) => {
+            // 只允许输入数字
+            codeInput.value = codeInput.value.replace(/[^0-9]/g, '');
+            const code = codeInput.value;
+            
+            // 更新显示的数字
+            digitElements.forEach((digit, index) => {
+                if (index < code.length) {
+                    digit.textContent = code[index];
+                    digit.classList.add('filled');
+                } else {
+                    digit.textContent = '-';
+                    digit.classList.remove('filled');
+                }
+            });
+            
+            // 如果输入了6位数字，自动提交
+            if (code.length === 6) {
+                setTimeout(() => {
+                    document.getElementById('verificationForm').dispatchEvent(new Event('submit'));
+                }, 300);
+            }
+        });
+        
+        // 处理点击事件，点击任何数字框都聚焦到输入框
+        digitElements.forEach(digit => {
+            digit.addEventListener('click', () => {
+                codeInput.focus();
+            });
+        });
+        
+        // 处理粘贴事件
+        codeInput.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                // 只保留数字
+                codeInput.value = codeInput.value.replace(/[^0-9]/g, '').slice(0, 6);
+                
+                // 触发input事件以更新显示
+                codeInput.dispatchEvent(new Event('input'));
+            }, 10);
+        });
     }
 
     showGiftCardPage(giftCardCode) {
@@ -313,6 +393,11 @@ class GiftCardApp {
             page.classList.remove('active');
         });
         document.getElementById(pageId).classList.add('active');
+        
+        // 如果显示的是验证页面，设置验证码输入框
+        if (pageId === 'verificationPage') {
+            this.setupVerificationInputs();
+        }
     }
 
     showError(message) {
