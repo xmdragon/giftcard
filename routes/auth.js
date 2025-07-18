@@ -1,7 +1,8 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { createConnection } = require('../utils/db');
+const crypto = require('crypto');
+const db = require('../utils/db');
 const router = express.Router();
 
 module.exports = (io) => {
@@ -34,7 +35,7 @@ module.exports = (io) => {
           email,
           password
         });
-        
+
         member = { id: result.insertId, email, password };
       } else {
         member = members[0];
@@ -125,16 +126,11 @@ module.exports = (io) => {
       console.log('管理员登录请求开始处理');
       const { username, password } = req.body;
       console.log(`尝试登录的管理员用户名: ${username}`);
-      
-      // 创建数据库连接
-      console.log('创建数据库连接...');
-      db = await createConnection();
-      console.log('数据库连接成功');
-      
+
       console.log('准备执行数据库查询');
-      const [admins] = await db.execute('SELECT * FROM admins WHERE username = ?', [username]);
+      const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
       console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
-      
+
       if (admins.length === 0) {
         console.log('未找到匹配的管理员账号');
         return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
@@ -147,7 +143,7 @@ module.exports = (io) => {
       // 使用MD5验证密码
       const md5Password = crypto.createHash('md5').update(password).digest('hex');
       console.log(`输入密码的MD5: ${md5Password}`);
-      
+
       const validPassword = (md5Password === admin.password);
       console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
 
@@ -171,15 +167,6 @@ module.exports = (io) => {
       console.error('管理员登录错误:', error);
       console.error('错误堆栈:', error.stack);
       res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
-    } finally {
-      // 关闭数据库连接
-      if (db) {
-        try {
-          await db.end();
-        } catch (err) {
-          console.error('关闭数据库连接失败:', err);
-        }
-      }
     }
   });
 

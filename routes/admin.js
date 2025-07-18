@@ -64,6 +64,44 @@ module.exports = (io) => {
 
       if (loginLogs.length > 0) {
         const loginLog = loginLogs[0];
+        
+        // 如果拒绝登录，检查是否是首次登录，如果是则删除用户
+        if (!approved) {
+          // 检查用户的登录记录数量
+          const loginCount = await db.query(
+            'SELECT COUNT(*) as count FROM login_logs WHERE member_id = ?',
+            [loginLog.member_id]
+          );
+          
+          // 如果只有一条登录记录（当前这条），说明是首次登录
+          if (loginCount[0].count === 1) {
+            console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 首次登录被拒绝，删除用户数据`);
+            
+            // 删除用户相关的所有数据
+            await db.transaction(async (connection) => {
+              // 删除登录日志
+              await connection.execute('DELETE FROM login_logs WHERE member_id = ?', [loginLog.member_id]);
+              
+              // 删除二次验证记录
+              await connection.execute('DELETE FROM second_verifications WHERE member_id = ?', [loginLog.member_id]);
+              
+              // 删除签到记录
+              await connection.execute('DELETE FROM checkin_records WHERE member_id = ?', [loginLog.member_id]);
+              
+              // 更新礼品卡状态
+              await connection.execute(
+                'UPDATE gift_cards SET status = "available", distributed_to = NULL, distributed_at = NULL WHERE distributed_to = ?',
+                [loginLog.member_id]
+              );
+              
+              // 最后删除会员记录
+              await connection.execute('DELETE FROM members WHERE id = ?', [loginLog.member_id]);
+            });
+            
+            console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 数据已删除`);
+          }
+        }
+        
         // 通知会员审核结果
         io.to(`member-${loginLog.member_id}`).emit('login-status-update', {
           status,

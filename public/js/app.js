@@ -394,9 +394,27 @@ class GiftCardApp {
         });
         document.getElementById(pageId).classList.add('active');
         
+        // 清除所有状态消息
+        this.clearStatusMessages();
+        
         // 如果显示的是验证页面，设置验证码输入框
         if (pageId === 'verificationPage') {
             this.setupVerificationInputs();
+        }
+    }
+    
+    // 清除所有状态消息
+    clearStatusMessages() {
+        // 清除登录状态消息
+        const loginStatus = document.getElementById('loginStatus');
+        if (loginStatus) {
+            loginStatus.innerHTML = '';
+        }
+        
+        // 清除验证状态消息
+        const verificationStatus = document.getElementById('verificationStatus');
+        if (verificationStatus) {
+            verificationStatus.innerHTML = '';
         }
     }
 
