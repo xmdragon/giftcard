@@ -38,7 +38,9 @@
             </header>
 
             <nav class="admin-nav">
-                <button class="nav-btn active" data-section="pending">待审核</button>
+                <button class="nav-btn active" data-section="pending" id="pendingNavBtn">
+                    待审核 (<span id="navPendingCount">0</span>)
+                </button>
                 <button class="nav-btn" data-section="members">会员管理</button>
                 <button class="nav-btn" data-section="giftcards">礼品卡管理</button>
                 <button class="nav-btn" data-section="categories">分类管理</button>
@@ -54,8 +56,12 @@
                     </div>
 
                     <div class="pending-tabs">
-                        <button class="tab-btn active" data-tab="loginRequests">登录请求</button>
-                        <button class="tab-btn" data-tab="verificationRequests">验证请求</button>
+                        <button class="tab-btn active" data-tab="loginRequests">
+                            登录请求 (<span id="loginRequestsCount">0</span>)
+                        </button>
+                        <button class="tab-btn" data-tab="verificationRequests">
+                            验证请求 (<span id="verificationRequestsCount">0</span>)
+                        </button>
                     </div>
 
                     <div id="loginRequestsTab" class="tab-content active">

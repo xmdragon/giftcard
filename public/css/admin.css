@@ -881,3 +881,154 @@ code {
         min-width: 50px;
     }
 }
+
+/* 标签通知徽章样式 */
+.tab-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.tab-btn {
+    position: relative;
+}
+
+/* 导航按钮通知徽章样式 */
+.nav-btn {
+    position: relative;
+}
+
+.nav-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+/* 确保徽章显示 */
+.notification-badge {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 隐藏计数为0的徽章 */
+.notification-badge:empty,
+.notification-badge[style*="display: none"] {
+    display: none !important;
+}/* 标签按钮
+包装器样式 */
+.tab-btn-wrapper {
+    position: relative;
+    flex: 1;
+}
+
+/* 标签通知徽章样式 */
+.tab-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    z-index: 10;
+}
+
+/* 导航按钮通知徽章样式 */
+.nav-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    z-index: 10;
+}
+
+/* 隐藏计数为0的徽章 */
+.notification-badge:empty,
+.notification-badge[style*="display: none"] {
+    display: none !important;
+}/* 修复徽章样式 *
+/
+.nav-btn-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.tab-btn-wrapper .tab-btn {
+    width: 100%;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 确保徽章在按钮上方显示 */
+.tab-badge, .nav-badge {
+    pointer-events: none;
+}/*
+ 标签内的徽章样式 */
+.badge {
+    display: inline-block;
+    background-color: #ff3b30;
+    color: white;
+    border-radius: 50%;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+    margin-left: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 隐藏计数为0的徽章 */
+.badge:empty,
+.badge[style*="display: none"] {
+    display: none !important;
+}/* 
+徽章样式 */
+.badge {
+    display: inline-block;
+    background-color: #ff3b30;
+    color: white;
+    border-radius: 12px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    font-size: 12px;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+    margin-left: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}

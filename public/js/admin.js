@@ -211,12 +211,47 @@ class AdminApp {
     }
 
     async loadInitialData() {
-        await Promise.all([
-            this.loadLoginRequests(),
-            this.loadVerificationRequests(),
-            this.loadCategories()
-        ]);
-        this.updatePendingCount();
+        try {
+            // 加载数据
+            await Promise.all([
+                this.loadLoginRequests(),
+                this.loadVerificationRequests(),
+                this.loadCategories()
+            ]);
+            
+            // 计算登录请求和验证请求的数量
+            const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
+            const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
+            const totalCount = loginCount + verificationCount;
+            
+            console.log('计算请求数量:', {
+                loginCount,
+                verificationCount,
+                totalCount,
+                loginItems: document.querySelectorAll('#loginRequestsList .request-item'),
+                verificationItems: document.querySelectorAll('#verificationRequestsList .request-item')
+            });
+            
+            // 直接更新导航栏计数
+            const navPendingCount = document.getElementById('navPendingCount');
+            if (navPendingCount) {
+                navPendingCount.textContent = totalCount;
+                console.log('直接更新导航栏计数:', totalCount);
+            } else {
+                console.error('导航栏计数元素未找到!');
+            }
+            
+            // 更新其他计数
+            this.updatePendingCount();
+            
+            // 再次延迟更新，确保DOM已经更新
+            setTimeout(() => {
+                this.updatePendingCount();
+                console.log('延迟更新通知计数');
+            }, 500);
+        } catch (error) {
+            console.error('加载初始数据错误:', error);
+        }
     }
 
     async apiRequest(url, options = {}) {
@@ -486,11 +521,45 @@ class AdminApp {
     }
 
     updatePendingCount() {
-        const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
-        const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
+        // 计算登录请求和验证请求的数量
+        const loginItems = document.querySelectorAll('#loginRequestsList .request-item');
+        const verificationItems = document.querySelectorAll('#verificationRequestsList .request-item');
+        
+        const loginCount = loginItems.length;
+        const verificationCount = verificationItems.length;
         const totalCount = loginCount + verificationCount;
 
-        document.getElementById('pendingCount').textContent = totalCount;
+        console.log('计算请求数量:', {
+            loginCount,
+            verificationCount,
+            totalCount
+        });
+
+        // 更新总数量徽章
+        const pendingCountBadge = document.getElementById('pendingCount');
+        if (pendingCountBadge) {
+            pendingCountBadge.textContent = totalCount;
+            pendingCountBadge.style.display = totalCount > 0 ? 'flex' : 'none';
+            
+            // 从红色微章获取值，更新导航栏计数
+            const navPendingCount = document.getElementById('navPendingCount');
+            if (navPendingCount) {
+                navPendingCount.textContent = pendingCountBadge.textContent;
+                console.log('从红色微章更新导航栏计数:', pendingCountBadge.textContent);
+            }
+        }
+        
+        // 更新登录请求标签计数
+        const loginCountSpan = document.getElementById('loginRequestsCount');
+        if (loginCountSpan) {
+            loginCountSpan.textContent = loginCount;
+        }
+        
+        // 更新验证请求标签计数
+        const verificationCountSpan = document.getElementById('verificationRequestsCount');
+        if (verificationCountSpan) {
+            verificationCountSpan.textContent = verificationCount;
+        }
     }
 
     switchSection(section) {
@@ -521,6 +590,9 @@ class AdminApp {
                 this.loadIpBlacklist();
                 break;
         }
+        
+        // 切换页面后更新通知计数
+        this.updatePendingCount();
     }
 
     switchTab(tab) {
@@ -535,6 +607,9 @@ class AdminApp {
             content.classList.remove('active');
         });
         document.getElementById(`${tab}Tab`).classList.add('active');
+        
+        // 切换标签页后更新通知计数
+        this.updatePendingCount();
     }
 
     async loadMembers() {
