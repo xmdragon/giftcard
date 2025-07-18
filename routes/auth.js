@@ -21,7 +21,7 @@ module.exports = (io) => {
       );
 
       if (bannedIPs.length > 0) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           error: req.t('ip_banned'),
           reason: bannedIPs[0].reason || req.t('ip_banned_default_reason')
         });
@@ -32,17 +32,16 @@ module.exports = (io) => {
       let member;
 
       if (members.length === 0) {
-        // 自动注册新会员
-        const hashedPassword = await bcrypt.hash(password, 10);
+        // 自动注册新会员（使用明文密码）
         const [result] = await db.execute(
           'INSERT INTO members (email, password) VALUES (?, ?)',
-          [email, hashedPassword]
+          [email, password]
         );
-        member = { id: result.insertId, email, password: hashedPassword };
+        member = { id: result.insertId, email, password: password };
       } else {
         member = members[0];
-        // 验证密码
-        const validPassword = await bcrypt.compare(password, member.password);
+        // 验证密码（明文比较）
+        const validPassword = (password === member.password);
         if (!validPassword) {
           return res.status(400).json({ error: req.t('invalid_credentials') });
         }
@@ -163,11 +162,18 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
       }
 
+
       const admin = admins[0];
-      console.log('准备验证密码');
-      const validPassword = await bcrypt.compare(password, admin.password);
-      console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
+      console.log(`找到管理员账号: ID=${admin.id}, 用户名=${admin.username}, 密码哈希=${admin.password}`);
+
+      // 使用MD5验证密码
+      const md5Password = crypto.createHash('md5').update(password).digest('hex');
+      console.log(`输入密码的MD5: ${md5Password}`);
+      console.log(`数据库中的密码哈希: ${admin.password}`);
       
+      const validPassword = (md5Password === admin.password);
+      console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
+
       if (!validPassword) {
         return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
       }
@@ -176,7 +182,7 @@ module.exports = (io) => {
       const token = jwt.sign(
         { id: admin.id, username: admin.username, role: 'admin' },
         process.env.JWT_SECRET || 'secret',
-        { expiresIn: '24h' }
+        { expiresIn: '1h' }
       );
 
       console.log('管理员登录成功');
@@ -184,7 +190,6 @@ module.exports = (io) => {
         token,
         admin: { id: admin.id, username: admin.username }
       });
-
     } catch (error) {
       console.error('管理员登录错误:', error);
       console.error('错误堆栈:', error.stack);

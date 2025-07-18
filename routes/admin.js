@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
+const { createConnection } = require('../utils/db');
 
-module.exports = (db, io) => {
+module.exports = (io) => {
   // JWT验证中间件
   const authenticateAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
@@ -23,7 +24,10 @@ module.exports = (db, io) => {
 
   // 获取待审核的登录请求
   router.get('/login-requests', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const [requests] = await db.execute(`
         SELECT ll.*, m.email 
         FROM login_logs ll 
@@ -35,12 +39,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取登录请求错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 审核登录请求
   router.post('/approve-login/:id', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { id } = req.params;
       const { approved } = req.body;
       const status = approved ? 'approved' : 'rejected';
@@ -70,12 +86,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('审核登录请求错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取待审核的验证请求
   router.get('/verification-requests', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const [requests] = await db.execute(`
         SELECT sv.*, m.email 
         FROM second_verifications sv 
@@ -87,12 +115,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取验证请求错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 审核验证请求
   router.post('/approve-verification/:id', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { id } = req.params;
       const { approved } = req.body;
       const status = approved ? 'approved' : 'rejected';
@@ -154,12 +194,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('审核验证请求错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取会员列表
   router.get('/members', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const [members] = await db.execute(`
         SELECT m.*, 
                COUNT(DISTINCT ll.id) as login_count,
@@ -179,23 +231,47 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取会员列表错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取礼品卡分类
   router.get('/gift-card-categories', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const [categories] = await db.execute('SELECT * FROM gift_card_categories ORDER BY name');
       res.json(categories);
     } catch (error) {
       console.error('获取礼品卡分类错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 添加礼品卡分类
   router.post('/gift-card-categories', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { name, description } = req.body;
       const [result] = await db.execute(
         'INSERT INTO gift_card_categories (name, description) VALUES (?, ?)',
@@ -205,12 +281,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('添加礼品卡分类错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 批量添加礼品卡
   router.post('/gift-cards/batch', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { categoryId, codes, cardType = 'login' } = req.body;
       const codeList = codes.split('\n').filter(code => code.trim());
       
@@ -230,12 +318,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('批量添加礼品卡错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取礼品卡列表
   router.get('/gift-cards', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { category, status, page = 1, limit = 50 } = req.query;
       let query = `
         SELECT gc.*, gcc.name as category_name, m.email as distributed_to_email
@@ -264,12 +364,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取礼品卡列表错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取IP黑名单
   router.get('/ip-blacklist', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const [blacklist] = await db.execute(`
         SELECT ib.*, a.username as banned_by_username,
                COUNT(DISTINCT ll.member_id) as affected_members
@@ -283,12 +395,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取IP黑名单错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 禁止IP
   router.post('/ban-ip', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { ipAddress, reason } = req.body;
       
       if (!ipAddress) {
@@ -315,12 +439,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('禁止IP错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 解禁IP
   router.post('/unban-ip/:id', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { id } = req.params;
 
       await db.execute(
@@ -332,12 +468,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('解禁IP错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 获取IP登录历史
   router.get('/ip-history/:ip', authenticateAdmin, async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { ip } = req.params;
       const [history] = await db.execute(`
         SELECT ll.*, m.email, m.created_at as member_created_at
@@ -352,6 +500,15 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('获取IP历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 

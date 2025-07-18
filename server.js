@@ -36,7 +36,7 @@ i18next
     },
     detection: {
       order: ['header', 'querystring', 'cookie'],
-      caches: ['cookie']
+      caches: [] // 禁用缓存
     }
   });
 
@@ -202,7 +202,8 @@ async function createTables() {
 async function createDefaultAdmin() {
   const [existing] = await db.execute('SELECT id FROM admins WHERE username = ?', ['admin']);
   if (existing.length === 0) {
-    const hashedPassword = await bcrypt.hash('admin123', 10);
+    const crypto = require('crypto');
+    const hashedPassword = crypto.createHash('md5').update('admin123').digest('hex');
     await db.execute('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hashedPassword]);
     console.log('默认管理员账号创建完成');
   }
@@ -249,8 +250,8 @@ const createMemberRoutes = require('./routes/member');
 // 启动服务器
 async function startServer() {
   try {
-    // 先初始化数据库
-    await initDatabase();
+    // 先初始化数据库，并确保获取到数据库连接对象
+    db = await initDatabase();
     
     // 创建路由（不再传递数据库连接对象）
     const authRoutes = createAuthRoutes(io);
