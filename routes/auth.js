@@ -1,21 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-<<<<<<< HEAD
-const crypto = require('crypto');
-const db = require('../utils/db');
-const router = express.Router();
-
-module.exports = (io) => {
-  console.log('认证路由模块初始化');
-  console.log(`Socket.IO对象: ${io ? '已定义' : '未定义'}`);
-  
-=======
 const { createConnection } = require('../utils/db');
 const router = express.Router();
 
 module.exports = (io) => {
->>>>>>> 2664d93ce3ba24c58c342b259ced03e86c49f423
   // 会员登录
   router.post('/member/login', async (req, res) => {
     try {
