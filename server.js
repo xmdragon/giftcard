@@ -88,23 +88,9 @@ async function startServer() {
     // 初始化数据库
     await initDatabase();
     
-    console.log('数据库初始化完成，创建路由...');
-    
-    // 测试数据库连接
-    try {
-      const testResult = await db.query('SELECT 1 as test');
-      console.log(`数据库测试查询结果: ${JSON.stringify(testResult)}`);
-    } catch (dbError) {
-      console.error('数据库测试查询失败:', dbError);
-      throw dbError;
-    }
-    
-    // 创建路由
-    console.log('创建认证路由...');
+    // 创建路由（不再传递数据库连接对象）
     const authRoutes = createAuthRoutes(io);
-    console.log('创建管理员路由...');
     const adminRoutes = createAdminRoutes(io);
-    console.log('创建会员路由...');
     const memberRoutes = createMemberRoutes(io);
     
     // 使用路由
