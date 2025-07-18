@@ -252,10 +252,10 @@ async function startServer() {
     // 先初始化数据库
     await initDatabase();
     
-    // 确保数据库连接成功后再创建路由
-    const authRoutes = createAuthRoutes(db, io);
-    const adminRoutes = createAdminRoutes(db, io);
-    const memberRoutes = createMemberRoutes(db, io);
+    // 创建路由（不再传递数据库连接对象）
+    const authRoutes = createAuthRoutes(io);
+    const adminRoutes = createAdminRoutes(io);
+    const memberRoutes = createMemberRoutes(io);
     
     // 使用路由
     app.use('/api/auth', authRoutes);

@@ -1,12 +1,16 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { createConnection } = require('../utils/db');
 const router = express.Router();
 
-module.exports = (db, io) => {
+module.exports = (io) => {
   // 会员登录
   router.post('/member/login', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { email, password } = req.body;
       const clientIP = req.ip || req.connection.remoteAddress;
 
@@ -68,12 +72,24 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('登录错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 提交二次验证码
   router.post('/member/verify', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
+      db = await createConnection();
       const { loginId, verificationCode } = req.body;
 
       // 获取登录记录
@@ -112,21 +128,31 @@ module.exports = (db, io) => {
     } catch (error) {
       console.error('验证错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
   // 管理员登录
   router.post('/admin/login', async (req, res) => {
+    // 创建数据库连接
+    let db = null;
     try {
       console.log('管理员登录请求开始处理');
       const { username, password } = req.body;
       console.log(`尝试登录的管理员用户名: ${username}`);
       
-      // 检查数据库连接
-      if (!db) {
-        console.error('数据库连接对象为空');
-        return res.status(500).json({ error: '数据库连接失败，请稍后重试' });
-      }
+      // 创建数据库连接
+      console.log('创建数据库连接...');
+      db = await createConnection();
+      console.log('数据库连接成功');
       
       console.log('准备执行数据库查询');
       const [admins] = await db.execute('SELECT * FROM admins WHERE username = ?', [username]);
@@ -163,6 +189,15 @@ module.exports = (db, io) => {
       console.error('管理员登录错误:', error);
       console.error('错误堆栈:', error.stack);
       res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+    } finally {
+      // 关闭数据库连接
+      if (db) {
+        try {
+          await db.end();
+        } catch (err) {
+          console.error('关闭数据库连接失败:', err);
+        }
+      }
     }
   });
 
