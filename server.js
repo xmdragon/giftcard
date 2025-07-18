@@ -126,6 +126,11 @@ async function startServer() {
       res.sendFile(path.join(__dirname, 'public', 'admin.html'));
     });
 
+    // favicon.ico路由
+    app.get('/favicon.ico', (req, res) => {
+      res.sendFile(path.join(__dirname, 'favicon.ico'));
+    });
+    
     // 默认路由
     app.get('/', (req, res) => {
       res.sendFile(path.join(__dirname, 'public', 'index.html'));

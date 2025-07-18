@@ -119,6 +119,18 @@ class AdminApp {
             this.addVerificationRequest(data);
             this.updatePendingCount();
         });
+        
+        // 更新验证请求
+        this.socket.on('update-verification-request', (data) => {
+            console.log('收到更新验证请求事件:', data);
+            // 清空验证请求列表
+            const container = document.getElementById('verificationRequestsList');
+            container.innerHTML = '<p>正在刷新验证请求...</p>';
+            // 重新加载所有验证请求
+            setTimeout(() => {
+                this.loadVerificationRequests();
+            }, 100);
+        });
 
         // 加入管理员房间
         this.socket.emit('join-admin');

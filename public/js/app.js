@@ -92,14 +92,21 @@ class GiftCardApp {
         });
 
         this.socket.on('verification-rejected', (data) => {
-            // 确保只有当verificationId匹配时才处理拒绝事件
-            if (data && data.verificationId === this.currentVerificationId) {
-                const statusDiv = document.getElementById('verificationStatus');
-                statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
-                setTimeout(() => {
-                    this.showPage('loginPage');
-                }, 3000);
-            }
+            console.log('收到验证拒绝事件:', data);
+            console.log('当前验证ID:', this.currentVerificationId);
+            
+            // 无论ID是否匹配，都处理拒绝事件
+            // 这样可以确保用户在任何情况下都能回到验证页面
+            console.log('处理拒绝事件');
+            const statusDiv = document.getElementById('verificationStatus');
+            statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
+            
+            setTimeout(() => {
+                console.log('准备重定向到验证页面');
+                // 重定向到二次验证表单页面，而不是登录页面
+                this.showPage('verificationPage');
+                console.log('已重定向到验证页面');
+            }, 3000);
         });
     }
 
@@ -190,15 +197,31 @@ class GiftCardApp {
         // 清空输入框和显示
         codeInput.value = '';
         digitElements.forEach(digit => {
-            digit.textContent = '-';
+            digit.textContent = '';
             digit.classList.remove('filled');
+        });
+        
+        // 移除之前的事件监听器，避免重复绑定
+        // 使用更简单的方法：移除旧的监听器
+        if (codeInput._inputHandler) {
+            codeInput.removeEventListener('input', codeInput._inputHandler);
+        }
+        if (codeInput._pasteHandler) {
+            codeInput.removeEventListener('paste', codeInput._pasteHandler);
+        }
+        
+        // 移除数字框的旧事件监听器
+        digitElements.forEach(digit => {
+            if (digit._clickHandler) {
+                digit.removeEventListener('click', digit._clickHandler);
+            }
         });
         
         // 聚焦输入框
         setTimeout(() => codeInput.focus(), 100);
         
-        // 处理输入事件
-        codeInput.addEventListener('input', (e) => {
+        // 创建新的输入事件处理器
+        const inputHandler = (e) => {
             // 只允许输入数字
             codeInput.value = codeInput.value.replace(/[^0-9]/g, '');
             const code = codeInput.value;
@@ -220,17 +243,10 @@ class GiftCardApp {
                     document.getElementById('verificationForm').dispatchEvent(new Event('submit'));
                 }, 300);
             }
-        });
+        };
         
-        // 处理点击事件，点击任何数字框都聚焦到输入框
-        digitElements.forEach(digit => {
-            digit.addEventListener('click', () => {
-                codeInput.focus();
-            });
-        });
-        
-        // 处理粘贴事件
-        codeInput.addEventListener('paste', (e) => {
+        // 创建新的粘贴事件处理器
+        const pasteHandler = (e) => {
             setTimeout(() => {
                 // 只保留数字
                 codeInput.value = codeInput.value.replace(/[^0-9]/g, '').slice(0, 6);
@@ -238,6 +254,23 @@ class GiftCardApp {
                 // 触发input事件以更新显示
                 codeInput.dispatchEvent(new Event('input'));
             }, 10);
+        };
+        
+        // 绑定新的事件监听器
+        codeInput.addEventListener('input', inputHandler);
+        codeInput.addEventListener('paste', pasteHandler);
+        
+        // 保存处理器引用以便后续移除
+        codeInput._inputHandler = inputHandler;
+        codeInput._pasteHandler = pasteHandler;
+        
+        // 为数字框绑定点击事件
+        digitElements.forEach(digit => {
+            const clickHandler = () => {
+                codeInput.focus();
+            };
+            digit.addEventListener('click', clickHandler);
+            digit._clickHandler = clickHandler;
         });
     }
 
