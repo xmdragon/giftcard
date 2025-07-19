@@ -84,8 +84,32 @@ check_restart_nginx() {
     fi
 }
 
+is_cert_expired() {
+  local cert_file="ssl/fullchain.pem"
+  if [[ ! -f "$cert_file" ]]; then
+    return 0 # 视为已过期
+  fi
+  local end_date=$(openssl x509 -enddate -noout -in "$cert_file" | cut -d= -f2)
+  local end_ts=$(date -d "$end_date" +%s)
+  local now_ts=$(date +%s)
+  local days_left=$(( (end_ts - now_ts) / 86400 ))
+  if (( days_left < 7 )); then
+    log_warning "SSL证书即将过期（剩余 $days_left 天），将自动申请新证书"
+    return 0
+  else
+    log_info "SSL证书有效，剩余 $days_left 天，跳过证书申请"
+    return 1
+  fi
+}
+
 check_ssl_cert() {
     local domain=$1
+    if [[ -f "ssl/fullchain.pem" && -f "ssl/privkey.pem" ]]; then
+      if ! is_cert_expired; then
+        log_info "检测到已存在且有效的SSL证书，跳过证书申请"
+        return 0
+      fi
+    fi
     if [[ -f "get-ssl-cert.sh" ]]; then
         log_info "检测到 SSL 证书申请脚本"
         if [[ "$AUTO_MODE" == "1" ]]; then
@@ -132,6 +156,23 @@ show_completion_info() {
     echo ""
 }
 
+fix_ssl_permissions() {
+  if [[ -f "ssl/fullchain.pem" && -f "ssl/privkey.pem" ]]; then
+    chmod 644 ssl/fullchain.pem ssl/privkey.pem
+    log_success "已自动修正证书文件权限"
+  fi
+}
+
+fix_docker_compose_ssl_mount() {
+  if [[ -f "docker-compose.yml" ]]; then
+    if ! grep -q './ssl:/etc/nginx/ssl:ro' docker-compose.yml; then
+      # 在nginx服务的volumes下插入ssl挂载
+      awk '/nginx:/ {print; in_nginx=1; next} in_nginx && /volumes:/ {print; print "      - ./ssl:/etc/nginx/ssl:ro"; in_nginx=0; next} 1' docker-compose.yml > docker-compose.yml.tmp && mv docker-compose.yml.tmp docker-compose.yml
+      log_success "已自动为nginx服务添加ssl挂载"
+    fi
+  fi
+}
+
 main() {
     echo ""
     log_info "=== 礼品卡系统 - 域名更新脚本（增强版） ==="
@@ -152,6 +193,8 @@ main() {
     add_http_to_https_redirect
     check_ssl_cert_path
     check_ssl_cert "$DOMAIN"
+    fix_ssl_permissions
+    fix_docker_compose_ssl_mount
     check_restart_nginx
     show_completion_info "$DOMAIN"
 }
