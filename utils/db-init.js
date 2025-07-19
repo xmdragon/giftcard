@@ -19,18 +19,8 @@ async function initDatabase() {
   let connected = false;
   let db;
 
-  console.log(`=== 数据库连接信息 ===`);
-  console.log(`主机: ${dbConfig.host}`);
-  console.log(`用户: ${dbConfig.user}`);
-  console.log(`数据库: ${dbConfig.database}`);
-  console.log(`环境变量DB_HOST: ${process.env.DB_HOST || '未设置'}`);
-  console.log(`环境变量NODE_ENV: ${process.env.NODE_ENV || '未设置'}`);
-  console.log(`=====================`);
-
   while (retries > 0 && !connected) {
     try {
-      console.log(`[尝试 ${16 - retries}/15] 连接到数据库: ${dbConfig.host}:3306, 用户: ${dbConfig.user}`);
-
       // 添加连接超时设置和字符集设置
       db = await mysql.createConnection({
         ...dbConfig,
@@ -41,11 +31,9 @@ async function initDatabase() {
       });
 
       connected = true;
-      console.log('✅ 数据库连接成功');
 
       // 测试数据库连接
       const [testResult] = await db.execute('SELECT 1 as test');
-      console.log(`✅ 数据库连接测试成功: ${JSON.stringify(testResult)}`);
 
       // 创建数据库表
       await createTables(db);
@@ -53,27 +41,11 @@ async function initDatabase() {
 
       return db; // 返回数据库连接对象
     } catch (error) {
-      console.error('❌ 数据库连接失败:');
-      console.error(`错误代码: ${error.code}`);
-      console.error(`错误消息: ${error.message}`);
-
-      if (error.code === 'ECONNREFUSED') {
-        console.error(`无法连接到数据库服务器，请确保MySQL服务正在运行且可以访问`);
-        console.error(`如果MySQL在Docker中运行，请确保端口已正确映射`);
-      } else if (error.code === 'ER_ACCESS_DENIED_ERROR') {
-        console.error(`访问被拒绝，请检查用户名和密码是否正确`);
-      } else if (error.code === 'ER_BAD_DB_ERROR') {
-        console.error(`数据库 ${dbConfig.database} 不存在，请先创建数据库`);
-      }
-
       retries--;
       if (retries > 0) {
         const waitTime = 5000; // 5秒
-        console.log(`⏳ 将在 ${waitTime / 1000} 秒后重试连接...`);
         await new Promise(resolve => setTimeout(resolve, waitTime));
       } else {
-        console.error('❌ 达到最大重试次数，无法连接到数据库');
-        console.error('请检查数据库配置和网络连接');
         throw new Error('无法连接到数据库，请检查配置和网络连接');
       }
     }
@@ -170,6 +142,7 @@ async function createTables(db) {
       id INT AUTO_INCREMENT PRIMARY KEY,
       username VARCHAR(50) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
+      role ENUM('super','admin') NOT NULL DEFAULT 'admin',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
@@ -187,8 +160,6 @@ async function createTables(db) {
       UNIQUE KEY unique_ip (ip_address)
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
-
-  console.log('数据库表创建完成');
 }
 
 // 创建默认管理员账号
@@ -198,8 +169,7 @@ async function createDefaultAdmin(db) {
     if (existing.length === 0) {
       // 使用MD5加密密码（在实际生产环境中应使用更安全的方法）
       const hashedPassword = crypto.createHash('md5').update('admin123').digest('hex');
-      await db.execute('INSERT INTO admins (username, password) VALUES (?, ?)', ['admin', hashedPassword]);
-      console.log('默认管理员账号创建完成');
+      await db.execute('INSERT INTO admins (username, password, role) VALUES (?, ?, ?)', ['admin', hashedPassword, 'super']);
     }
   } catch (error) {
     console.error('创建默认管理员失败:', error);

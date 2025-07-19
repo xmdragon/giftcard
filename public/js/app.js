@@ -22,7 +22,6 @@ class GiftCardApp {
     // 检查是否有未完成的登录会话
     checkPendingSession() {
         if (this.currentLoginId && this.currentMemberId) {
-            console.log('检测到未完成的登录会话，发送取消请求');
             
             // 发送取消请求
             fetch('/api/auth/member/cancel', {
@@ -36,19 +35,15 @@ class GiftCardApp {
                 })
             }).then(response => {
                 if (response.ok) {
-                    console.log('已清理未完成的登录会话');
                 } else {
-                    console.error('清理未完成的登录会话失败:', response.status, response.statusText);
                     // 记录详细错误信息
                     return response.text().then(text => {
-                        console.error('错误详情:', text);
                     });
                 }
             }).then(() => {
                 // 清除本地存储和会话状态
                 this.clearSession();
             }).catch(error => {
-                console.error('清理未完成的登录会话失败:', error);
                 // 即使失败也清除会话状态，避免卡在错误状态
                 this.clearSession();
             });
@@ -127,7 +122,6 @@ class GiftCardApp {
                 
                 // 使用正确的路径
                 navigator.sendBeacon('/api/auth/member/cancel', data);
-                console.log('已发送取消请求:', data);
             }
         });
         
@@ -138,7 +132,6 @@ class GiftCardApp {
             const savedMemberId = localStorage.getItem('currentMemberId');
             
             if (savedLoginId && savedMemberId) {
-                console.log('检测到未完成的登录会话，发送取消请求');
                 
                 // 发送取消请求
                 fetch('/api/auth/member/cancel', {
@@ -151,12 +144,7 @@ class GiftCardApp {
                         memberId: savedMemberId
                     })
                 }).then(() => {
-                    console.log('已清理未完成的登录会话');
-                    // 清除本地存储
-                    localStorage.removeItem('currentLoginId');
-                    localStorage.removeItem('currentMemberId');
                 }).catch(error => {
-                    console.error('清理未完成的登录会话失败:', error);
                 });
             }
         });
@@ -194,20 +182,16 @@ class GiftCardApp {
         });
 
         this.socket.on('verification-rejected', (data) => {
-            console.log('收到验证拒绝事件:', data);
-            console.log('当前验证ID:', this.currentVerificationId);
             
             // 无论ID是否匹配，都处理拒绝事件
             // 这样可以确保用户在任何情况下都能回到验证页面
-            console.log('处理拒绝事件');
+            
             const statusDiv = document.getElementById('verificationStatus');
             statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
             
             setTimeout(() => {
-                console.log('准备重定向到验证页面');
                 // 重定向到二次验证表单页面，而不是登录页面
                 this.showPage('verificationPage');
-                console.log('已重定向到验证页面');
             }, 3000);
         });
     }
@@ -243,7 +227,6 @@ class GiftCardApp {
                 this.showError(data.error);
             }
         } catch (error) {
-            console.error('登录错误:', error);
             this.showError('网络错误，请重试');
         }
     }
@@ -252,7 +235,6 @@ class GiftCardApp {
         // 获取验证码输入框的值
         const verificationCode = document.getElementById('verificationCode').value;
         
-        console.log('提交的验证码:', verificationCode);
         
         // 验证是否填写完整
         if (verificationCode.length !== 6) {
@@ -289,7 +271,6 @@ class GiftCardApp {
                 });
             }
         } catch (error) {
-            console.error('验证错误:', error);
             this.showError('网络错误，请重试');
         }
     }
@@ -420,7 +401,6 @@ class GiftCardApp {
                 checkinBtn.disabled = true;
             }
         } catch (error) {
-            console.error('检查签到资格错误:', error);
         }
     }
 
@@ -452,7 +432,6 @@ class GiftCardApp {
                 resultDiv.innerHTML = `<div class="status-message error">${data.error}</div>`;
             }
         } catch (error) {
-            console.error('签到错误:', error);
             document.getElementById('checkinResult').innerHTML = 
                 `<div class="status-message error">网络错误，请重试</div>`;
         }
@@ -484,7 +463,6 @@ class GiftCardApp {
                 </div>
             `).join('');
         } catch (error) {
-            console.error('加载礼品卡历史错误:', error);
         }
     }
 
@@ -509,7 +487,6 @@ class GiftCardApp {
                 </div>
             `).join('');
         } catch (error) {
-            console.error('加载签到历史错误:', error);
         }
     }
 

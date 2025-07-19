@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS admins (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
   password VARCHAR(255) NOT NULL,
+  role ENUM('super','admin') NOT NULL DEFAULT 'admin',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -92,7 +93,7 @@ CREATE TABLE IF NOT EXISTS ip_blacklist (
 );
 
 -- 插入默认管理员账号 (密码: admin123, MD5格式)
-INSERT INTO admins (username, password) VALUES ('admin', '0192023a7bbd73250516f069df18b500');
+INSERT INTO admins (username, password, role) VALUES ('admin', '0192023a7bbd73250516f069df18b500', 'super');
 
 -- 插入默认礼品卡分类
 INSERT INTO gift_card_categories (name, description) VALUES 

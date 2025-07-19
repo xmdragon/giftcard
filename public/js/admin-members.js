@@ -91,12 +91,10 @@
                 email: this.membersState.searchEmail
             });
 
-            console.log('正在加载会员列表，参数:', params.toString());
             const response = await this.apiRequest(`/api/admin/members?${params}`);
 
             if (response && response.ok) {
                 const data = await response.json();
-                console.log('会员列表API返回数据:', data);
 
                 // 检查数据格式
                 if (data && typeof data === 'object') {
@@ -109,7 +107,6 @@
                     }
                     // 旧格式：直接是会员数组
                     else if (Array.isArray(data)) {
-                        console.log('使用旧格式数据');
                         this.displayMembers(data);
                         // 为旧格式创建默认分页信息
                         this.updateMembersPagination({

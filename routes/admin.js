@@ -14,12 +14,20 @@ module.exports = (io) => {
 
     const jwt = require('jsonwebtoken');
     jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
-      if (err || user.role !== 'admin') {
+      if (err || (user.role !== 'admin' && user.role !== 'super')) {
         return res.status(403).json({ error: 'Admin access required' });
       }
       req.admin = user;
       next();
     });
+  };
+
+  // 新增：超级管理员权限中间件
+  const authenticateSuperAdmin = (req, res, next) => {
+    if (!req.admin || req.admin.role !== 'super') {
+      return res.status(403).json({ error: 'Only super admin can perform this action' });
+    }
+    next();
   };
 
   // 获取待审核的登录请求
@@ -227,12 +235,12 @@ module.exports = (io) => {
   router.get('/members', authenticateAdmin, async (req, res) => {
     try {
       const { page = 1, limit = 20, email = '' } = req.query;
-      const offset = (page - 1) * limit;
+      const offset = Math.max(0, parseInt(page) - 1) * Math.max(1, parseInt(limit));
+      const safeLimit = Math.max(1, parseInt(limit));
       
       // 构建搜索条件
       let whereClause = '';
       let queryParams = [];
-      
       if (email) {
         whereClause = 'WHERE m.email LIKE ?';
         queryParams.push(`%${email}%`);
@@ -244,10 +252,17 @@ module.exports = (io) => {
         FROM members m
         ${whereClause}
       `;
-      const countResult = await db.query(countQuery, queryParams);
-      const total = countResult[0].total;
       
-      // 获取会员列表
+      let total = 0;
+      try {
+        const countResult = await db.query(countQuery, queryParams);
+        total = countResult[0] ? countResult[0].total : 0;
+      } catch (err) {
+        console.error('会员总数查询错误:', err.message);
+        total = 0;
+      }
+      
+      // 获取会员列表 - 修复参数传递问题
       const membersQuery = `
         SELECT m.*, 
                COUNT(DISTINCT ll.id) as login_count,
@@ -263,23 +278,29 @@ module.exports = (io) => {
         ${whereClause}
         GROUP BY m.id
         ORDER BY m.created_at DESC
-        LIMIT ? OFFSET ?
+        LIMIT ${safeLimit} OFFSET ${offset}
       `;
       
-      const members = await db.query(membersQuery, [...queryParams, parseInt(limit), parseInt(offset)]);
+      let members = [];
+      try {
+        members = await db.query(membersQuery, queryParams);
+      } catch (err) {
+        console.error('会员列表查询错误:', err.message);
+        members = [];
+      }
       
       res.json({
         members,
         pagination: {
           page: parseInt(page),
-          limit: parseInt(limit),
+          limit: safeLimit,
           total,
-          totalPages: Math.ceil(total / limit)
+          totalPages: Math.ceil(total / safeLimit)
         }
       });
     } catch (error) {
-      console.error('获取会员列表错误:', error);
-      res.status(500).json({ error: req.t('server_error') });
+      console.error('获取会员列表错误:', error.message);
+      res.status(500).json({ error: '服务器错误，请稍后重试' });
     }
   });
 
@@ -538,6 +559,61 @@ module.exports = (io) => {
     } catch (error) {
       console.error('获取IP历史错误:', error);
       res.status(500).json({ error: req.t('server_error') });
+    }
+  });
+
+  // 获取管理员列表（仅超级管理员可见）
+  router.get('/admins', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
+    try {
+      const admins = await db.query('SELECT id, username, role, created_at FROM admins ORDER BY id ASC');
+      res.json(admins);
+    } catch (error) {
+      res.status(500).json({ error: '服务器错误' });
+    }
+  });
+
+  // 添加管理员（仅超级管理员可操作）
+  router.post('/admins', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ error: '用户名和密码不能为空' });
+      }
+      // 检查用户名是否已存在
+      const existing = await db.query('SELECT id FROM admins WHERE username = ?', [username]);
+      if (existing.length > 0) {
+        return res.status(400).json({ error: '用户名已存在' });
+      }
+      // 密码加密
+      const crypto = require('crypto');
+      const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
+      await db.insert('admins', { username, password: hashedPassword, role: 'admin' });
+      res.json({ message: '管理员添加成功' });
+    } catch (error) {
+      res.status(500).json({ error: '服务器错误' });
+    }
+  });
+
+  // 删除管理员（仅超级管理员可操作，不能删除自己和超级管理员）
+  router.delete('/admins/:id', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      // 不能删除自己
+      if (parseInt(id) === req.admin.id) {
+        return res.status(400).json({ error: '不能删除自己' });
+      }
+      // 不能删除超级管理员
+      const admin = await db.query('SELECT * FROM admins WHERE id = ?', [id]);
+      if (admin.length === 0) {
+        return res.status(404).json({ error: '管理员不存在' });
+      }
+      if (admin[0].role === 'super') {
+        return res.status(400).json({ error: '不能删除超级管理员' });
+      }
+      await db.remove('admins', { id });
+      res.json({ message: '管理员删除成功' });
+    } catch (error) {
+      res.status(500).json({ error: '服务器错误' });
     }
   });
 

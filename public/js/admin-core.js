@@ -21,10 +21,6 @@ class AdminApp {
     }
 
     init() {
-        console.log('初始化管理员应用');
-        console.log('Token存在:', !!this.token);
-        console.log('DOM状态:', document.readyState);
-
         // 确保两个页面都处于隐藏状态
         document.getElementById('adminLoginPage').classList.remove('active');
         document.getElementById('adminDashboard').classList.remove('active');
@@ -34,11 +30,9 @@ class AdminApp {
         this.setupSocketListeners();
 
         if (this.token) {
-            console.log('使用已存在的令牌显示管理界面');
             this.showDashboard();
             this.loadInitialData();
         } else {
-            console.log('显示登录页面');
             this.showLoginPage();
         }
     }
@@ -49,7 +43,6 @@ class AdminApp {
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log('登录表单提交事件触发');
                 this.handleAdminLogin();
             });
         } else {
@@ -109,6 +102,17 @@ class AdminApp {
             });
         }
 
+        // 管理员管理区按钮事件
+        const addAdminBtn = document.getElementById('addAdminBtn');
+        if (addAdminBtn) {
+            addAdminBtn.addEventListener('click', () => this.showAddAdminModal());
+        }
+        const refreshAdminsBtn = document.getElementById('refreshAdmins');
+        if (refreshAdminsBtn) {
+            refreshAdminsBtn.addEventListener('click', () => this.loadAdmins());
+        }
+
+
         // 模态框关闭
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -141,7 +145,6 @@ class AdminApp {
         
         // 更新验证请求
         this.socket.on('update-verification-request', (data) => {
-            console.log('收到更新验证请求事件:', data);
             // 清空验证请求列表
             const container = document.getElementById('verificationRequestsList');
             container.innerHTML = '<p>正在刷新验证请求...</p>';
@@ -160,8 +163,6 @@ class AdminApp {
         const password = document.getElementById('adminPassword').value;
 
         try {
-            console.log(`尝试管理员登录: 用户名=${username}, 密码长度=${password.length}`);
-
             const response = await fetch('/api/auth/admin/login', {
                 method: 'POST',
                 headers: {
@@ -170,26 +171,20 @@ class AdminApp {
                 body: JSON.stringify({ username, password })
             });
 
-            console.log(`登录响应状态: ${response.status}`);
             const data = await response.json();
-            console.log('登录响应数据:', data);
 
             if (response.ok) {
-                console.log('登录成功，保存令牌和管理员信息');
                 this.token = data.token;
                 this.currentAdmin = data.admin;
                 localStorage.setItem('adminToken', this.token);
                 localStorage.setItem('adminInfo', JSON.stringify(data.admin));
 
-                console.log('切换到管理界面');
                 this.showDashboard();
                 this.loadInitialData();
             } else {
-                console.error('登录失败:', data.error);
                 alert(data.error || '登录失败');
             }
         } catch (error) {
-            console.error('管理员登录错误:', error);
             alert('网络错误，请重试');
         }
     }
@@ -208,23 +203,12 @@ class AdminApp {
     }
 
     showDashboard() {
-        console.log('执行showDashboard函数');
-
         const loginPage = document.getElementById('adminLoginPage');
         const dashboardPage = document.getElementById('adminDashboard');
 
-        console.log('登录页面元素:', loginPage);
-        console.log('管理界面元素:', dashboardPage);
-
         if (loginPage && dashboardPage) {
-            console.log('移除登录页面的active类');
             loginPage.classList.remove('active');
-
-            console.log('添加管理界面的active类');
             dashboardPage.classList.add('active');
-
-            console.log('登录页面类列表:', loginPage.classList.toString());
-            console.log('管理界面类列表:', dashboardPage.classList.toString());
         } else {
             console.error('页面元素未找到!');
         }
@@ -233,13 +217,20 @@ class AdminApp {
             const usernameElement = document.getElementById('adminUsername');
             if (usernameElement) {
                 usernameElement.textContent = this.currentAdmin.username;
-                console.log('设置管理员用户名:', this.currentAdmin.username);
             } else {
                 console.error('用户名显示元素未找到!');
             }
         }
 
-        console.log('showDashboard函数执行完成');
+        // 显示/隐藏管理员管理入口
+        const adminManageNav = document.getElementById('adminManageNav');
+        if (adminManageNav) {
+            if (this.currentAdmin && this.currentAdmin.role === 'super') {
+                adminManageNav.style.display = 'inline-block';
+            } else {
+                adminManageNav.style.display = 'none';
+            }
+        }
     }
 
     async loadInitialData() {
@@ -256,19 +247,10 @@ class AdminApp {
             const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
             const totalCount = loginCount + verificationCount;
             
-            console.log('计算请求数量:', {
-                loginCount,
-                verificationCount,
-                totalCount,
-                loginItems: document.querySelectorAll('#loginRequestsList .request-item'),
-                verificationItems: document.querySelectorAll('#verificationRequestsList .request-item')
-            });
-            
             // 直接更新导航栏计数
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
                 navPendingCount.textContent = totalCount;
-                console.log('直接更新导航栏计数:', totalCount);
             } else {
                 console.error('导航栏计数元素未找到!');
             }
@@ -279,7 +261,6 @@ class AdminApp {
             // 再次延迟更新，确保DOM已经更新
             setTimeout(() => {
                 this.updatePendingCount();
-                console.log('延迟更新通知计数');
             }, 500);
         } catch (error) {
             console.error('加载初始数据错误:', error);
@@ -313,12 +294,6 @@ class AdminApp {
         const verificationCount = verificationItems.length;
         const totalCount = loginCount + verificationCount;
 
-        console.log('计算请求数量:', {
-            loginCount,
-            verificationCount,
-            totalCount
-        });
-
         // 更新总数量徽章
         const pendingCountBadge = document.getElementById('pendingCount');
         if (pendingCountBadge) {
@@ -329,7 +304,6 @@ class AdminApp {
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
                 navPendingCount.textContent = pendingCountBadge.textContent;
-                console.log('从红色微章更新导航栏计数:', pendingCountBadge.textContent);
             }
         }
         
@@ -372,6 +346,9 @@ class AdminApp {
                 break;
             case 'ipmanagement':
                 this.loadIpBlacklist();
+                break;
+            case 'adminmanage':
+                this.loadAdmins();
                 break;
         }
         
@@ -484,8 +461,104 @@ class AdminApp {
                 alert(error.error || '密码修改失败');
             }
         } catch (error) {
-            console.error('修改密码错误:', error);
             alert('网络错误，请稍后重试');
+        }
+    }
+
+
+
+    // 加载管理员列表
+    async loadAdmins() {
+        const container = document.getElementById('adminList');
+        if (!container) return;
+        container.innerHTML = '加载中...';
+        try {
+            const response = await this.apiRequest('/api/admin/admins');
+            if (response && response.ok) {
+                const admins = await response.json();
+                container.innerHTML = this.renderAdminList(admins);
+            } else {
+                container.innerHTML = '加载失败';
+            }
+        } catch (e) {
+            container.innerHTML = '加载失败';
+        }
+    }
+
+    // 渲染管理员列表
+    renderAdminList(admins) {
+        const currentId = this.currentAdmin ? this.currentAdmin.id : null;
+        return `<table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
+            ${admins.map(admin => `
+                <tr>
+                    <td>${admin.id}</td>
+                    <td>${admin.username}</td>
+                    <td>${admin.role === 'super' ? '超级管理员' : '普通管理员'}</td>
+                    <td>${this.formatDateTime(admin.created_at)}</td>
+                    <td>
+                        ${admin.role === 'admin' && admin.id !== currentId ? `<button onclick=\"adminApp.deleteAdmin(${admin.id})\">删除</button>` : '<span style=\"color:#aaa\">不可操作</span>'}
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody></table>`;
+    }
+
+    // 显示添加管理员模态框
+    showAddAdminModal() {
+        this.showModal('添加管理员', `
+            <form id="addAdminForm">
+                <div class="form-group">
+                    <label>用户名</label>
+                    <input type="text" id="addAdminUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>密码</label>
+                    <input type="password" id="addAdminPassword" required minlength="6">
+                </div>
+                <button type="submit">添加</button>
+            </form>
+        `);
+        document.getElementById('addAdminForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('addAdminUsername').value.trim();
+            const password = document.getElementById('addAdminPassword').value;
+            if (!username || !password) {
+                alert('用户名和密码不能为空');
+                return;
+            }
+            try {
+                const response = await this.apiRequest('/api/admin/admins', {
+                    method: 'POST',
+                    body: JSON.stringify({ username, password })
+                });
+                if (response && response.ok) {
+                    alert('添加成功');
+                    this.closeModal();
+                    this.loadAdmins();
+                } else {
+                    const data = await response.json();
+                    alert(data.error || '添加失败');
+                }
+            } catch (e) {
+                alert('添加失败');
+            }
+        };
+    }
+
+    // 删除管理员
+    async deleteAdmin(id) {
+        if (!confirm('确定要删除该管理员吗？')) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/admins/${id}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('删除成功');
+                this.loadAdmins();
+            } else {
+                const data = await response.json();
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            alert('删除失败');
         }
     }
 }

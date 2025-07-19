@@ -28,13 +28,13 @@ module.exports = (io) => {
             }
 
             const token = jwt.sign(
-                { id: admin.id, username: admin.username, role: 'admin' },
+                { id: admin.id, username: admin.username, role: admin.role },
                 process.env.JWT_SECRET || 'secret',
                 { expiresIn: '1h' }
             );
             res.json({
                 token,
-                admin: { id: admin.id, username: admin.username }
+                admin: { id: admin.id, username: admin.username, role: admin.role }
             });
         } catch (error) {
             res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
