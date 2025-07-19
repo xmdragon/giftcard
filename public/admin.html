@@ -81,7 +81,27 @@
                         <h2>会员管理</h2>
                         <button id="refreshMembers">刷新</button>
                     </div>
+                    
+                    <!-- 搜索和筛选 -->
+                    <div class="filters">
+                        <input type="text" id="memberEmailSearch" placeholder="按邮箱搜索会员..." style="padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-right: 10px; width: 250px;">
+                        <button id="searchMembersBtn">搜索</button>
+                        <button id="clearSearchBtn">清除</button>
+                    </div>
+                    
                     <div id="membersList" class="data-table"></div>
+                    
+                    <!-- 分页控件 -->
+                    <div id="membersPagination" class="pagination">
+                        <button id="prevPageBtn" disabled>上一页</button>
+                        <span id="pageInfo">第 1 页，共 1 页</span>
+                        <button id="nextPageBtn" disabled>下一页</button>
+                        <select id="pageSizeSelect" style="margin-left: 10px;">
+                            <option value="10">每页 10 条</option>
+                            <option value="20" selected>每页 20 条</option>
+                            <option value="50">每页 50 条</option>
+                        </select>
+                    </div>
                 </section>
 
                 <!-- 礼品卡管理区域 -->

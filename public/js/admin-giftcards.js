@@ -5,6 +5,18 @@
 
 // 扩展 AdminApp 类
 (function() {
+    // 礼品卡状态翻译
+    AdminApp.prototype.translateGiftCardStatus = function(status) {
+        const statusMap = {
+            'available': '可用',
+            'distributed': '已发放',
+            'used': '已使用',
+            'expired': '已过期',
+            'cancelled': '已取消'
+        };
+        return statusMap[status] || status;
+    };
+
     // 加载礼品卡列表
     AdminApp.prototype.loadGiftCards = async function() {
         const category = document.getElementById('categoryFilter').value;
@@ -55,7 +67,7 @@
                             <td>${card.category_name || '无分类'}</td>
                             <td><code>${card.code}</code></td>
                             <td>${card.card_type}</td>
-                            <td><span class="status-badge status-${card.status}">${card.status}</span></td>
+                            <td><span class="status-badge status-${card.status}">${this.translateGiftCardStatus(card.status)}</span></td>
                             <td>${card.distributed_to_email || '未发放'}</td>
                             <td>${card.distributed_at ? new Date(card.distributed_at).toLocaleString() : '未发放'}</td>
                             <td>${new Date(card.created_at).toLocaleString()}</td>

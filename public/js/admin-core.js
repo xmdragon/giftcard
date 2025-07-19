@@ -79,9 +79,6 @@ class AdminApp {
         });
 
         // 各种按钮事件
-        document.getElementById('refreshMembers').addEventListener('click', () => {
-            this.loadMembers();
-        });
 
         document.getElementById('addGiftCardsBtn').addEventListener('click', () => {
             this.showAddGiftCardsModal();
@@ -114,6 +111,11 @@ class AdminApp {
                 this.closeModal();
             }
         });
+
+        // 初始化会员管理事件（如果方法存在）
+        if (typeof this.initMembersEvents === 'function') {
+            this.initMembersEvents();
+        }
     }
 
     setupSocketListeners() {

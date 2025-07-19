@@ -229,10 +229,32 @@ module.exports = (io) => {
     }
   });
 
-  // 获取会员列表
+  // 获取会员列表（支持搜索和分页）
   router.get('/members', authenticateAdmin, async (req, res) => {
     try {
-      const members = await db.query(`
+      const { page = 1, limit = 20, email = '' } = req.query;
+      const offset = (page - 1) * limit;
+      
+      // 构建搜索条件
+      let whereClause = '';
+      let queryParams = [];
+      
+      if (email) {
+        whereClause = 'WHERE m.email LIKE ?';
+        queryParams.push(`%${email}%`);
+      }
+      
+      // 获取总数
+      const countQuery = `
+        SELECT COUNT(DISTINCT m.id) as total
+        FROM members m
+        ${whereClause}
+      `;
+      const countResult = await db.query(countQuery, queryParams);
+      const total = countResult[0].total;
+      
+      // 获取会员列表
+      const membersQuery = `
         SELECT m.*, 
                COUNT(DISTINCT ll.id) as login_count,
                COUNT(DISTINCT cr.id) as checkin_count,
@@ -244,12 +266,64 @@ module.exports = (io) => {
         LEFT JOIN login_logs ll ON m.id = ll.member_id
         LEFT JOIN checkin_records cr ON m.id = cr.member_id
         LEFT JOIN gift_cards gc ON m.id = gc.distributed_to
+        ${whereClause}
         GROUP BY m.id
         ORDER BY m.created_at DESC
-      `);
-      res.json(members);
+        LIMIT ? OFFSET ?
+      `;
+      
+      const members = await db.query(membersQuery, [...queryParams, parseInt(limit), parseInt(offset)]);
+      
+      res.json({
+        members,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      });
     } catch (error) {
       console.error('获取会员列表错误:', error);
+      res.status(500).json({ error: req.t('server_error') });
+    }
+  });
+
+  // 删除会员
+  router.delete('/members/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // 检查会员是否存在
+      const members = await db.query('SELECT * FROM members WHERE id = ?', [id]);
+      if (members.length === 0) {
+        return res.status(404).json({ error: '会员不存在' });
+      }
+      
+      // 使用事务删除会员及相关数据
+      await db.transaction(async (connection) => {
+        // 删除签到记录
+        await connection.execute('DELETE FROM checkin_records WHERE member_id = ?', [id]);
+        
+        // 删除二次验证记录
+        await connection.execute('DELETE FROM second_verifications WHERE member_id = ?', [id]);
+        
+        // 删除登录日志
+        await connection.execute('DELETE FROM login_logs WHERE member_id = ?', [id]);
+        
+        // 将分配给该会员的礼品卡状态重置为可用
+        await connection.execute(
+          'UPDATE gift_cards SET status = "available", distributed_to = NULL, distributed_at = NULL WHERE distributed_to = ?',
+          [id]
+        );
+        
+        // 删除会员
+        await connection.execute('DELETE FROM members WHERE id = ?', [id]);
+      });
+      
+      res.json({ message: '会员删除成功' });
+    } catch (error) {
+      console.error('删除会员错误:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
