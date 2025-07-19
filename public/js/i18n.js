@@ -203,3 +203,18 @@ class I18n {
 
 // 初始化多语言
 const i18n = new I18n();
+
+document.addEventListener('DOMContentLoaded', function() {
+  var lang = window.recommendLang || 'en';
+  // 如果本地存储有用户选择，则优先用用户选择
+  if (localStorage.getItem('selectedLang')) {
+    lang = localStorage.getItem('selectedLang');
+  }
+  var langSelect = document.getElementById('languageSelect');
+  if (langSelect) langSelect.value = lang;
+  // 触发语言切换逻辑（假设有change事件）
+  if (langSelect) {
+    var event = new Event('change');
+    langSelect.dispatchEvent(event);
+  }
+});

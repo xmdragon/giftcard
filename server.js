@@ -7,13 +7,18 @@ const socketIo = require('socket.io');
 const i18next = require('i18next');
 const Backend = require('i18next-fs-backend');
 const middleware = require('i18next-http-middleware');
+const geoip = require('geoip-lite');
 require('dotenv').config();
 
 // 导入数据库模块
 const { initDatabase } = require('./utils/db-init');
 const db = require('./utils/db');
 
+// 集成EJS模板引擎
 const app = express();
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -43,6 +48,20 @@ i18next
   });
 
 app.use(middleware.handle(i18next));
+
+// 根据IP判断推荐语言
+app.use((req, res, next) => {
+  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
+  const geo = geoip.lookup(ip);
+  let lang = 'en'; // 默认英文
+  if (geo && geo.country) {
+    if (geo.country === 'CN') lang = 'zh';
+    else if (geo.country === 'JP') lang = 'ja';
+  }
+  res.locals.recommendLang = lang;
+  next();
+});
 
 // JWT验证中间件
 const authenticateToken = (req, res, next) => {
@@ -125,8 +144,8 @@ async function startServer() {
     });
 
     // 管理员页面路由
-    app.get('/admin', (req, res) => {
-      res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+    app.get(['/admin', '/admin.html'], (req, res) => {
+      res.render('admin');
     });
 
     // favicon.ico路由
@@ -136,7 +155,7 @@ async function startServer() {
     
     // 默认路由
     app.get('/', (req, res) => {
-      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+      res.render('index', { title: '首页', user: req.user });
     });
     
     // 启动HTTP服务器

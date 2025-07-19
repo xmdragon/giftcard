@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员后台 - 礼品卡发放系统</title>
+    <link rel="stylesheet" href="/css/admin.css">
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- 登录页面 -->
+        <div id="adminLoginPage" class="page active">
+            <div class="login-form">
+                <h2>管理员登录</h2>
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="username">用户名</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">密码</label>
+                        <input type="password" id="adminPassword" required>
+                    </div>
+                    <button type="submit">登录</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 管理员主页面 -->
+        <div id="adminDashboard" class="page">
+            <header class="admin-header">
+                <h1>礼品卡发放系统 - 管理后台</h1>
+                <div class="admin-info">
+                    <span id="adminUsername"></span>
+                    <button id="changePasswordBtn">修改密码</button>
+                    <button id="logoutBtn">退出</button>
+                </div>
+            </header>
+
+            <nav class="admin-nav">
+                <button class="nav-btn active" data-section="pending" id="pendingNavBtn">
+                    待审核 (<span id="navPendingCount">0</span>)
+                </button>
+                <button class="nav-btn" data-section="members">会员管理</button>
+                <button class="nav-btn" data-section="giftcards">礼品卡管理</button>
+                <button class="nav-btn" data-section="categories">分类管理</button>
+                <button class="nav-btn" data-section="ipmanagement">IP管理</button>
+                <button class="nav-btn" data-section="adminmanage" id="adminManageNav" style="display:none;">管理员管理</button>
+            </nav>
+
+            <main class="admin-main">
+                <!-- 待审核区域 -->
+                <section id="pendingSection" class="admin-section active">
+                    <div class="section-header">
+                        <h2>待审核请求</h2>
+                        <div class="notification-badge" id="pendingCount">0</div>
+                    </div>
+
+                    <div class="pending-tabs">
+                        <button class="tab-btn active" data-tab="loginRequests">
+                            登录请求 (<span id="loginRequestsCount">0</span>)
+                        </button>
+                        <button class="tab-btn" data-tab="verificationRequests">
+                            验证请求 (<span id="verificationRequestsCount">0</span>)
+                        </button>
+                    </div>
+
+                    <div id="loginRequestsTab" class="tab-content active">
+                        <h3>待审核登录请求</h3>
+                        <div id="loginRequestsList" class="requests-list"></div>
+                    </div>
+
+                    <div id="verificationRequestsTab" class="tab-content">
+                        <h3>待审核验证请求</h3>
+                        <div id="verificationRequestsList" class="requests-list"></div>
+                    </div>
+                </section>
+
+                <!-- 会员管理区域 -->
+                <section id="membersSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>会员管理</h2>
+                        <button id="refreshMembers">刷新</button>
+                    </div>
+                    
+                    <!-- 搜索和筛选 -->
+                    <div class="filters">
+                        <input type="text" id="memberEmailSearch" placeholder="按邮箱搜索会员..." style="padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-right: 10px; width: 250px;">
+                        <button id="searchMembersBtn">搜索</button>
+                        <button id="clearSearchBtn">清除</button>
+                    </div>
+                    
+                    <div id="membersList" class="data-table"></div>
+                    
+                    <!-- 分页控件 -->
+                    <div id="membersPagination" class="pagination">
+                        <button id="prevPageBtn" disabled>上一页</button>
+                        <span id="pageInfo">第 1 页，共 1 页</span>
+                        <button id="nextPageBtn" disabled>下一页</button>
+                        <select id="pageSizeSelect" style="margin-left: 10px;">
+                            <option value="10">每页 10 条</option>
+                            <option value="20" selected>每页 20 条</option>
+                            <option value="50">每页 50 条</option>
+                        </select>
+                    </div>
+                </section>
+
+                <!-- 礼品卡管理区域 -->
+                <section id="giftcardsSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>礼品卡管理</h2>
+                        <button id="addGiftCardsBtn">批量添加</button>
+                    </div>
+
+                    <div class="filters">
+                        <select id="categoryFilter">
+                            <option value="">所有分类</option>
+                        </select>
+                        <select id="statusFilter">
+                            <option value="">所有状态</option>
+                            <option value="available">可用</option>
+                            <option value="distributed">已发放</option>
+                            <option value="used">已使用</option>
+                        </select>
+                        <button id="filterGiftCards">筛选</button>
+                    </div>
+
+                    <div id="giftCardsList" class="data-table"></div>
+                </section>
+
+                <!-- 分类管理区域 -->
+                <section id="categoriesSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>分类管理</h2>
+                        <button id="addCategoryBtn">添加分类</button>
+                    </div>
+                    <div id="categoriesList" class="data-table"></div>
+                </section>
+
+                <!-- IP管理区域 -->
+                <section id="ipmanagementSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>IP管理</h2>
+                        <button id="banIpBtn">禁止IP</button>
+                        <button id="refreshIpList">刷新</button>
+                    </div>
+                    
+                    <div class="ip-stats">
+                        <div class="stat-card">
+                            <h3>已禁止IP数量</h3>
+                            <span id="bannedIpCount">0</span>
+                        </div>
+                    </div>
+
+                    <div id="ipBlacklistTable" class="data-table"></div>
+                </section>
+
+                <!-- 管理员管理区域 -->
+                <section id="adminmanageSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>管理员管理</h2>
+                        <button id="refreshAdmins">刷新</button>
+                        <button id="addAdminBtn">添加管理员</button>
+                    </div>
+                    <div id="adminList" class="data-table">加载中...</div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- 模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 核心模块 -->
+    <script src="js/admin-core.js" type="text/javascript"></script>
+    
+    <!-- 功能模块 -->
+    <script src="js/admin-members.js" type="text/javascript"></script>
+    <script src="js/admin-categories.js" type="text/javascript"></script>
+    <script src="js/admin-giftcards.js" type="text/javascript"></script>
+    <script src="js/admin-ip.js" type="text/javascript"></script>
+    <script src="js/admin-approvals.js" type="text/javascript"></script>
+    
+    <!-- 调试模块 -->
+    
+</body>
+</html> 

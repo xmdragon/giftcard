@@ -56,5 +56,8 @@
   "login_ips": "登录IP",
   "latest_ip": "最新IP",
   "ip_history": "IP历史",
-  "affected_members": "影响会员数"
+  "affected_members": "影响会员数",
+  "lang_zh": "中文",
+  "lang_en": "English",
+  "lang_ja": "日本語"
 }

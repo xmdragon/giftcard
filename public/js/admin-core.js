@@ -325,13 +325,15 @@ class AdminApp {
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-section="${section}"]`).classList.add('active');
+        const navBtn = document.querySelector(`[data-section="${section}"]`);
+        if (navBtn) navBtn.classList.add('active');
 
         // 更新内容区域显示
         document.querySelectorAll('.admin-section').forEach(sec => {
             sec.classList.remove('active');
         });
-        document.getElementById(`${section}Section`).classList.add('active');
+        const sectionEl = document.getElementById(`${section}Section`);
+        if (sectionEl) sectionEl.classList.add('active');
 
         // 根据需要加载数据
         switch (section) {
@@ -351,7 +353,6 @@ class AdminApp {
                 this.loadAdmins();
                 break;
         }
-        
         // 切换页面后更新通知计数
         this.updatePendingCount();
     }
