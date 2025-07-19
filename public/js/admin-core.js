@@ -101,6 +101,14 @@ class AdminApp {
             this.loadIpBlacklist();
         });
 
+        // 修改密码按钮
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        if (changePasswordBtn) {
+            changePasswordBtn.addEventListener('click', () => {
+                this.showChangePasswordModal();
+            });
+        }
+
         // 模态框关闭
         document.querySelector('.close').addEventListener('click', () => {
             this.closeModal();
@@ -395,6 +403,90 @@ class AdminApp {
 
     closeModal() {
         document.getElementById('modal').style.display = 'none';
+    }
+
+    // 显示修改密码模态框
+    showChangePasswordModal() {
+        const content = `
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">当前密码</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">新密码</label>
+                    <input type="password" id="newPassword" required minlength="6">
+                    <small>密码长度至少6位</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">确认新密码</label>
+                    <input type="password" id="confirmPassword" required minlength="6">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
+                    <button type="submit">确认修改</button>
+                </div>
+            </form>
+        `;
+
+        this.showModal('修改密码', content);
+
+        // 绑定表单提交事件
+        document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleChangePassword();
+        });
+    }
+
+    // 处理密码修改
+    async handleChangePassword() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        // 前端验证
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('请填写所有字段');
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            alert('新密码长度至少6位');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('两次输入的新密码不一致');
+            return;
+        }
+
+        if (currentPassword === newPassword) {
+            alert('新密码不能与当前密码相同');
+            return;
+        }
+
+        try {
+            const response = await this.apiRequest('/api/auth/admin/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    currentPassword,
+                    newPassword
+                })
+            });
+
+            if (response && response.ok) {
+                const data = await response.json();
+                alert('密码修改成功！请重新登录。');
+                this.closeModal();
+                this.logout(); // 修改密码后需要重新登录
+            } else {
+                const error = await response.json();
+                alert(error.error || '密码修改失败');
+            }
+        } catch (error) {
+            console.error('修改密码错误:', error);
+            alert('网络错误，请稍后重试');
+        }
     }
 }
 

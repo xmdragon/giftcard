@@ -33,8 +33,7 @@ module.exports = (io) => {
         ORDER BY ll.login_time DESC
       `);
 
-      // 添加调试日志
-      console.log('获取到的登录请求数据:', requests.length > 0 ? requests[0] : '无数据');
+
 
       res.json(requests);
     } catch (error) {
@@ -75,8 +74,6 @@ module.exports = (io) => {
 
           // 如果只有一条登录记录（当前这条），说明是首次登录
           if (loginCount[0].count === 1) {
-            console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 首次登录被拒绝，删除用户数据`);
-
             // 删除用户相关的所有数据
             await db.transaction(async (connection) => {
               // 删除登录日志
@@ -97,8 +94,6 @@ module.exports = (io) => {
               // 最后删除会员记录
               await connection.execute('DELETE FROM members WHERE id = ?', [loginLog.member_id]);
             });
-
-            console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 数据已删除`);
           }
         }
 
@@ -128,8 +123,7 @@ module.exports = (io) => {
         ORDER BY sv.submitted_at DESC
       `);
 
-      // 添加调试日志
-      console.log('获取到的验证请求数据:', requests.length > 0 ? requests[0] : '无数据');
+
 
       res.json(requests);
     } catch (error) {

@@ -68,7 +68,6 @@ module.exports = (io) => {
       });
 
     } catch (error) {
-      console.error('登录错误:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -96,15 +95,7 @@ module.exports = (io) => {
         [loginLog.member_id, loginId]
       );
       
-      console.log(`检查现有验证请求: 会员ID=${loginLog.member_id}, 登录ID=${loginId}, 找到 ${existingVerifications.length} 条记录`);
-      if (existingVerifications.length > 0) {
-        console.log(`现有验证请求详情:`, existingVerifications.map(v => ({
-          id: v.id,
-          status: v.status,
-          verification_code: v.verification_code,
-          submitted_at: v.submitted_at
-        })));
-      }
+
       
       let verificationId;
       
@@ -119,7 +110,7 @@ module.exports = (io) => {
           { id: existingVerification.id }
         );
         verificationId = existingVerification.id;
-        console.log(`更新现有验证请求 ID: ${verificationId}, 会员ID: ${loginLog.member_id}, 验证码: ${verificationCode}, 状态: pending`);
+
       } else {
         // 如果不存在待处理的验证请求，则创建新的
         const verifyResult = await db.insert('second_verifications', {
@@ -128,7 +119,7 @@ module.exports = (io) => {
           verification_code: verificationCode
         });
         verificationId = verifyResult.insertId;
-        console.log(`创建新的验证请求 ID: ${verificationId}, 会员ID: ${loginLog.member_id}, 验证码: ${verificationCode}`);
+
       }
 
       // 通知管理员有新的验证请求
@@ -163,7 +154,6 @@ module.exports = (io) => {
       });
 
     } catch (error) {
-      console.error('验证错误:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -177,8 +167,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: 'Missing required parameters' });
       }
 
-      console.log(`收到取消请求: 登录ID=${loginId}, 会员ID=${memberId}`);
-      
       // 获取登录记录
       const loginLogs = await db.query('SELECT * FROM login_logs WHERE id = ?', [loginId]);
       
@@ -187,9 +175,6 @@ module.exports = (io) => {
       }
       
       const loginLog = loginLogs[0];
-      
-      // 处理所有状态的登录记录，确保能够清理
-      console.log(`登录记录状态为 ${loginLog.status}，准备清理数据`);
       
       // 直接使用 db 模块的方法，而不是事务
       try {

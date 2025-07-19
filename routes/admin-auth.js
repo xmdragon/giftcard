@@ -5,54 +5,91 @@ const db = require('../utils/db');
 const router = express.Router();
 
 module.exports = (io) => {
-  // 管理员登录
-  router.post('/login', async (req, res) => {
-    try {
-      console.log('管理员登录请求开始处理');
-      const { username, password } = req.body;
-      console.log(`尝试登录的管理员用户名: ${username}`);
+    // 管理员登录
+    router.post('/login', async (req, res) => {
+        try {
+            const { username, password } = req.body;
 
-      console.log('准备执行数据库查询');
-      const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
-      console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
+            const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
 
-      if (admins.length === 0) {
-        console.log('未找到匹配的管理员账号');
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
-      }
+            if (admins.length === 0) {
+                return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+            }
 
-      const admin = admins[0];
-      console.log(`找到管理员账号: ID=${admin.id}, 用户名=${admin.username}, 密码哈希=${admin.password}`);
+            const admin = admins[0];
 
-      // 使用MD5验证密码
-      const md5Password = crypto.createHash('md5').update(password).digest('hex');
-      console.log(`输入密码的MD5: ${md5Password}`);
+            // 使用MD5验证密码
+            const md5Password = crypto.createHash('md5').update(password).digest('hex');
 
-      const validPassword = (md5Password === admin.password);
-      console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
+            const validPassword = (md5Password === admin.password);
 
-      if (!validPassword) {
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
-      }
+            if (!validPassword) {
+                return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+            }
 
-      console.log('生成JWT令牌');
-      const token = jwt.sign(
-        { id: admin.id, username: admin.username, role: 'admin' },
-        process.env.JWT_SECRET || 'secret',
-        { expiresIn: '24h' }
-      );
+            const token = jwt.sign(
+                { id: admin.id, username: admin.username, role: 'admin' },
+                process.env.JWT_SECRET || 'secret',
+                { expiresIn: '1h' }
+            );
+            res.json({
+                token,
+                admin: { id: admin.id, username: admin.username }
+            });
+        } catch (error) {
+            res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+        }
+    });
 
-      console.log('管理员登录成功');
-      res.json({
-        token,
-        admin: { id: admin.id, username: admin.username }
-      });
-    } catch (error) {
-      console.error('管理员登录错误:', error);
-      console.error('错误堆栈:', error.stack);
-      res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
-    }
-  });
+    // 修改管理员密码
+    router.post('/change-password', async (req, res) => {
+        try {
+            const { currentPassword, newPassword } = req.body;
+            const authHeader = req.headers['authorization'];
+            const token = authHeader && authHeader.split(' ')[1];
 
-  return router;
+            if (!token) {
+                return res.status(401).json({ error: '需要登录' });
+            }
+
+            // 验证JWT令牌
+            const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+            const adminId = decoded.id;
+
+            // 获取管理员信息
+            const admins = await db.query('SELECT * FROM admins WHERE id = ?', [adminId]);
+            if (admins.length === 0) {
+                return res.status(404).json({ error: '管理员不存在' });
+            }
+
+            const admin = admins[0];
+
+            // 验证当前密码
+            const currentMd5Password = crypto.createHash('md5').update(currentPassword).digest('hex');
+            if (currentMd5Password !== admin.password) {
+                return res.status(400).json({ error: '当前密码不正确' });
+            }
+
+            // 验证新密码
+            if (!newPassword || newPassword.length < 6) {
+                return res.status(400).json({ error: '新密码长度至少6位' });
+            }
+
+            // 生成新密码的MD5哈希
+            const newMd5Password = crypto.createHash('md5').update(newPassword).digest('hex');
+
+            // 更新密码
+            await db.query('UPDATE admins SET password = ? WHERE id = ?', [newMd5Password, adminId]);
+
+            res.json({ message: '密码修改成功' });
+
+        } catch (error) {
+            if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ error: '无效的令牌' });
+            }
+            res.status(500).json({ error: '服务器错误，请稍后重试' });
+        }
+    });
+
+    return router;
 };

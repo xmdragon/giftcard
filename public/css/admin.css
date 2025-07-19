@@ -106,6 +106,24 @@ h1, h2, h3, h4, h5, h6 {
     margin-right: 10px;
 }
 
+.admin-info button {
+    margin-left: 8px;
+}
+
+#changePasswordBtn {
+    background-color: #34c759;
+    color: white;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+#changePasswordBtn:hover {
+    background-color: #28a745;
+}
+
 .admin-nav {
     display: flex;
     margin-bottom: 20px;
