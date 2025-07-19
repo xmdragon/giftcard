@@ -75,6 +75,28 @@ button:hover {
     border-bottom: 1px solid #ddd;
 }
 
+/* 标题样式 */
+h1, h2, h3, h4, h5, h6 {
+    color: #333;
+    text-shadow: none;
+    font-weight: normal;
+    margin: 0 0 10px 0;
+}
+
+.section-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #1d1d1f;
+    margin: 0;
+}
+
+.tab-content h3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #1d1d1f;
+    margin: 0 0 15px 0;
+}
+
 .admin-info {
     display: flex;
     align-items: center;
@@ -139,11 +161,13 @@ button:hover {
 
 .tab-btn {
     padding: 8px 12px;
-    background-color: #f0f0f0;
-    border: none;
+    background-color: #ffffff;
+    border: 1px solid #d1d1d6;
     border-radius: 3px;
     margin-right: 10px;
     cursor: pointer;
+    color: #1d1d1f;
+    font-weight: 400;
 }
 
 .tab-btn.active {

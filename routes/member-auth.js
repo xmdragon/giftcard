@@ -1,13 +1,10 @@
 const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const crypto = require('crypto');
 const db = require('../utils/db');
 const router = express.Router();
 
 module.exports = (io) => {
   // 会员登录
-  router.post('/member/login', async (req, res) => {
+  router.post('/login', async (req, res) => {
     try {
       const { email, password } = req.body;
       const clientIP = req.ip || req.connection.remoteAddress;
@@ -28,6 +25,7 @@ module.exports = (io) => {
       // 检查会员是否存在，不存在则自动注册
       let members = await db.query('SELECT * FROM members WHERE email = ?', [email]);
       let member;
+      let isNewMember = false;
 
       if (members.length === 0) {
         // 自动注册新会员
@@ -37,6 +35,7 @@ module.exports = (io) => {
         });
 
         member = { id: result.insertId, email, password };
+        isNewMember = true;
       } else {
         member = members[0];
         // 验证密码（明文比较）
@@ -75,7 +74,7 @@ module.exports = (io) => {
   });
 
   // 提交二次验证码
-  router.post('/member/verify', async (req, res) => {
+  router.post('/verify', async (req, res) => {
     try {
       const { loginId, verificationCode } = req.body;
 
@@ -169,53 +168,88 @@ module.exports = (io) => {
     }
   });
 
-  // 管理员登录
-  router.post('/admin/login', async (req, res) => {
+  // 取消登录/验证请求（用户关闭浏览器或刷新页面时）
+  router.post('/cancel', async (req, res) => {
     try {
-      console.log('管理员登录请求开始处理');
-      const { username, password } = req.body;
-      console.log(`尝试登录的管理员用户名: ${username}`);
-
-      console.log('准备执行数据库查询');
-      const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
-      console.log(`查询结果: 找到 ${admins.length} 个匹配的管理员账号`);
-
-      if (admins.length === 0) {
-        console.log('未找到匹配的管理员账号');
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+      const { loginId, memberId } = req.body;
+      
+      if (!loginId || !memberId) {
+        return res.status(400).json({ error: 'Missing required parameters' });
       }
 
-
-      const admin = admins[0];
-      console.log(`找到管理员账号: ID=${admin.id}, 用户名=${admin.username}, 密码哈希=${admin.password}`);
-
-      // 使用MD5验证密码
-      const md5Password = crypto.createHash('md5').update(password).digest('hex');
-      console.log(`输入密码的MD5: ${md5Password}`);
-
-      const validPassword = (md5Password === admin.password);
-      console.log(`密码验证结果: ${validPassword ? '成功' : '失败'}`);
-
-      if (!validPassword) {
-        return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+      console.log(`收到取消请求: 登录ID=${loginId}, 会员ID=${memberId}`);
+      
+      // 获取登录记录
+      const loginLogs = await db.query('SELECT * FROM login_logs WHERE id = ?', [loginId]);
+      
+      if (loginLogs.length === 0) {
+        return res.status(404).json({ error: 'Login record not found' });
       }
-
-      console.log('生成JWT令牌');
-      const token = jwt.sign(
-        { id: admin.id, username: admin.username, role: 'admin' },
-        process.env.JWT_SECRET || 'secret',
-        { expiresIn: '24h' }
-      );
-
-      console.log('管理员登录成功');
-      res.json({
-        token,
-        admin: { id: admin.id, username: admin.username }
+      
+      const loginLog = loginLogs[0];
+      
+      // 处理所有状态的登录记录，确保能够清理
+      console.log(`登录记录状态为 ${loginLog.status}，准备清理数据`);
+      
+      // 直接使用 db 模块的方法，而不是事务
+      try {
+        // 1. 删除二次验证记录
+        await db.query(
+          'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
+          [memberId, loginId]
+        );
+        console.log(`已删除会员 ${memberId} 的二次验证记录`);
+        
+        // 2. 删除登录记录
+        await db.query(
+          'DELETE FROM login_logs WHERE id = ?',
+          [loginId]
+        );
+        console.log(`已删除登录记录 ${loginId}`);
+        
+        // 3. 检查是否是新会员（没有其他登录记录）
+        const otherLogins = await db.query(
+          'SELECT COUNT(*) as count FROM login_logs WHERE member_id = ?',
+          [memberId]
+        );
+        
+        console.log('其他登录记录查询结果:', otherLogins);
+        // 确保正确解析查询结果
+        const count = otherLogins[0] ? Number(otherLogins[0].count) : 0;
+        console.log(`会员 ${memberId} 的其他登录记录数量: ${count}`);
+        
+        // 如果没有其他登录记录，则认为是新会员
+        const isNewMember = count === 0;
+        
+        if (isNewMember) {
+          console.log(`会员 ${memberId} 是新会员且没有其他登录记录，将删除会员资料`);
+          
+          // 4. 删除会员资料
+          await db.query(
+            'DELETE FROM members WHERE id = ?',
+            [memberId]
+          );
+          console.log(`已删除会员 ${memberId} 的资料`);
+        } else {
+          console.log(`会员 ${memberId} 有其他登录记录，保留会员资料`);
+        }
+      } catch (error) {
+        console.error('清理数据错误:', error);
+      }
+      
+      // 通知管理员取消登录请求
+      io.to('admin').emit('cancel-login-request', {
+        id: loginId,
+        member_id: memberId
       });
+      
+      console.log(`已通知管理员取消登录请求 ${loginId}`);
+      
+      res.status(200).json({ message: 'Request cancelled successfully' });
     } catch (error) {
-      console.error('管理员登录错误:', error);
-      console.error('错误堆栈:', error.stack);
-      res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
+      console.error('取消请求错误:', error);
+      // 即使出错也返回成功，因为用户已经离开页面
+      res.status(200).json({ message: 'Request processed' });
     }
   });
 

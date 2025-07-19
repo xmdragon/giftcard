@@ -78,7 +78,8 @@ io.on('connection', (socket) => {
 });
 
 // 导入路由函数
-const createAuthRoutes = require('./routes/auth');
+const createMemberAuthRoutes = require('./routes/member-auth');
+const createAdminAuthRoutes = require('./routes/admin-auth');
 const createAdminRoutes = require('./routes/admin');
 const createMemberRoutes = require('./routes/member');
 
@@ -88,13 +89,15 @@ async function startServer() {
     // 初始化数据库
     await initDatabase();
     
-    // 创建路由（不再传递数据库连接对象）
-    const authRoutes = createAuthRoutes(io);
+    // 创建路由
+    const memberAuthRoutes = createMemberAuthRoutes(io);
+    const adminAuthRoutes = createAdminAuthRoutes(io);
     const adminRoutes = createAdminRoutes(io);
     const memberRoutes = createMemberRoutes(io);
     
     // 使用路由
-    app.use('/api/auth', authRoutes);
+    app.use('/api/auth/member', memberAuthRoutes);
+    app.use('/api/auth/admin', adminAuthRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/member', memberRoutes);
     

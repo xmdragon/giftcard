@@ -5,6 +5,28 @@
 
 // 扩展 AdminApp 类
 (function () {
+    // 构造函数中添加 Socket 监听器
+    const originalSetupSocketListeners = AdminApp.prototype.setupSocketListeners;
+    AdminApp.prototype.setupSocketListeners = function() {
+        // 调用原始方法
+        originalSetupSocketListeners.call(this);
+        
+        // 添加取消登录请求的监听器
+        this.socket.on('cancel-login-request', (data) => {
+            console.log('收到取消登录请求:', data);
+            
+            // 从页面中移除已取消的登录请求
+            const requestElement = document.querySelector(`#loginRequestsList .request-item[data-id="${data.id}"]`);
+            if (requestElement) {
+                requestElement.remove();
+                console.log(`已从页面中移除登录请求 ${data.id}`);
+                
+                // 更新计数
+                this.updatePendingCount();
+            }
+        });
+    };
+    
     // 加载登录请求
     AdminApp.prototype.loadLoginRequests = async function () {
         try {
@@ -199,22 +221,9 @@
             return;
         }
 
-        // 尝试从服务器获取完整的验证请求数据，包括密码
-        this.fetchVerificationRequestDetails(request.id)
-            .then(fullRequest => {
-                // 如果成功获取到完整数据，使用它来添加请求
-                if (fullRequest && fullRequest.password) {
-                    this.renderVerificationRequest(fullRequest);
-                } else {
-                    // 否则使用原始数据
-                    this.renderVerificationRequest(request);
-                }
-            })
-            .catch(error => {
-                console.error(`获取验证请求 ${request.id} 详情失败:`, error);
-                // 出错时使用原始数据
-                this.renderVerificationRequest(request);
-            });
+        // 直接使用传入的请求数据，因为Socket事件已经包含了所有必要信息
+        console.log('添加验证请求，使用Socket事件数据:', request);
+        this.renderVerificationRequest(request);
     };
 
     // 从服务器获取完整的验证请求详情

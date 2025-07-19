@@ -1,16 +1,68 @@
 class GiftCardApp {
     constructor() {
         this.socket = io();
-        this.currentMemberId = null;
-        this.currentLoginId = null;
-        this.currentVerificationId = null;
+        
+        // 从本地存储中恢复会话状态
+        this.currentMemberId = localStorage.getItem('currentMemberId');
+        this.currentLoginId = localStorage.getItem('currentLoginId');
+        this.currentVerificationId = localStorage.getItem('currentVerificationId');
+        
         this.init();
     }
 
     init() {
+        // 检查是否有未完成的登录会话
+        this.checkPendingSession();
+        
         this.bindEvents();
         this.setupSocketListeners();
         this.showPage('loginPage');
+    }
+    
+    // 检查是否有未完成的登录会话
+    checkPendingSession() {
+        if (this.currentLoginId && this.currentMemberId) {
+            console.log('检测到未完成的登录会话，发送取消请求');
+            
+            // 发送取消请求
+            fetch('/api/auth/member/cancel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    loginId: this.currentLoginId,
+                    memberId: this.currentMemberId
+                })
+            }).then(response => {
+                if (response.ok) {
+                    console.log('已清理未完成的登录会话');
+                } else {
+                    console.error('清理未完成的登录会话失败:', response.status, response.statusText);
+                    // 记录详细错误信息
+                    return response.text().then(text => {
+                        console.error('错误详情:', text);
+                    });
+                }
+            }).then(() => {
+                // 清除本地存储和会话状态
+                this.clearSession();
+            }).catch(error => {
+                console.error('清理未完成的登录会话失败:', error);
+                // 即使失败也清除会话状态，避免卡在错误状态
+                this.clearSession();
+            });
+        }
+    }
+    
+    // 清除会话状态
+    clearSession() {
+        this.currentMemberId = null;
+        this.currentLoginId = null;
+        this.currentVerificationId = null;
+        localStorage.removeItem('currentMemberId');
+        localStorage.removeItem('currentLoginId');
+        localStorage.removeItem('currentVerificationId');
     }
 
     bindEvents() {
@@ -59,6 +111,56 @@ class GiftCardApp {
     }
 
     setupSocketListeners() {
+        // 添加页面关闭/刷新事件监听
+        window.addEventListener('pagehide', () => {
+            // 如果用户在等待登录审核或验证审核，发送取消请求
+            if (this.currentLoginId && (
+                document.getElementById('waitingPage').classList.contains('active') || 
+                document.getElementById('verificationPage').classList.contains('active') ||
+                document.getElementById('waitingVerificationPage').classList.contains('active')
+            )) {
+                // 使用 navigator.sendBeacon，这是专门为页面卸载时发送请求设计的
+                const data = JSON.stringify({ 
+                    loginId: this.currentLoginId,
+                    memberId: this.currentMemberId
+                });
+                
+                // 使用正确的路径
+                navigator.sendBeacon('/api/auth/member/cancel', data);
+                console.log('已发送取消请求:', data);
+            }
+        });
+        
+        // 添加页面加载事件监听，用于处理刷新情况
+        window.addEventListener('load', () => {
+            // 检查本地存储中是否有未完成的登录会话
+            const savedLoginId = localStorage.getItem('currentLoginId');
+            const savedMemberId = localStorage.getItem('currentMemberId');
+            
+            if (savedLoginId && savedMemberId) {
+                console.log('检测到未完成的登录会话，发送取消请求');
+                
+                // 发送取消请求
+                fetch('/api/auth/member/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        loginId: savedLoginId,
+                        memberId: savedMemberId
+                    })
+                }).then(() => {
+                    console.log('已清理未完成的登录会话');
+                    // 清除本地存储
+                    localStorage.removeItem('currentLoginId');
+                    localStorage.removeItem('currentMemberId');
+                }).catch(error => {
+                    console.error('清理未完成的登录会话失败:', error);
+                });
+            }
+        });
+        
         // 登录状态更新
         this.socket.on('login-status-update', (data) => {
             const statusDiv = document.getElementById('loginStatus');
@@ -128,6 +230,10 @@ class GiftCardApp {
             if (response.ok) {
                 this.currentMemberId = data.memberId;
                 this.currentLoginId = data.loginId;
+                
+                // 保存到本地存储，以便在页面刷新时能够发送取消请求
+                localStorage.setItem('currentLoginId', this.currentLoginId);
+                localStorage.setItem('currentMemberId', this.currentMemberId);
                 
                 // 加入Socket房间
                 this.socket.emit('join-member', this.currentMemberId);
@@ -232,7 +338,7 @@ class GiftCardApp {
                     digit.textContent = code[index];
                     digit.classList.add('filled');
                 } else {
-                    digit.textContent = '-';
+                    digit.textContent = '';
                     digit.classList.remove('filled');
                 }
             });
