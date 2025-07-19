@@ -254,6 +254,53 @@ module.exports = (io) => {
       res.status(500).json({ error: req.t('server_error') });
     }
   });
+  
+  // 编辑礼品卡分类
+  router.put('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { name, description } = req.body;
+      
+      // 检查分类是否存在
+      const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
+      if (category.length === 0) {
+        return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
+      }
+      
+      // 更新分类
+      await db.update('gift_card_categories', { name, description }, { id });
+      res.json({ message: req.t ? req.t('category_updated') : '分类已更新' });
+    } catch (error) {
+      console.error('编辑礼品卡分类错误:', error);
+      res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误' });
+    }
+  });
+  
+  // 删除礼品卡分类
+  router.delete('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // 检查分类是否存在
+      const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
+      if (category.length === 0) {
+        return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
+      }
+      
+      // 检查分类是否被使用
+      const usedCards = await db.query('SELECT COUNT(*) as count FROM gift_cards WHERE category_id = ?', [id]);
+      if (usedCards[0].count > 0) {
+        return res.status(400).json({ error: req.t ? req.t('category_in_use') : '该分类下有礼品卡，无法删除' });
+      }
+      
+      // 删除分类
+      await db.remove('gift_card_categories', { id });
+      res.json({ message: req.t ? req.t('category_deleted') : '分类已删除' });
+    } catch (error) {
+      console.error('删除礼品卡分类错误:', error);
+      res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误' });
+    }
+  });
 
   // 批量添加礼品卡
   router.post('/gift-cards/batch', authenticateAdmin, async (req, res) => {
@@ -304,8 +351,12 @@ module.exports = (io) => {
         params.push(status);
       }
 
-      query += ' ORDER BY gc.created_at DESC LIMIT ? OFFSET ?';
-      params.push(parseInt(limit), (parseInt(page) - 1) * parseInt(limit));
+      const limitNum = Number(limit);
+      const offsetNum = (Number(page) - 1) * Number(limit);
+      
+      // 使用具体数字而不是参数占位符，避免类型问题
+      query += ` ORDER BY gc.created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
+      // 不再添加这些参数到 params 数组中
 
       const giftCards = await db.query(query, params);
       res.json(giftCards);

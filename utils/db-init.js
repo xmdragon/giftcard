@@ -31,11 +31,13 @@ async function initDatabase() {
     try {
       console.log(`[尝试 ${16 - retries}/15] 连接到数据库: ${dbConfig.host}:3306, 用户: ${dbConfig.user}`);
 
-      // 添加连接超时设置
+      // 添加连接超时设置和字符集设置
       db = await mysql.createConnection({
         ...dbConfig,
         connectTimeout: 10000, // 10秒连接超时
-        debug: process.env.NODE_ENV === 'development'
+        debug: process.env.NODE_ENV === 'development',
+        charset: 'utf8mb4',
+        collation: 'utf8mb4_unicode_ci'
       });
 
       connected = true;
@@ -89,7 +91,7 @@ async function createTables(db) {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       last_login TIMESTAMP NULL,
       status ENUM('active', 'inactive') DEFAULT 'active'
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 登录记录表
@@ -103,7 +105,7 @@ async function createTables(db) {
       admin_confirmed_by INT NULL,
       admin_confirmed_at TIMESTAMP NULL,
       FOREIGN KEY (member_id) REFERENCES members(id)
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 二次验证表
@@ -119,7 +121,7 @@ async function createTables(db) {
       admin_confirmed_at TIMESTAMP NULL,
       FOREIGN KEY (member_id) REFERENCES members(id),
       FOREIGN KEY (login_log_id) REFERENCES login_logs(id)
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 礼品卡分类表
@@ -129,7 +131,7 @@ async function createTables(db) {
       name VARCHAR(100) NOT NULL,
       description TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 礼品卡表
@@ -145,7 +147,7 @@ async function createTables(db) {
       card_type ENUM('login', 'checkin') DEFAULT 'login',
       FOREIGN KEY (category_id) REFERENCES gift_card_categories(id),
       FOREIGN KEY (distributed_to) REFERENCES members(id)
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 签到记录表
@@ -159,7 +161,7 @@ async function createTables(db) {
       FOREIGN KEY (member_id) REFERENCES members(id),
       FOREIGN KEY (gift_card_id) REFERENCES gift_cards(id),
       UNIQUE KEY unique_member_date (member_id, checkin_date)
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // 管理员表
@@ -169,7 +171,7 @@ async function createTables(db) {
       username VARCHAR(50) UNIQUE NOT NULL,
       password VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   // IP黑名单表
@@ -183,7 +185,7 @@ async function createTables(db) {
       status ENUM('active', 'inactive') DEFAULT 'active',
       FOREIGN KEY (banned_by) REFERENCES admins(id),
       UNIQUE KEY unique_ip (ip_address)
-    )
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
   console.log('数据库表创建完成');
@@ -211,7 +213,9 @@ function getDbPool() {
     ...dbConfig,
     waitForConnections: true,
     connectionLimit: 10,
-    queueLimit: 0
+    queueLimit: 0,
+    charset: 'utf8mb4',
+    collation: 'utf8mb4_unicode_ci'
   });
 }
 

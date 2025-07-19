@@ -40,7 +40,8 @@ const translations = {
         status: '状态',
         distributed_at: '发放时间',
         checkin_date: '签到日期',
-        gift_card_received: '获得礼品卡'
+        gift_card_received: '获得礼品卡',
+        member_password: '会员密码'
     },
     en: {
         site_title: 'Gift Card Distribution System',
@@ -82,7 +83,8 @@ const translations = {
         status: 'Status',
         distributed_at: 'Distributed At',
         checkin_date: 'Check-in Date',
-        gift_card_received: 'Gift Card Received'
+        gift_card_received: 'Gift Card Received',
+        member_password: 'Member Password'
     },
     ja: {
         site_title: 'ギフトカード配布システム',
@@ -124,7 +126,8 @@ const translations = {
         status: 'ステータス',
         distributed_at: '配布日時',
         checkin_date: 'チェックイン日',
-        gift_card_received: 'ギフトカード受領'
+        gift_card_received: 'ギフトカード受領',
+        member_password: 'メンバーパスワード'
     }
 };
 
