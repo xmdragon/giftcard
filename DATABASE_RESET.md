@@ -48,6 +48,21 @@
 ./reset-db-only.sh
 ```
 
+### 4. `fix-encoding.sh` - 中文乱码修复脚本
+**功能**：专门解决中文乱码问题，强制重新构建所有镜像
+**适用场景**：重置后仍然出现中文乱码的情况
+
+**特点**：
+- 🔧 强制重新构建所有镜像
+- 🗑️ 清理所有缓存和数据
+- ✅ 完整的字符集验证
+- 🧪 自动测试中文 API
+
+**使用方法**：
+```bash
+./fix-encoding.sh
+```
+
 ## 🚀 在远程环境使用
 
 ### 上传脚本到服务器
@@ -140,10 +155,54 @@ docker compose exec mysql mysqladmin ping -h localhost -u giftcard_user -p'GiftC
 docker compose logs mysql
 ```
 
+## 🔧 中文乱码问题解决
+
+### 问题原因
+中文乱码通常由以下原因造成：
+1. **Docker 镜像缓存**：旧镜像没有包含最新的字符集配置
+2. **数据库编码**：数据以错误编码存储
+3. **前端文件编码**：JS 文件不是 UTF-8 编码
+4. **浏览器缓存**：浏览器缓存了错误的响应
+
+### 解决步骤
+1. **使用专用修复脚本**：
+   ```bash
+   ./fix-encoding.sh
+   ```
+
+2. **手动解决**：
+   ```bash
+   # 停止服务
+   docker compose down
+   
+   # 删除镜像和数据
+   docker rmi $(docker images | grep giftcard | awk '{print $3}')
+   docker volume rm giftcard_mysql_data
+   
+   # 重新构建
+   docker compose build --no-cache
+   docker compose up -d --force-recreate
+   ```
+
+3. **验证修复**：
+   ```bash
+   # 检查字符集
+   docker compose exec mysql mysql -u giftcard_user -p'GiftCard_User_2024!' -e "SHOW VARIABLES LIKE 'character_set%';"
+   
+   # 测试中文 API
+   curl -k -H "Authorization: Bearer $(curl -k -s -X POST https://localhost/api/auth/admin/login -H "Content-Type: application/json" -d '{"username":"admin","password":"admin123"}' | jq -r '.token')" https://localhost/api/admin/gift-card-categories
+   ```
+
+### 预防措施
+- 确保所有脚本都使用 `--build --force-recreate` 参数
+- 定期清理 Docker 缓存：`docker system prune -f`
+- 检查前端文件编码：确保所有 JS 文件都是 UTF-8
+
 ## 📞 技术支持
 
 如果遇到问题，请检查：
 1. Docker 和 Docker Compose 是否正确安装
 2. 端口 80、443、3306 是否被占用
 3. 磁盘空间是否充足
-4. 网络连接是否正常 
+4. 网络连接是否正常
+5. 文件编码是否为 UTF-8 

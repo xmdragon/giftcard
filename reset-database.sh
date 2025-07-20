@@ -56,7 +56,7 @@ docker volume rm giftcard_nginx_cache 2>/dev/null || print_warning "缓存卷不
 docker volume rm giftcard_nginx_logs 2>/dev/null || print_warning "日志卷不存在或已被删除"
 
 print_info "重新构建并启动服务..."
-docker compose up -d --build
+docker compose up -d --build --force-recreate
 
 print_info "等待服务启动..."
 sleep 15

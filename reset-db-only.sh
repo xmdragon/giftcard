@@ -15,7 +15,7 @@ docker volume rm giftcard_mysql_data 2>/dev/null || echo "MySQL 数据卷已删�
 
 # 重新启动
 echo "重新启动服务..."
-docker compose up -d
+docker compose up -d --build --force-recreate
 
 echo "✅ 数据库重置完成！"
 echo "Nginx 缓存和日志已保留"

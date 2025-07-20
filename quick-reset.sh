@@ -16,7 +16,7 @@ docker volume rm giftcard_redis_data 2>/dev/null || echo "Redis 数据卷已删�
 
 # 重新启动
 echo "重新启动服务..."
-docker compose up -d
+docker compose up -d --build --force-recreate
 
 echo "✅ 数据库重置完成！"
 echo "等待 30 秒后服务将完全启动..."
