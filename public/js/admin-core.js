@@ -309,7 +309,8 @@ class AdminApp {
 
         const response = await fetch(url, { ...defaultOptions, ...options });
 
-        if (response.status === 401) {
+        // 处理认证错误 (401) 和权限错误 (403)
+        if (response.status === 401 || response.status === 403) {
             try {
                 const errorData = await response.json();
                 
@@ -321,8 +322,12 @@ class AdminApp {
                     message = '无效的登录凭证，请重新登录';
                 } else if (errorData.code === 'NO_TOKEN') {
                     message = '请先登录';
+                } else if (errorData.code === 'INSUFFICIENT_PERMISSIONS') {
+                    message = '权限不足，请重新登录';
                 } else if (errorData.message) {
                     message = errorData.message;
+                } else if (response.status === 403) {
+                    message = '权限不足或登录已过期，请重新登录';
                 }
                 
                 // 显示提示信息
@@ -333,7 +338,11 @@ class AdminApp {
                 return null;
             } catch (parseError) {
                 // 如果无法解析错误信息，使用默认处理
-                alert('登录已过期，请重新登录');
+                if (response.status === 401) {
+                    alert('登录已过期，请重新登录');
+                } else if (response.status === 403) {
+                    alert('权限不足或登录已过期，请重新登录');
+                }
                 this.logout();
                 return null;
             }
