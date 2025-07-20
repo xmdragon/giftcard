@@ -8,7 +8,11 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   charset: 'utf8mb4',
-  collation: 'utf8mb4_unicode_ci'
+  collation: 'utf8mb4_unicode_ci',
+  // 确保连接时设置正确的字符集
+  connectionConfig: {
+    charset: 'utf8mb4'
+  }
 });
 
 // 执行查询

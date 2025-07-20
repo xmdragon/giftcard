@@ -17,7 +17,7 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     networks:
       - gift_card_network
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect="SET NAMES utf8mb4"
 
   # Node.js应用
   app:
@@ -35,6 +35,9 @@ services:
       DB_NAME: gift_card_system
       JWT_SECRET: GiftCard_JWT_Secret_Key_2024_Super_Complex_String
       PORT: 3000
+      # 确保字符集设置
+      LANG: zh_CN.UTF-8
+      LC_ALL: zh_CN.UTF-8
     depends_on:
       - mysql
     networks:
