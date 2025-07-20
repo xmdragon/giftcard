@@ -1,0 +1,3 @@
+ssl/fullchain.pem
+ssl/privkey.pem
+.vscode/
