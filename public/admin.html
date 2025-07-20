@@ -115,15 +115,17 @@
 
                     <div class="filters">
                         <select id="categoryFilter">
-                            <option value="">所有分类</option>
+                            <option value="">All Categories</option>
                         </select>
                         <select id="statusFilter">
-                            <option value="">所有状态</option>
-                            <option value="available">可用</option>
-                            <option value="distributed">已发放</option>
-                            <option value="used">已使用</option>
+                            <option value="">All Status</option>
+                            <option value="available">Available</option>
+                            <option value="distributed">Distributed</option>
+                            <option value="used">Used</option>
                         </select>
-                        <button id="filterGiftCards">筛选</button>
+                        <input type="text" id="emailFilter" placeholder="Search by email..." style="padding: 8px; border: 1px solid #ddd; border-radius: 3px; margin-right: 10px; width: 250px;">
+                        <button id="filterGiftCards">Filter</button>
+                        <button id="clearGiftCardFilters">Clear</button>
                     </div>
 
                     <div id="giftCardsList" class="data-table"></div>

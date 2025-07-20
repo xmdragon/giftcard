@@ -10,11 +10,11 @@ const middleware = require('i18next-http-middleware');
 const geoip = require('geoip-lite');
 require('dotenv').config();
 
-// 导入数据库模块
+// Database modules
 const { initDatabase } = require('./utils/db-init');
 const db = require('./utils/db');
 
-// 集成EJS模板引擎
+// EJS template engine setup
 const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -27,12 +27,12 @@ const io = socketIo(server, {
   }
 });
 
-// 中间件
+// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
-// 初始化i18next
+// Initialize i18next
 i18next
   .use(Backend)
   .use(middleware.LanguageDetector)
@@ -43,18 +43,18 @@ i18next
     },
     detection: {
       order: ['header', 'querystring', 'cookie'],
-      caches: [] // 禁用缓存
+      caches: []
     }
   });
 
 app.use(middleware.handle(i18next));
 
-// 根据IP判断推荐语言
+// Language detection based on IP
 app.use((req, res, next) => {
   let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
   const geo = geoip.lookup(ip);
-  let lang = 'en'; // 默认英文
+  let lang = 'en';
   if (geo && geo.country) {
     if (geo.country === 'CN') lang = 'zh';
     else if (geo.country === 'JP') lang = 'ja';
@@ -63,7 +63,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// JWT验证中间件
+// JWT authentication middleware
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -79,10 +79,8 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Socket.IO连接处理
+// Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('用户连接:', socket.id);
-  
   socket.on('join-member', (memberId) => {
     socket.join(`member-${memberId}`);
   });
@@ -90,40 +88,35 @@ io.on('connection', (socket) => {
   socket.on('join-admin', () => {
     socket.join('admin');
   });
-  
-  socket.on('disconnect', () => {
-    console.log('用户断开连接:', socket.id);
-  });
 });
 
-// 导入路由函数
+// Route modules
 const createMemberAuthRoutes = require('./routes/member-auth');
 const createAdminAuthRoutes = require('./routes/admin-auth');
 const createAdminRoutes = require('./routes/admin');
 const createMemberRoutes = require('./routes/member');
 
-// 启动服务器
+// Start server
 async function startServer() {
   try {
-    // 初始化数据库
+    // Initialize database
     await initDatabase();
     
-    // 创建路由
+    // Create routes
     const memberAuthRoutes = createMemberAuthRoutes(io);
     const adminAuthRoutes = createAdminAuthRoutes(io);
     const adminRoutes = createAdminRoutes(io);
     const memberRoutes = createMemberRoutes(io);
     
-    // 使用路由
+    // Use routes
     app.use('/api/auth/member', memberAuthRoutes);
     app.use('/api/auth/admin', adminAuthRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/member', memberRoutes);
     
-    // 健康检查路由
+    // Health check route
     app.get('/health', async (req, res) => {
       try {
-        // 测试数据库连接
         await db.query('SELECT 1');
         
         res.status(200).json({ 
@@ -143,33 +136,33 @@ async function startServer() {
       }
     });
 
-    // 管理员页面路由
+    // Admin page routes
     app.get(['/admin', '/admin.html'], (req, res) => {
       res.render('admin');
     });
 
-    // favicon.ico路由
+    // Favicon route
     app.get('/favicon.ico', (req, res) => {
       res.sendFile(path.join(__dirname, 'favicon.ico'));
     });
     
-    // 默认路由
+    // Default route
     app.get('/', (req, res) => {
       res.render('index', { title: '首页', user: req.user });
     });
     
-    // 启动HTTP服务器
+    // Start HTTP server
     const PORT = process.env.PORT || 3000;
     server.listen(PORT, () => {
-      console.log(`服务器运行在端口 ${PORT}`);
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('启动服务器失败:', error);
+    console.error('Failed to start server:', error);
     process.exit(1);
   }
 }
 
-// 启动服务器
+// Start server
 startServer();
 
 module.exports = { app, db, io };

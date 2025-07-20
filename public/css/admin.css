@@ -511,3 +511,20 @@ th {
     flex-wrap: wrap;
     gap: 10px;
 }
+
+/* Gift card pagination specific styles */
+.pagination .current-page {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #0071e3;
+    color: white;
+    border-radius: 3px;
+    margin: 0 2px;
+    font-weight: bold;
+}
+
+.pagination .total-info {
+    margin-left: 15px;
+    color: #666;
+    font-size: 14px;
+}

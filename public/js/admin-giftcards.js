@@ -1,130 +1,201 @@
 /**
- * 礼品卡管理模块
- * 包含礼品卡列表加载、显示、添加等功能
+ * Gift Card Management Module
+ * Includes gift card list loading, display, adding, etc.
  */
 
-// 扩展 AdminApp 类
+// Extend AdminApp class
 (function() {
-    // 礼品卡状态翻译
+    // Gift card status translation
     AdminApp.prototype.translateGiftCardStatus = function(status) {
         const statusMap = {
-            'available': '可用',
-            'distributed': '已发放',
-            'used': '已使用',
-            'expired': '已过期',
-            'cancelled': '已取消'
+            'available': 'Available',
+            'distributed': 'Distributed',
+            'used': 'Used',
+            'expired': 'Expired',
+            'cancelled': 'Cancelled'
         };
         return statusMap[status] || status;
     };
 
-    // 加载礼品卡列表
-    AdminApp.prototype.loadGiftCards = async function() {
-        const category = document.getElementById('categoryFilter').value;
-        const status = document.getElementById('statusFilter').value;
+    // Gift card management state
+    AdminApp.prototype.giftCardState = {
+        currentPage: 1,
+        totalPages: 1,
+        total: 0,
+        limit: 20
+    };
+
+    // Load gift card list
+    AdminApp.prototype.loadGiftCards = async function(page = 1) {
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const emailFilter = document.getElementById('emailFilter');
+        
+        const category = categoryFilter ? categoryFilter.value : '';
+        const status = statusFilter ? statusFilter.value : '';
+        const email = emailFilter ? emailFilter.value : '';
 
         const params = new URLSearchParams();
         if (category) params.append('category', category);
         if (status) params.append('status', status);
+        if (email) params.append('email', email);
+        params.append('page', page);
+        params.append('limit', this.giftCardState.limit);
 
         try {
             const response = await this.apiRequest(`/api/admin/gift-cards?${params.toString()}`);
             if (response && response.ok) {
-                const giftCards = await response.json();
-                this.displayGiftCards(giftCards);
+                const data = await response.json();
+                this.displayGiftCards(data.giftCards, data.pagination);
             }
         } catch (error) {
-            console.error('加载礼品卡错误:', error);
+            console.error('Error loading gift cards:', error);
         }
     };
 
-    // 显示礼品卡列表
-    AdminApp.prototype.displayGiftCards = function(giftCards) {
+    // Display gift card list
+    AdminApp.prototype.displayGiftCards = function(giftCards, pagination) {
         const container = document.getElementById('giftCardsList');
-
-        if (giftCards.length === 0) {
-            container.innerHTML = '<p>暂无礼品卡数据</p>';
+        
+        if (!container) {
+            console.error('Gift cards list container not found');
             return;
         }
+
+        if (giftCards.length === 0) {
+            container.innerHTML = '<p>No gift card data</p>';
+            return;
+        }
+
+        // Update state
+        this.giftCardState.currentPage = pagination.page;
+        this.giftCardState.totalPages = pagination.totalPages;
+        this.giftCardState.total = pagination.total;
 
         container.innerHTML = `
             <table>
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>分类</th>
-                        <th>代码</th>
-                        <th>类型</th>
-                        <th>状态</th>
-                        <th>发放给</th>
-                        <th>发放时间</th>
-                        <th>创建时间</th>
+                        <th>Category</th>
+                        <th>Code</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Distributed To</th>
+                        <th>Distribution Time</th>
+                        <th>Created At</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${giftCards.map(card => `
                         <tr>
                             <td>${card.id}</td>
-                            <td>${card.category_name || '无分类'}</td>
+                            <td>${card.category_name || 'No Category'}</td>
                             <td><code>${card.code}</code></td>
                             <td>${card.card_type}</td>
                             <td><span class="status-badge status-${card.status}">${this.translateGiftCardStatus(card.status)}</span></td>
-                            <td>${card.distributed_to_email || '未发放'}</td>
-                            <td>${card.distributed_at ? new Date(card.distributed_at).toLocaleString() : '未发放'}</td>
+                            <td>${card.distributed_to_email || 'Not Distributed'}</td>
+                            <td>${card.distributed_at ? new Date(card.distributed_at).toLocaleString() : 'Not Distributed'}</td>
                             <td>${new Date(card.created_at).toLocaleString()}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
+            ${this.renderGiftCardPagination()}
         `;
     };
 
-    // 显示添加礼品卡的模态框
+    // Render gift card pagination
+    AdminApp.prototype.renderGiftCardPagination = function() {
+        const { currentPage, totalPages, total } = this.giftCardState;
+        
+        if (totalPages <= 1) return '';
+
+        let paginationHtml = '<div class="pagination">';
+        
+        // Previous button
+        if (currentPage > 1) {
+            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage - 1})">Previous</button>`;
+        }
+        
+        // Page numbers
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, currentPage + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
+                paginationHtml += `<span class="current-page">${i}</span>`;
+            } else {
+                paginationHtml += `<button onclick="adminApp.loadGiftCards(${i})">${i}</button>`;
+            }
+        }
+        
+        // Next button
+        if (currentPage < totalPages) {
+            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage + 1})">Next</button>`;
+        }
+        
+        paginationHtml += `<span class="total-info">Total: ${total} items</span>`;
+        paginationHtml += '</div>';
+        
+        return paginationHtml;
+    };
+
+    // Show add gift cards modal
     AdminApp.prototype.showAddGiftCardsModal = function() {
         const content = `
             <form id="addGiftCardsForm">
                 <div class="form-group">
-                    <label for="giftCardCategory">选择分类</label>
+                    <label for="giftCardCategory">Select Category</label>
                     <select id="giftCardCategory" required>
-                        <option value="">请选择分类</option>
+                        <option value="">Please select a category</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="cardType">卡片类型</label>
+                    <label for="cardType">Card Type</label>
                     <select id="cardType" required>
-                        <option value="login">登录奖励</option>
-                        <option value="checkin">签到奖励</option>
+                        <option value="login">Login Reward</option>
+                        <option value="checkin">Check-in Reward</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="giftCardCodes">礼品卡代码（每行一个）</label>
-                    <textarea id="giftCardCodes" placeholder="请输入礼品卡代码，每行一个" required></textarea>
+                    <label for="giftCardCodes">Gift Card Codes (one per line)</label>
+                    <textarea id="giftCardCodes" placeholder="Please enter gift card codes, one per line" required></textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
-                    <button type="submit">添加</button>
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">Cancel</button>
+                    <button type="submit">Add</button>
                 </div>
             </form>
         `;
 
-        this.showModal('批量添加礼品卡', content);
+        this.showModal('Batch Add Gift Cards', content);
 
-        // 填充分类选项
+        // Populate category options
         this.populateCategorySelect('giftCardCategory');
 
-        // 绑定表单提交事件
-        document.getElementById('addGiftCardsForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleAddGiftCards();
-        });
+        // Bind form submission event
+        const addGiftCardsForm = document.getElementById('addGiftCardsForm');
+        if (addGiftCardsForm) {
+            addGiftCardsForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleAddGiftCards();
+            });
+        }
     };
 
-    // 填充分类选择下拉框
+    // Populate category select dropdown
     AdminApp.prototype.populateCategorySelect = async function(selectId) {
         try {
             const response = await this.apiRequest('/api/admin/gift-card-categories');
             if (response && response.ok) {
                 const categories = await response.json();
                 const select = document.getElementById(selectId);
+                
+                if (!select) {
+                    console.error(`Category select element with id '${selectId}' not found`);
+                    return;
+                }
 
                 categories.forEach(category => {
                     const option = document.createElement('option');
@@ -134,15 +205,24 @@
                 });
             }
         } catch (error) {
-            console.error('加载分类错误:', error);
+            console.error('Error loading categories:', error);
         }
     };
 
-    // 处理添加礼品卡
+    // Handle add gift cards
     AdminApp.prototype.handleAddGiftCards = async function() {
-        const categoryId = document.getElementById('giftCardCategory').value;
-        const cardType = document.getElementById('cardType').value;
-        const codes = document.getElementById('giftCardCodes').value;
+        const categoryField = document.getElementById('giftCardCategory');
+        const cardTypeField = document.getElementById('cardType');
+        const codesField = document.getElementById('giftCardCodes');
+        
+        if (!categoryField || !cardTypeField || !codesField) {
+            alert('Gift card form elements not found');
+            return;
+        }
+        
+        const categoryId = categoryField.value;
+        const cardType = cardTypeField.value;
+        const codes = codesField.value;
 
         try {
             const response = await this.apiRequest('/api/admin/gift-cards/batch', {
@@ -152,13 +232,13 @@
 
             if (response && response.ok) {
                 const result = await response.json();
-                alert(`成功添加 ${result.count} 张礼品卡`);
+                alert(`Successfully added ${result.count} gift cards`);
                 this.closeModal();
-                this.loadGiftCards();
+                this.loadGiftCards(1); // Reset to first page
             }
         } catch (error) {
-            console.error('添加礼品卡错误:', error);
-            alert('添加失败，请重试');
+            console.error('Error adding gift cards:', error);
+            alert('Add failed, please try again');
         }
     };
 })();

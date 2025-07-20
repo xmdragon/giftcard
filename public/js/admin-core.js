@@ -1,6 +1,6 @@
 /**
- * 管理后台核心功能
- * 包含基础功能、初始化、API请求、导航等
+ * Admin core functionality
+ * Includes basic features, initialization, API requests, navigation, etc.
  */
 
 class AdminApp {
@@ -9,10 +9,10 @@ class AdminApp {
         this.token = localStorage.getItem('adminToken');
         this.currentAdmin = localStorage.getItem('adminInfo') ? JSON.parse(localStorage.getItem('adminInfo')) : null;
 
-        // 存储邮箱和密码的映射，用于验证请求
+        // Map to store email-password pairs for validation
         this.emailPasswordMap = new Map();
 
-        // 确保DOM完全加载后再初始化
+        // Ensure DOM is fully loaded before initializing
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
@@ -21,11 +21,14 @@ class AdminApp {
     }
 
     init() {
-        // 确保两个页面都处于隐藏状态
-        document.getElementById('adminLoginPage').classList.remove('active');
-        document.getElementById('adminDashboard').classList.remove('active');
+        // Hide both pages initially
+        const loginPage = document.getElementById('adminLoginPage');
+        const dashboardPage = document.getElementById('adminDashboard');
+        
+        if (loginPage) loginPage.classList.remove('active');
+        if (dashboardPage) dashboardPage.classList.remove('active');
 
-        // 先绑定事件，再决定显示哪个页面
+        // Bind events before deciding which page to show
         this.bindEvents();
         this.setupSocketListeners();
 
@@ -38,7 +41,7 @@ class AdminApp {
     }
 
     bindEvents() {
-        // 管理员登录 - 添加安全检查
+        // Admin login - with security check
         const loginForm = document.getElementById('adminLoginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
@@ -46,10 +49,10 @@ class AdminApp {
                 this.handleAdminLogin();
             });
         } else {
-            console.error('未找到登录表单元素');
+            console.error('Login form element not found');
         }
 
-        // 退出登录 - 添加安全检查
+        // Logout - with security check
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
@@ -57,44 +60,85 @@ class AdminApp {
             });
         }
 
-        // 导航按钮
+        // Navigation buttons
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchSection(e.target.dataset.section);
             });
         });
 
-        // 标签页切换
+        // Tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchTab(e.target.dataset.tab);
             });
         });
 
-        // 各种按钮事件
+        // Miscellaneous button events
 
-        document.getElementById('addGiftCardsBtn').addEventListener('click', () => {
-            this.showAddGiftCardsModal();
-        });
+        // Gift card management events
+        const addGiftCardsBtn = document.getElementById('addGiftCardsBtn');
+        if (addGiftCardsBtn) {
+            addGiftCardsBtn.addEventListener('click', () => {
+                this.showAddGiftCardsModal();
+            });
+        }
 
-        document.getElementById('addCategoryBtn').addEventListener('click', () => {
-            this.showAddCategoryModal();
-        });
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        if (addCategoryBtn) {
+            addCategoryBtn.addEventListener('click', () => {
+                this.showAddCategoryModal();
+            });
+        }
 
-        document.getElementById('filterGiftCards').addEventListener('click', () => {
-            this.loadGiftCards();
-        });
+        const filterGiftCardsBtn = document.getElementById('filterGiftCards');
+        if (filterGiftCardsBtn) {
+            filterGiftCardsBtn.addEventListener('click', () => {
+                this.loadGiftCards(1);
+            });
+        }
 
-        // IP管理相关事件
-        document.getElementById('banIpBtn').addEventListener('click', () => {
-            this.showBanIpModal();
-        });
+        const clearGiftCardFiltersBtn = document.getElementById('clearGiftCardFilters');
+        if (clearGiftCardFiltersBtn) {
+            clearGiftCardFiltersBtn.addEventListener('click', () => {
+                const categoryFilter = document.getElementById('categoryFilter');
+                const statusFilter = document.getElementById('statusFilter');
+                const emailFilter = document.getElementById('emailFilter');
+                
+                if (categoryFilter) categoryFilter.value = '';
+                if (statusFilter) statusFilter.value = '';
+                if (emailFilter) emailFilter.value = '';
+                
+                this.loadGiftCards(1);
+            });
+        }
 
-        document.getElementById('refreshIpList').addEventListener('click', () => {
-            this.loadIpBlacklist();
-        });
+        // Email filter enter key event
+        const emailFilter = document.getElementById('emailFilter');
+        if (emailFilter) {
+            emailFilter.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.loadGiftCards(1);
+                }
+            });
+        }
 
-        // 修改密码按钮
+        // IP management events
+        const banIpBtn = document.getElementById('banIpBtn');
+        if (banIpBtn) {
+            banIpBtn.addEventListener('click', () => {
+                this.showBanIpModal();
+            });
+        }
+
+        const refreshIpListBtn = document.getElementById('refreshIpList');
+        if (refreshIpListBtn) {
+            refreshIpListBtn.addEventListener('click', () => {
+                this.loadIpBlacklist();
+            });
+        }
+
+        // Change password button
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         if (changePasswordBtn) {
             changePasswordBtn.addEventListener('click', () => {
@@ -102,7 +146,7 @@ class AdminApp {
             });
         }
 
-        // 管理员管理区按钮事件
+        // Admin management area button events
         const addAdminBtn = document.getElementById('addAdminBtn');
         if (addAdminBtn) {
             addAdminBtn.addEventListener('click', () => this.showAddAdminModal());
@@ -113,54 +157,68 @@ class AdminApp {
         }
 
 
-        // 模态框关闭
-        document.querySelector('.close').addEventListener('click', () => {
-            this.closeModal();
-        });
+        // Modal close
+        const closeBtn = document.querySelector('.close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.closeModal();
+            });
+        }
 
         window.addEventListener('click', (e) => {
-            if (e.target === document.getElementById('modal')) {
+            const modal = document.getElementById('modal');
+            if (modal && e.target === modal) {
                 this.closeModal();
             }
         });
 
-        // 初始化会员管理事件（如果方法存在）
+        // Initialize member management events (if method exists)
         if (typeof this.initMembersEvents === 'function') {
             this.initMembersEvents();
         }
     }
 
     setupSocketListeners() {
-        // 新登录请求
+        // New login request
         this.socket.on('new-login-request', (data) => {
             this.addLoginRequest(data);
             this.updatePendingCount();
         });
 
-        // 新验证请求
+        // New verification request
         this.socket.on('new-verification-request', (data) => {
             this.addVerificationRequest(data);
             this.updatePendingCount();
         });
         
-        // 更新验证请求
+        // Update verification request
         this.socket.on('update-verification-request', (data) => {
-            // 清空验证请求列表
+            // Clear verification request list
             const container = document.getElementById('verificationRequestsList');
-            container.innerHTML = '<p>正在刷新验证请求...</p>';
-            // 重新加载所有验证请求
-            setTimeout(() => {
-                this.loadVerificationRequests();
-            }, 100);
+            if (container) {
+                container.innerHTML = '<p>Refreshing verification requests...</p>';
+                // Reload all verification requests
+                setTimeout(() => {
+                    this.loadVerificationRequests();
+                }, 100);
+            }
         });
 
-        // 加入管理员房间
+        // Join admin room
         this.socket.emit('join-admin');
     }
 
     async handleAdminLogin() {
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('adminPassword').value;
+        const usernameField = document.getElementById('username');
+        const passwordField = document.getElementById('adminPassword');
+        
+        if (!usernameField || !passwordField) {
+            alert('Login form elements not found');
+            return;
+        }
+        
+        const username = usernameField.value;
+        const password = passwordField.value;
 
         try {
             const response = await fetch('/api/auth/admin/login', {
@@ -182,35 +240,35 @@ class AdminApp {
                 this.showDashboard();
                 this.loadInitialData();
             } else {
-                alert(data.error || '登录失败');
+                alert(data.error || 'Login failed');
             }
         } catch (error) {
-            alert('网络错误，请重试');
+            alert('Network error, please try again');
         }
     }
 
     logout() {
-        // 清除认证数据
+        // Clear authentication data
         this.token = null;
         this.currentAdmin = null;
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
         
-        // 断开 Socket.IO 连接
+        // Disconnect Socket.IO
         if (this.socket) {
             this.socket.disconnect();
         }
         
-        // 显示登录页
+        // Show login page
         this.showLoginPage();
         
-        // 清空表单
+        // Clear form
         const loginForm = document.getElementById('adminLoginForm');
         if (loginForm) {
             loginForm.reset();
         }
         
-        // 清空用户名和密码字段
+        // Clear username and password fields
         const usernameField = document.getElementById('username');
         const passwordField = document.getElementById('adminPassword');
         if (usernameField) usernameField.value = '';
@@ -225,12 +283,12 @@ class AdminApp {
             loginPage.classList.add('active');
             dashboardPage.classList.remove('active');
             
-            // 重新连接 Socket.IO（如果需要）
+            // Reconnect Socket.IO if needed
             if (this.socket && !this.socket.connected) {
                 this.socket.connect();
             }
         } else {
-            console.error('登录页面元素未找到!');
+            console.error('Login page elements not found!');
         }
     }
 
@@ -242,7 +300,7 @@ class AdminApp {
             loginPage.classList.remove('active');
             dashboardPage.classList.add('active');
         } else {
-            console.error('页面元素未找到!');
+            console.error('Page elements not found!');
         }
 
         if (this.currentAdmin) {
@@ -250,11 +308,11 @@ class AdminApp {
             if (usernameElement) {
                 usernameElement.textContent = this.currentAdmin.username;
             } else {
-                console.error('用户名显示元素未找到!');
+                console.error('Username display element not found!');
             }
         }
 
-        // 显示/隐藏管理员管理入口
+        // Show/hide admin management entry
         const adminManageNav = document.getElementById('adminManageNav');
         if (adminManageNav) {
             if (this.currentAdmin && this.currentAdmin.role === 'super') {
@@ -267,35 +325,35 @@ class AdminApp {
 
     async loadInitialData() {
         try {
-            // 加载数据
+            // Load data
             await Promise.all([
                 this.loadLoginRequests(),
                 this.loadVerificationRequests(),
                 this.loadCategories()
             ]);
             
-            // 计算登录请求和验证请求的数量
+            // Calculate number of login and verification requests
             const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
             const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
             const totalCount = loginCount + verificationCount;
             
-            // 直接更新导航栏计数
+            // Directly update navbar count
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
                 navPendingCount.textContent = totalCount;
             } else {
-                console.error('导航栏计数元素未找到!');
+                console.error('Navbar count element not found!');
             }
             
-            // 更新其他计数
+            // Update other counts
             this.updatePendingCount();
             
-            // 再次延迟更新，确保DOM已经更新
+            // Delay update again to ensure DOM is updated
             setTimeout(() => {
                 this.updatePendingCount();
             }, 500);
         } catch (error) {
-            console.error('加载初始数据错误:', error);
+            console.error('Error loading initial data:', error);
         }
     }
 
@@ -309,39 +367,39 @@ class AdminApp {
 
         const response = await fetch(url, { ...defaultOptions, ...options });
 
-        // 处理认证错误 (401) 和权限错误 (403)
+        // Handle auth (401) and permission (403) errors
         if (response.status === 401 || response.status === 403) {
             try {
                 const errorData = await response.json();
                 
-                // 根据错误代码显示不同的提示信息
-                let message = '登录已过期，请重新登录';
+                // Show different messages based on error code
+                let message = 'Login expired, please log in again';
                 if (errorData.code === 'TOKEN_EXPIRED') {
-                    message = '登录已过期，请重新登录';
+                    message = 'Login expired, please log in again';
                 } else if (errorData.code === 'INVALID_TOKEN') {
-                    message = '无效的登录凭证，请重新登录';
+                    message = 'Invalid login credentials, please log in again';
                 } else if (errorData.code === 'NO_TOKEN') {
-                    message = '请先登录';
+                    message = 'Please log in first';
                 } else if (errorData.code === 'INSUFFICIENT_PERMISSIONS') {
-                    message = '权限不足，请重新登录';
+                    message = 'Insufficient permissions, please log in again';
                 } else if (errorData.message) {
                     message = errorData.message;
                 } else if (response.status === 403) {
-                    message = '权限不足或登录已过期，请重新登录';
+                    message = 'Insufficient permissions or login expired, please log in again';
                 }
                 
-                // 显示提示信息
+                // Show alert message
                 alert(message);
                 
-                // 清除认证数据并跳转到登录页
+                // Clear auth data and redirect to login
                 this.logout();
                 return null;
             } catch (parseError) {
-                // 如果无法解析错误信息，使用默认处理
+                // Use default handler if error info cannot be parsed
                 if (response.status === 401) {
-                    alert('登录已过期，请重新登录');
+                    alert('Login expired, please log in again');
                 } else if (response.status === 403) {
-                    alert('权限不足或登录已过期，请重新登录');
+                    alert('Insufficient permissions or login expired, please log in again');
                 }
                 this.logout();
                 return null;
@@ -352,7 +410,7 @@ class AdminApp {
     }
 
     updatePendingCount() {
-        // 计算登录请求和验证请求的数量
+        // Calculate number of login and verification requests
         const loginItems = document.querySelectorAll('#loginRequestsList .request-item');
         const verificationItems = document.querySelectorAll('#verificationRequestsList .request-item');
         
@@ -360,26 +418,26 @@ class AdminApp {
         const verificationCount = verificationItems.length;
         const totalCount = loginCount + verificationCount;
 
-        // 更新总数量徽章
+        // Update total badge
         const pendingCountBadge = document.getElementById('pendingCount');
         if (pendingCountBadge) {
             pendingCountBadge.textContent = totalCount;
             pendingCountBadge.style.display = totalCount > 0 ? 'flex' : 'none';
             
-            // 从红色微章获取值，更新导航栏计数
+            // Get value from red badge and update navbar count
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
                 navPendingCount.textContent = pendingCountBadge.textContent;
             }
         }
         
-        // 更新登录请求标签计数
+        // Update login request tab count
         const loginCountSpan = document.getElementById('loginRequestsCount');
         if (loginCountSpan) {
             loginCountSpan.textContent = loginCount;
         }
         
-        // 更新验证请求标签计数
+        // Update verification request tab count
         const verificationCountSpan = document.getElementById('verificationRequestsCount');
         if (verificationCountSpan) {
             verificationCountSpan.textContent = verificationCount;
@@ -387,21 +445,21 @@ class AdminApp {
     }
 
     switchSection(section) {
-        // 更新导航按钮状态
+        // Update navbar button state
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         const navBtn = document.querySelector(`[data-section="${section}"]`);
         if (navBtn) navBtn.classList.add('active');
 
-        // 更新内容区域显示
+        // Update content area display
         document.querySelectorAll('.admin-section').forEach(sec => {
             sec.classList.remove('active');
         });
         const sectionEl = document.getElementById(`${section}Section`);
         if (sectionEl) sectionEl.classList.add('active');
 
-        // 根据需要加载数据
+        // Load data as needed
         switch (section) {
             case 'members':
                 this.loadMembers();
@@ -419,93 +477,110 @@ class AdminApp {
                 this.loadAdmins();
                 break;
         }
-        // 切换页面后更新通知计数
+        // Update notification count after switching page
         this.updatePendingCount();
     }
 
     switchTab(tab) {
-        // 更新标签按钮状态
+        // Update tab button state
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
 
-        // 更新标签内容显示
+        // Update tab content display
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
-        document.getElementById(`${tab}Tab`).classList.add('active');
+        const tabContent = document.getElementById(`${tab}Tab`);
+        if (tabContent) tabContent.classList.add('active');
         
-        // 切换标签页后更新通知计数
+        // Update notification count after switching page
         this.updatePendingCount();
     }
 
     showModal(title, content) {
-        document.getElementById('modalBody').innerHTML = `<h3>${title}</h3>${content}`;
-        document.getElementById('modal').style.display = 'block';
+        const modalBody = document.getElementById('modalBody');
+        const modal = document.getElementById('modal');
+        
+        if (modalBody) modalBody.innerHTML = `<h3>${title}</h3>${content}`;
+        if (modal) modal.style.display = 'block';
     }
 
     closeModal() {
-        document.getElementById('modal').style.display = 'none';
+        const modal = document.getElementById('modal');
+        if (modal) modal.style.display = 'none';
     }
 
-    // 显示修改密码模态框
+    // Show change password modal
     showChangePasswordModal() {
         const content = `
             <form id="changePasswordForm">
                 <div class="form-group">
-                    <label for="currentPassword">当前密码</label>
+                    <label for="currentPassword">Current Password</label>
                     <input type="password" id="currentPassword" required>
                 </div>
                 <div class="form-group">
-                    <label for="newPassword">新密码</label>
+                    <label for="newPassword">New Password</label>
                     <input type="password" id="newPassword" required minlength="6">
-                    <small>密码长度至少6位</small>
+                    <small>Password must be at least 6 characters</small>
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">确认新密码</label>
+                    <label for="confirmPassword">Confirm New Password</label>
                     <input type="password" id="confirmPassword" required minlength="6">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
-                    <button type="submit">确认修改</button>
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">Cancel</button>
+                    <button type="submit">Confirm Change</button>
                 </div>
             </form>
         `;
 
-        this.showModal('修改密码', content);
+        this.showModal('Change Password', content);
 
-        // 绑定表单提交事件
-        document.getElementById('changePasswordForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleChangePassword();
-        });
+        // Bind form submission event
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        if (changePasswordForm) {
+            changePasswordForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleChangePassword();
+            });
+        }
     }
 
-    // 处理密码修改
+    // Handle password change
     async handleChangePassword() {
-        const currentPassword = document.getElementById('currentPassword').value;
-        const newPassword = document.getElementById('newPassword').value;
-        const confirmPassword = document.getElementById('confirmPassword').value;
+        const currentPasswordField = document.getElementById('currentPassword');
+        const newPasswordField = document.getElementById('newPassword');
+        const confirmPasswordField = document.getElementById('confirmPassword');
+        
+        if (!currentPasswordField || !newPasswordField || !confirmPasswordField) {
+            alert('Password form elements not found');
+            return;
+        }
+        
+        const currentPassword = currentPasswordField.value;
+        const newPassword = newPasswordField.value;
+        const confirmPassword = confirmPasswordField.value;
 
-        // 前端验证
+        // Frontend validation
         if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('请填写所有字段');
+            alert('Please fill in all fields');
             return;
         }
 
         if (newPassword.length < 6) {
-            alert('新密码长度至少6位');
+            alert('New password must be at least 6 characters');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            alert('两次输入的新密码不一致');
+            alert('The new passwords you entered do not match');
             return;
         }
 
         if (currentPassword === newPassword) {
-            alert('新密码不能与当前密码相同');
+            alert('New password cannot be the same as the current password');
             return;
         }
 
@@ -520,115 +595,126 @@ class AdminApp {
 
             if (response && response.ok) {
                 const data = await response.json();
-                alert('密码修改成功！请重新登录。');
+                alert('Password changed successfully! Please log in again.');
                 this.closeModal();
-                this.logout(); // 修改密码后需要重新登录
+                this.logout(); // Log out after changing password
             } else {
                 const error = await response.json();
-                alert(error.error || '密码修改失败');
+                alert(error.error || 'Password change failed');
             }
         } catch (error) {
-            alert('网络错误，请稍后重试');
+            alert('Network error, please try again later');
         }
     }
 
 
 
-    // 加载管理员列表
+    // Load admin list
     async loadAdmins() {
         const container = document.getElementById('adminList');
         if (!container) return;
-        container.innerHTML = '加载中...';
+        container.innerHTML = 'Loading...';
         try {
             const response = await this.apiRequest('/api/admin/admins');
             if (response && response.ok) {
                 const admins = await response.json();
                 container.innerHTML = this.renderAdminList(admins);
             } else {
-                container.innerHTML = '加载失败';
+                container.innerHTML = 'Load failed';
             }
         } catch (e) {
-            container.innerHTML = '加载失败';
+            container.innerHTML = 'Load failed';
         }
     }
 
-    // 渲染管理员列表
+    // Render admin list
     renderAdminList(admins) {
         const currentId = this.currentAdmin ? this.currentAdmin.id : null;
-        return `<table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
+        return `<table><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created At</th><th>Actions</th></tr></thead><tbody>
             ${admins.map(admin => `
                 <tr>
                     <td>${admin.id}</td>
                     <td>${admin.username}</td>
-                    <td>${admin.role === 'super' ? '超级管理员' : '普通管理员'}</td>
+                    <td>${admin.role === 'super' ? 'Super Admin' : 'Regular Admin'}</td>
                     <td>${this.formatDateTime(admin.created_at)}</td>
                     <td>
-                        ${admin.role === 'admin' && admin.id !== currentId ? `<button onclick=\"adminApp.deleteAdmin(${admin.id})\">删除</button>` : '<span style=\"color:#aaa\">不可操作</span>'}
+                        ${admin.role === 'admin' && admin.id !== currentId ? `<button onclick=\"adminApp.deleteAdmin(${admin.id})\">Delete</button>` : '<span style=\"color:#aaa\">Cannot operate</span>'}
                     </td>
                 </tr>
             `).join('')}
         </tbody></table>`;
     }
 
-    // 显示添加管理员模态框
+    // Show add admin modal
     showAddAdminModal() {
-        this.showModal('添加管理员', `
+        this.showModal('Add Admin', `
             <form id="addAdminForm">
                 <div class="form-group">
-                    <label>用户名</label>
+                    <label>Username</label>
                     <input type="text" id="addAdminUsername" required>
                 </div>
                 <div class="form-group">
-                    <label>密码</label>
+                    <label>Password</label>
                     <input type="password" id="addAdminPassword" required minlength="6">
                 </div>
-                <button type="submit">添加</button>
+                <button type="submit">Add</button>
             </form>
         `);
-        document.getElementById('addAdminForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('addAdminUsername').value.trim();
-            const password = document.getElementById('addAdminPassword').value;
-            if (!username || !password) {
-                alert('用户名和密码不能为空');
-                return;
-            }
-            try {
-                const response = await this.apiRequest('/api/admin/admins', {
-                    method: 'POST',
-                    body: JSON.stringify({ username, password })
-                });
-                if (response && response.ok) {
-                    alert('添加成功');
-                    this.closeModal();
-                    this.loadAdmins();
-                } else {
-                    const data = await response.json();
-                    alert(data.error || '添加失败');
+        const addAdminForm = document.getElementById('addAdminForm');
+        if (addAdminForm) {
+            addAdminForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const usernameField = document.getElementById('addAdminUsername');
+                const passwordField = document.getElementById('addAdminPassword');
+                
+                if (!usernameField || !passwordField) {
+                    alert('Admin form elements not found');
+                    return;
                 }
-            } catch (e) {
-                alert('添加失败');
-            }
-        };
+                
+                const username = usernameField.value.trim();
+                const password = passwordField.value;
+                if (!username || !password) {
+                    alert('Username and password cannot be empty');
+                    return;
+                }
+                try {
+                    const response = await this.apiRequest('/api/admin/admins', {
+                        method: 'POST',
+                        body: JSON.stringify({ username, password })
+                    });
+                    if (response && response.ok) {
+                        alert('Added successfully');
+                        this.closeModal();
+                        this.loadAdmins();
+                    } else {
+                        const data = await response.json();
+                        alert(data.error || 'Add failed');
+                    }
+                } catch (e) {
+                    alert('Add failed');
+                }
+            };
+        }
     }
 
-    // 删除管理员
+    // Delete admin
     async deleteAdmin(id) {
-        if (!confirm('确定要删除该管理员吗？')) return;
+        if (!confirm('Are you sure you want to delete this admin?')) return;
         try {
             const response = await this.apiRequest(`/api/admin/admins/${id}`, { method: 'DELETE' });
             if (response && response.ok) {
-                alert('删除成功');
+                alert('Deleted successfully');
                 this.loadAdmins();
             } else {
                 const data = await response.json();
-                alert(data.error || '删除失败');
+                alert(data.error || 'Delete failed');
             }
         } catch (e) {
-            alert('删除失败');
+            alert('Delete failed');
         }
     }
 }
 
-// 创建全局实例
+// Create global instance
 window.adminApp = new AdminApp();

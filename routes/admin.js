@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../utils/db');
 
 module.exports = (io) => {
-  // JWT验证中间件
+  // JWT authentication middleware
   const authenticateAdmin = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
@@ -15,34 +15,32 @@ module.exports = (io) => {
     const jwt = require('jsonwebtoken');
     jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
       if (err) {
-        // 区分不同类型的 JWT 错误
         if (err.name === 'TokenExpiredError') {
           return res.status(401).json({ 
             error: 'Token expired', 
             code: 'TOKEN_EXPIRED',
-            message: '登录已过期，请重新登录'
+            message: 'Login expired, please login again'
           });
         } else if (err.name === 'JsonWebTokenError') {
           return res.status(401).json({ 
             error: 'Invalid token', 
             code: 'INVALID_TOKEN',
-            message: '无效的登录凭证，请重新登录'
+            message: 'Invalid login credentials, please login again'
           });
         } else {
           return res.status(401).json({ 
             error: 'Token verification failed', 
             code: 'TOKEN_ERROR',
-            message: '登录验证失败，请重新登录'
+            message: 'Login verification failed, please login again'
           });
         }
       }
       
-      // 检查用户角色
       if (user.role !== 'admin' && user.role !== 'super') {
         return res.status(403).json({ 
           error: 'Admin access required', 
           code: 'INSUFFICIENT_PERMISSIONS',
-          message: '权限不足，需要管理员权限'
+          message: 'Insufficient permissions, admin access required'
         });
       }
       
@@ -51,7 +49,7 @@ module.exports = (io) => {
     });
   };
 
-  // 新增：超级管理员权限中间件
+  // Super admin authentication middleware
   const authenticateSuperAdmin = (req, res, next) => {
     if (!req.admin || req.admin.role !== 'super') {
       return res.status(403).json({ error: 'Only super admin can perform this action' });
@@ -59,7 +57,7 @@ module.exports = (io) => {
     next();
   };
 
-  // 获取待审核的登录请求
+  // Get pending login requests
   router.get('/login-requests', authenticateAdmin, async (req, res) => {
     try {
       const requests = await db.query(`
@@ -70,16 +68,14 @@ module.exports = (io) => {
         ORDER BY ll.login_time DESC
       `);
 
-
-
       res.json(requests);
     } catch (error) {
-      console.error('获取登录请求错误:', error);
+      console.error('Error getting login requests:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 审核登录请求
+  // Approve login request
   router.post('/approve-login/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -92,7 +88,6 @@ module.exports = (io) => {
         admin_confirmed_at: new Date()
       }, { id: id });
 
-      // 获取登录记录详情
       const loginLogs = await db.query(
         'SELECT ll.*, m.email FROM login_logs ll JOIN members m ON ll.member_id = m.id WHERE ll.id = ?',
         [id]
@@ -101,40 +96,26 @@ module.exports = (io) => {
       if (loginLogs.length > 0) {
         const loginLog = loginLogs[0];
 
-        // 如果拒绝登录，检查是否是首次登录，如果是则删除用户
         if (!approved) {
-          // 检查用户的登录记录数量
           const loginCount = await db.query(
             'SELECT COUNT(*) as count FROM login_logs WHERE member_id = ?',
             [loginLog.member_id]
           );
 
-          // 如果只有一条登录记录（当前这条），说明是首次登录
           if (loginCount[0].count === 1) {
-            // 删除用户相关的所有数据
             await db.transaction(async (connection) => {
-              // 删除登录日志
               await connection.execute('DELETE FROM login_logs WHERE member_id = ?', [loginLog.member_id]);
-
-              // 删除二次验证记录
               await connection.execute('DELETE FROM second_verifications WHERE member_id = ?', [loginLog.member_id]);
-
-              // 删除签到记录
               await connection.execute('DELETE FROM checkin_records WHERE member_id = ?', [loginLog.member_id]);
-
-              // 更新礼品卡状态
               await connection.execute(
                 'UPDATE gift_cards SET status = "available", distributed_to = NULL, distributed_at = NULL WHERE distributed_to = ?',
                 [loginLog.member_id]
               );
-
-              // 最后删除会员记录
               await connection.execute('DELETE FROM members WHERE id = ?', [loginLog.member_id]);
             });
           }
         }
 
-        // 通知会员审核结果
         io.to(`member-${loginLog.member_id}`).emit('login-status-update', {
           status,
           loginId: id,
@@ -144,12 +125,12 @@ module.exports = (io) => {
 
       res.json({ message: req.t('login_request_processed') });
     } catch (error) {
-      console.error('审核登录请求错误:', error);
+      console.error('Error approving login request:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取待审核的验证请求
+  // Get pending verification requests
   router.get('/verification-requests', authenticateAdmin, async (req, res) => {
     try {
       const requests = await db.query(`
@@ -160,16 +141,14 @@ module.exports = (io) => {
         ORDER BY sv.submitted_at DESC
       `);
 
-
-
       res.json(requests);
     } catch (error) {
-      console.error('获取验证请求错误:', error);
+      console.error('Error getting verification requests:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取单个验证请求详情
+  // Get single verification request details
   router.get('/verification-request/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -186,12 +165,12 @@ module.exports = (io) => {
 
       res.json(requests[0]);
     } catch (error) {
-      console.error('获取验证请求详情错误:', error);
+      console.error('Error getting verification request details:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 审核验证请求
+  // Approve verification request
   router.post('/approve-verification/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -205,7 +184,7 @@ module.exports = (io) => {
       }, { id: id });
 
       if (approved) {
-        // 获取验证记录详情
+        // Get verification record details
         const verifications = await db.query(
           'SELECT sv.*, m.email FROM second_verifications sv JOIN members m ON sv.member_id = m.id WHERE sv.id = ?',
           [id]
@@ -214,7 +193,7 @@ module.exports = (io) => {
         if (verifications.length > 0) {
           const verification = verifications[0];
 
-          // 分配礼品卡
+          // Distribute gift card
           const availableCards = await db.query(
             'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "login" LIMIT 1'
           );
@@ -222,20 +201,20 @@ module.exports = (io) => {
           if (availableCards.length > 0) {
             const giftCard = availableCards[0];
 
-            // 更新礼品卡状态
+            // Update gift card status
             await db.update('gift_cards', {
               status: 'distributed',
               distributed_to: verification.member_id,
               distributed_at: new Date()
             }, { id: giftCard.id });
 
-            // 通知会员验证通过并发放礼品卡
+            // Notify member of verification approval and gift card distribution
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: giftCard.code,
               verificationId: id
             });
           } else {
-            // 没有可用礼品卡
+            // No available gift cards
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: null,
               message: req.t('no_gift_cards_available'),
@@ -244,7 +223,7 @@ module.exports = (io) => {
           }
         }
       } else {
-        // 通知会员验证被拒绝
+        // Notify member of verification rejection
         const verifications = await db.query('SELECT member_id FROM second_verifications WHERE id = ?', [id]);
         if (verifications.length > 0) {
           io.to(`member-${verifications[0].member_id}`).emit('verification-rejected', {
@@ -255,19 +234,19 @@ module.exports = (io) => {
 
       res.json({ message: req.t('verification_request_processed') });
     } catch (error) {
-      console.error('审核验证请求错误:', error);
+      console.error('Error approving verification request:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取会员列表（支持搜索和分页）
+  // Get member list (with search and pagination)
   router.get('/members', authenticateAdmin, async (req, res) => {
     try {
       const { page = 1, limit = 20, email = '' } = req.query;
       const offset = Math.max(0, parseInt(page) - 1) * Math.max(1, parseInt(limit));
       const safeLimit = Math.max(1, parseInt(limit));
       
-      // 构建搜索条件
+      // Build search conditions
       let whereClause = '';
       let queryParams = [];
       if (email) {
@@ -275,7 +254,7 @@ module.exports = (io) => {
         queryParams.push(`%${email}%`);
       }
       
-      // 获取总数
+      // Get total count
       const countQuery = `
         SELECT COUNT(DISTINCT m.id) as total
         FROM members m
@@ -287,11 +266,11 @@ module.exports = (io) => {
         const countResult = await db.query(countQuery, queryParams);
         total = countResult[0] ? countResult[0].total : 0;
       } catch (err) {
-        console.error('会员总数查询错误:', err.message);
+        console.error('Error querying member count:', err.message);
         total = 0;
       }
       
-      // 获取会员列表 - 修复参数传递问题
+      // Get member list - fix parameter passing issue
       const membersQuery = `
         SELECT m.*, 
                COUNT(DISTINCT ll.id) as login_count,
@@ -314,7 +293,7 @@ module.exports = (io) => {
       try {
         members = await db.query(membersQuery, queryParams);
       } catch (err) {
-        console.error('会员列表查询错误:', err.message);
+        console.error('Error querying member list:', err.message);
         members = [];
       }
       
@@ -328,90 +307,90 @@ module.exports = (io) => {
         }
       });
     } catch (error) {
-      console.error('获取会员列表错误:', error.message);
+      console.error('Error getting member list:', error.message);
       res.status(500).json({ error: '服务器错误，请稍后重试' });
     }
   });
 
-  // 删除会员
+  // Delete member
   router.delete('/members/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       
-      // 检查会员是否存在
+      // Check if member exists
       const members = await db.query('SELECT * FROM members WHERE id = ?', [id]);
       if (members.length === 0) {
         return res.status(404).json({ error: '会员不存在' });
       }
       
-      // 使用事务删除会员及相关数据
+      // Use transaction to delete member and related data
       await db.transaction(async (connection) => {
-        // 删除签到记录
+        // Delete checkin records
         await connection.execute('DELETE FROM checkin_records WHERE member_id = ?', [id]);
         
-        // 删除二次验证记录
+        // Delete verification records
         await connection.execute('DELETE FROM second_verifications WHERE member_id = ?', [id]);
         
-        // 删除登录日志
+        // Delete login logs
         await connection.execute('DELETE FROM login_logs WHERE member_id = ?', [id]);
         
-        // 将分配给该会员的礼品卡状态重置为可用
+        // Reset gift cards assigned to this member
         await connection.execute(
           'UPDATE gift_cards SET status = "available", distributed_to = NULL, distributed_at = NULL WHERE distributed_to = ?',
           [id]
         );
         
-        // 删除会员
+        // Delete member
         await connection.execute('DELETE FROM members WHERE id = ?', [id]);
       });
       
       res.json({ message: '会员删除成功' });
     } catch (error) {
-      console.error('删除会员错误:', error);
+      console.error('Error deleting member:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取礼品卡分类
+  // Get gift card categories
   router.get('/gift-card-categories', authenticateAdmin, async (req, res) => {
     try {
       const categories = await db.query('SELECT * FROM gift_card_categories ORDER BY name');
       res.json(categories);
     } catch (error) {
-      console.error('获取礼品卡分类错误:', error);
+      console.error('Error getting gift card categories:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 添加礼品卡分类
+  // Add gift card category
   router.post('/gift-card-categories', authenticateAdmin, async (req, res) => {
     try {
       const { name, description } = req.body;
       const result = await db.insert('gift_card_categories', { name, description });
       res.json({ id: result.insertId, message: req.t('category_created') });
     } catch (error) {
-      console.error('添加礼品卡分类错误:', error);
+      console.error('Error adding gift card category:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 编辑礼品卡分类
+  // Edit gift card category
   router.put('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
     try {
       const { id } = req.params;
       const { name, description } = req.body;
 
-      // 检查分类是否存在
+      // Check if category exists
       const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
       if (category.length === 0) {
         return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
       }
 
-      // 更新分类
+      // Update category
       await db.update('gift_card_categories', { name, description }, { id });
       res.json({ message: req.t ? req.t('category_updated') : '分类已更新' });
     } catch (error) {
-      console.error('编辑礼品卡分类错误:', error);
+      console.error('Error editing gift card category:', error);
       res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误' });
     }
   });
@@ -421,34 +400,34 @@ module.exports = (io) => {
     try {
       const { id } = req.params;
 
-      // 检查分类是否存在
+      // Check if category exists
       const category = await db.query('SELECT * FROM gift_card_categories WHERE id = ?', [id]);
       if (category.length === 0) {
         return res.status(404).json({ error: req.t ? req.t('category_not_found') : '分类不存在' });
       }
 
-      // 检查分类是否被使用
+      // Check if category is in use
       const usedCards = await db.query('SELECT COUNT(*) as count FROM gift_cards WHERE category_id = ?', [id]);
       if (usedCards[0].count > 0) {
         return res.status(400).json({ error: req.t ? req.t('category_in_use') : '该分类下有礼品卡，无法删除' });
       }
 
-      // 删除分类
+      // Delete category
       await db.remove('gift_card_categories', { id });
       res.json({ message: req.t ? req.t('category_deleted') : '分类已删除' });
     } catch (error) {
-      console.error('删除礼品卡分类错误:', error);
+      console.error('Error deleting gift card category:', error);
       res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误' });
     }
   });
 
-  // 批量添加礼品卡
+  // Batch add gift cards
   router.post('/gift-cards/batch', authenticateAdmin, async (req, res) => {
     try {
       const { categoryId, codes, cardType = 'login' } = req.body;
       const codeList = codes.split('\n').filter(code => code.trim());
 
-      // 使用事务处理批量插入
+      // Use transaction for batch insertion
       await db.transaction(async (connection) => {
         for (const code of codeList) {
           await connection.execute(
@@ -463,50 +442,90 @@ module.exports = (io) => {
         count: codeList.length
       });
     } catch (error) {
-      console.error('批量添加礼品卡错误:', error);
+      console.error('Error batch adding gift cards:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取礼品卡列表
+  // Get gift card list
   router.get('/gift-cards', authenticateAdmin, async (req, res) => {
     try {
-      const { category, status, page = 1, limit = 50 } = req.query;
-      let query = `
+      const { category, status, email, page = 1, limit = 50 } = req.query;
+      const safeLimit = Math.max(1, parseInt(limit));
+      const offset = Math.max(0, parseInt(page) - 1) * safeLimit;
+      
+      // Build search conditions
+      let whereClause = '';
+      let queryParams = [];
+      
+      if (category) {
+        whereClause += ' AND gc.category_id = ?';
+        queryParams.push(category);
+      }
+
+      if (status) {
+        whereClause += ' AND gc.status = ?';
+        queryParams.push(status);
+      }
+
+      if (email) {
+        whereClause += ' AND m.email LIKE ?';
+        queryParams.push(`%${email}%`);
+      }
+
+      // Get total count
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM gift_cards gc
+        LEFT JOIN gift_card_categories gcc ON gc.category_id = gcc.id
+        LEFT JOIN members m ON gc.distributed_to = m.id
+        WHERE 1=1 ${whereClause}
+      `;
+      
+      let total = 0;
+      try {
+        const countResult = await db.query(countQuery, queryParams);
+        total = countResult[0] ? countResult[0].total : 0;
+      } catch (err) {
+        console.error('Error querying gift card count:', err.message);
+        total = 0;
+      }
+
+      // Get gift card list
+      const listQuery = `
         SELECT gc.*, gcc.name as category_name, m.email as distributed_to_email
         FROM gift_cards gc
         LEFT JOIN gift_card_categories gcc ON gc.category_id = gcc.id
         LEFT JOIN members m ON gc.distributed_to = m.id
-        WHERE 1=1
+        WHERE 1=1 ${whereClause}
+        ORDER BY gc.created_at DESC 
+        LIMIT ${safeLimit} OFFSET ${offset}
       `;
-      const params = [];
-
-      if (category) {
-        query += ' AND gc.category_id = ?';
-        params.push(category);
+      
+      let giftCards = [];
+      try {
+        giftCards = await db.query(listQuery, queryParams);
+      } catch (err) {
+        console.error('Error querying gift card list:', err.message);
+        giftCards = [];
       }
 
-      if (status) {
-        query += ' AND gc.status = ?';
-        params.push(status);
-      }
-
-      const limitNum = Number(limit);
-      const offsetNum = (Number(page) - 1) * Number(limit);
-
-      // 使用具体数字而不是参数占位符，避免类型问题
-      query += ` ORDER BY gc.created_at DESC LIMIT ${limitNum} OFFSET ${offsetNum}`;
-      // 不再添加这些参数到 params 数组中
-
-      const giftCards = await db.query(query, params);
-      res.json(giftCards);
+      res.json({
+        giftCards,
+        pagination: {
+          page: parseInt(page),
+          limit: safeLimit,
+          total,
+          totalPages: Math.ceil(total / safeLimit)
+        }
+      });
     } catch (error) {
-      console.error('获取礼品卡列表错误:', error);
+      console.error('Error getting gift card list:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
 
-  // 获取IP黑名单
+  // Get IP blacklist
   router.get('/ip-blacklist', authenticateAdmin, async (req, res) => {
     try {
       const blacklist = await db.query(`
@@ -520,7 +539,7 @@ module.exports = (io) => {
       `);
       res.json(blacklist);
     } catch (error) {
-      console.error('获取IP黑名单错误:', error);
+      console.error('Error getting IP blacklist:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -552,7 +571,7 @@ module.exports = (io) => {
 
       res.json({ message: req.t('ip_banned_successfully') });
     } catch (error) {
-      console.error('禁止IP错误:', error);
+      console.error('Error banning IP:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -566,7 +585,7 @@ module.exports = (io) => {
 
       res.json({ message: req.t('ip_unbanned_successfully') });
     } catch (error) {
-      console.error('解禁IP错误:', error);
+      console.error('Error unbanning IP:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -586,7 +605,7 @@ module.exports = (io) => {
 
       res.json(history);
     } catch (error) {
-      console.error('获取IP历史错误:', error);
+      console.error('Error getting IP history:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
