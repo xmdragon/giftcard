@@ -9,14 +9,43 @@ module.exports = (io) => {
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
-      return res.status(401).json({ error: 'Access token required' });
+      return res.status(401).json({ error: 'Access token required', code: 'NO_TOKEN' });
     }
 
     const jwt = require('jsonwebtoken');
     jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, user) => {
-      if (err || (user.role !== 'admin' && user.role !== 'super')) {
-        return res.status(403).json({ error: 'Admin access required' });
+      if (err) {
+        // 区分不同类型的 JWT 错误
+        if (err.name === 'TokenExpiredError') {
+          return res.status(401).json({ 
+            error: 'Token expired', 
+            code: 'TOKEN_EXPIRED',
+            message: '登录已过期，请重新登录'
+          });
+        } else if (err.name === 'JsonWebTokenError') {
+          return res.status(401).json({ 
+            error: 'Invalid token', 
+            code: 'INVALID_TOKEN',
+            message: '无效的登录凭证，请重新登录'
+          });
+        } else {
+          return res.status(401).json({ 
+            error: 'Token verification failed', 
+            code: 'TOKEN_ERROR',
+            message: '登录验证失败，请重新登录'
+          });
+        }
       }
+      
+      // 检查用户角色
+      if (user.role !== 'admin' && user.role !== 'super') {
+        return res.status(403).json({ 
+          error: 'Admin access required', 
+          code: 'INSUFFICIENT_PERMISSIONS',
+          message: '权限不足，需要管理员权限'
+        });
+      }
+      
       req.admin = user;
       next();
     });

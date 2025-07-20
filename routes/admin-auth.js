@@ -84,8 +84,18 @@ module.exports = (io) => {
             res.json({ message: '密码修改成功' });
 
         } catch (error) {
-            if (error.name === 'JsonWebTokenError') {
-                return res.status(401).json({ error: '无效的令牌' });
+            if (error.name === 'TokenExpiredError') {
+                return res.status(401).json({ 
+                    error: 'Token expired', 
+                    code: 'TOKEN_EXPIRED',
+                    message: '登录已过期，请重新登录'
+                });
+            } else if (error.name === 'JsonWebTokenError') {
+                return res.status(401).json({ 
+                    error: 'Invalid token', 
+                    code: 'INVALID_TOKEN',
+                    message: '无效的登录凭证，请重新登录'
+                });
             }
             res.status(500).json({ error: '服务器错误，请稍后重试' });
         }

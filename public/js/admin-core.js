@@ -190,16 +190,48 @@ class AdminApp {
     }
 
     logout() {
+        // 清除认证数据
         this.token = null;
         this.currentAdmin = null;
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
+        
+        // 断开 Socket.IO 连接
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+        
+        // 显示登录页
         this.showLoginPage();
+        
+        // 清空表单
+        const loginForm = document.getElementById('adminLoginForm');
+        if (loginForm) {
+            loginForm.reset();
+        }
+        
+        // 清空用户名和密码字段
+        const usernameField = document.getElementById('username');
+        const passwordField = document.getElementById('adminPassword');
+        if (usernameField) usernameField.value = '';
+        if (passwordField) passwordField.value = '';
     }
 
     showLoginPage() {
-        document.getElementById('adminLoginPage').classList.add('active');
-        document.getElementById('adminDashboard').classList.remove('active');
+        const loginPage = document.getElementById('adminLoginPage');
+        const dashboardPage = document.getElementById('adminDashboard');
+        
+        if (loginPage && dashboardPage) {
+            loginPage.classList.add('active');
+            dashboardPage.classList.remove('active');
+            
+            // 重新连接 Socket.IO（如果需要）
+            if (this.socket && !this.socket.connected) {
+                this.socket.connect();
+            }
+        } else {
+            console.error('登录页面元素未找到!');
+        }
     }
 
     showDashboard() {
@@ -278,8 +310,33 @@ class AdminApp {
         const response = await fetch(url, { ...defaultOptions, ...options });
 
         if (response.status === 401) {
-            this.logout();
-            return null;
+            try {
+                const errorData = await response.json();
+                
+                // 根据错误代码显示不同的提示信息
+                let message = '登录已过期，请重新登录';
+                if (errorData.code === 'TOKEN_EXPIRED') {
+                    message = '登录已过期，请重新登录';
+                } else if (errorData.code === 'INVALID_TOKEN') {
+                    message = '无效的登录凭证，请重新登录';
+                } else if (errorData.code === 'NO_TOKEN') {
+                    message = '请先登录';
+                } else if (errorData.message) {
+                    message = errorData.message;
+                }
+                
+                // 显示提示信息
+                alert(message);
+                
+                // 清除认证数据并跳转到登录页
+                this.logout();
+                return null;
+            } catch (parseError) {
+                // 如果无法解析错误信息，使用默认处理
+                alert('登录已过期，请重新登录');
+                this.logout();
+                return null;
+            }
         }
 
         return response;
