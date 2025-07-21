@@ -193,17 +193,17 @@ module.exports = (io) => {
       
       // 只要未审核通过就直接删除
       if (loginLog.status !== 'approved') {
-        try {
-          // 1. 删除二次验证记录
-          await db.query(
-            'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
-            [memberId, loginId]
-          );
-          // 2. 删除登录记录
-          await db.query(
-            'DELETE FROM login_logs WHERE id = ?',
-            [loginId]
-          );
+      try {
+        // 1. 删除二次验证记录
+        await db.query(
+          'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
+          [memberId, loginId]
+        );
+        // 2. 删除登录记录
+        await db.query(
+          'DELETE FROM login_logs WHERE id = ?',
+          [loginId]
+        );
           // 3. 删除会员资料
           await db.query(
             'DELETE FROM members WHERE id = ?',

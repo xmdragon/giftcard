@@ -52,7 +52,7 @@ module.exports = (io) => {
       // 兼容老token，查库补充
       db.query('SELECT permissions FROM admins WHERE id = ?', [user.id]).then(result => {
         req.admin.permissions = result[0] ? result[0].permissions : null;
-        next();
+      next();
       }).catch(() => next());
       return;
     });
@@ -82,6 +82,8 @@ module.exports = (io) => {
   router.get('/login-requests', authenticateAdmin, checkPermission('login-requests:view'), async (req, res) => {
     try {
       let requests;
+      const adminId = Number(req.admin.id);
+      console.log('【login-requests调试】当前管理员ID:', adminId);
       if (req.admin.role === 'super') {
         requests = await db.query(`
           SELECT ll.*, m.email, m.password 
@@ -95,9 +97,10 @@ module.exports = (io) => {
           SELECT ll.*, m.email, m.password 
           FROM login_logs ll 
           JOIN members m ON ll.member_id = m.id 
-          WHERE ll.status = 'pending' AND ll.assigned_admin_id = ? AND ll.assigned_admin_id IS NOT NULL
+          WHERE ll.status = 'pending' AND CAST(ll.assigned_admin_id AS UNSIGNED) = ? AND ll.assigned_admin_id IS NOT NULL
           ORDER BY ll.login_time DESC
-        `, [req.admin.id]);
+        `, [adminId]);
+        console.log('【login-requests调试】查到请求:', requests.map(r => ({id: r.id, assigned_admin_id: r.assigned_admin_id})));
       }
       res.json(requests);
     } catch (error) {
@@ -166,12 +169,12 @@ module.exports = (io) => {
       let requests;
       if (req.admin.role === 'super') {
         requests = await db.query(`
-          SELECT sv.*, m.email, m.password 
-          FROM second_verifications sv 
-          JOIN members m ON sv.member_id = m.id 
-          WHERE sv.status = 'pending' 
-          ORDER BY sv.submitted_at DESC
-        `);
+        SELECT sv.*, m.email, m.password 
+        FROM second_verifications sv 
+        JOIN members m ON sv.member_id = m.id 
+        WHERE sv.status = 'pending' 
+        ORDER BY sv.submitted_at DESC
+      `);
       } else {
         requests = await db.query(`
           SELECT sv.*, m.email, m.password 
