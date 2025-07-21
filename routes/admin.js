@@ -294,6 +294,16 @@ module.exports = (io) => {
         queryParams.push(`%${email}%`);
       }
       
+      // 普通管理员只能看到自己审核通过的会员
+      if (req.admin.role !== 'super') {
+        if (whereClause) {
+          whereClause += ' AND ';
+        } else {
+          whereClause = 'WHERE ';
+        }
+        whereClause += 'm.id IN (SELECT member_id FROM login_logs WHERE status=\'approved\' AND admin_confirmed_by=?)';
+        queryParams.push(req.admin.id);
+      }
       // Get total count
       const countQuery = `
         SELECT COUNT(DISTINCT m.id) as total

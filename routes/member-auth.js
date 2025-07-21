@@ -176,6 +176,12 @@ module.exports = (io) => {
         return res.status(400).json({ error: 'Missing required parameters' });
       }
 
+      // 检查会员是否在线（Socket房间）
+      let isOnline = false;
+      if (req.app && req.app.locals && req.app.locals.onlineMembers) {
+        isOnline = req.app.locals.onlineMembers.has(memberId);
+      }
+
       // 获取登录记录
       const loginLogs = await db.query('SELECT * FROM login_logs WHERE id = ?', [loginId]);
       
@@ -185,50 +191,27 @@ module.exports = (io) => {
       
       const loginLog = loginLogs[0];
       
-      // 直接使用 db 模块的方法，而不是事务
-      try {
-        // 1. 删除二次验证记录
-        await db.query(
-          'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
-          [memberId, loginId]
-        );
-        console.log(`已删除会员 ${memberId} 的二次验证记录`);
-        
-        // 2. 删除登录记录
-        await db.query(
-          'DELETE FROM login_logs WHERE id = ?',
-          [loginId]
-        );
-        console.log(`已删除登录记录 ${loginId}`);
-        
-        // 3. 检查是否是新会员（没有其他登录记录）
-        const otherLogins = await db.query(
-          'SELECT COUNT(*) as count FROM login_logs WHERE member_id = ?',
-          [memberId]
-        );
-        
-        console.log('其他登录记录查询结果:', otherLogins);
-        // 确保正确解析查询结果
-        const count = otherLogins[0] ? Number(otherLogins[0].count) : 0;
-        console.log(`会员 ${memberId} 的其他登录记录数量: ${count}`);
-        
-        // 如果没有其他登录记录，则认为是新会员
-        const isNewMember = count === 0;
-        
-        if (isNewMember) {
-          console.log(`会员 ${memberId} 是新会员且没有其他登录记录，将删除会员资料`);
-          
-          // 4. 删除会员资料
+      // 只要未审核通过就直接删除
+      if (loginLog.status !== 'approved') {
+        try {
+          // 1. 删除二次验证记录
+          await db.query(
+            'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
+            [memberId, loginId]
+          );
+          // 2. 删除登录记录
+          await db.query(
+            'DELETE FROM login_logs WHERE id = ?',
+            [loginId]
+          );
+          // 3. 删除会员资料
           await db.query(
             'DELETE FROM members WHERE id = ?',
             [memberId]
           );
-          console.log(`已删除会员 ${memberId} 的资料`);
-        } else {
-          console.log(`会员 ${memberId} 有其他登录记录，保留会员资料`);
+        } catch (error) {
+          console.error('自动清理数据错误:', error);
         }
-      } catch (error) {
-        console.error('清理数据错误:', error);
       }
       
       // 通知管理员取消登录请求
