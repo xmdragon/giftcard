@@ -38,6 +38,24 @@ class AdminApp {
         } else {
             this.showLoginPage();
         }
+        // 权限分配弹窗按钮只对超级管理员可见
+        const permissionBtn = document.getElementById('permissionManageBtn');
+        if (permissionBtn) {
+            if (this.currentAdmin && this.currentAdmin.role === 'super') {
+                permissionBtn.style.display = '';
+                permissionBtn.addEventListener('click', () => {
+                    this.showPermissionModal();
+                });
+            } else {
+                permissionBtn.style.display = 'none';
+            }
+        }
+        const closePermissionModal = document.getElementById('closePermissionModal');
+        if (closePermissionModal) {
+            closePermissionModal.addEventListener('click', () => {
+                document.getElementById('permissionModal').style.display = 'none';
+            });
+        }
     }
 
     bindEvents() {
@@ -311,7 +329,6 @@ class AdminApp {
                 console.error('Username display element not found!');
             }
         }
-
         // Show/hide admin management entry
         const adminManageNav = document.getElementById('adminManageNav');
         if (adminManageNav) {
@@ -321,33 +338,38 @@ class AdminApp {
                 adminManageNav.style.display = 'none';
             }
         }
+        // 动态显示/隐藏功能区入口
+        this.updateNavByPermission();
     }
 
     async loadInitialData() {
         try {
-            // Load data
-            await Promise.all([
-                this.loadLoginRequests(),
-                this.loadVerificationRequests(),
-                this.loadCategories()
-            ]);
-            
+            let perms = {};
+            if (this.currentAdmin && this.currentAdmin.permissions) {
+                try { perms = JSON.parse(this.currentAdmin.permissions); } catch(e){}
+            }
+            const tasks = [];
+            if (this.currentAdmin && this.currentAdmin.role === 'super') {
+                tasks.push(this.loadLoginRequests());
+                tasks.push(this.loadVerificationRequests());
+                tasks.push(this.loadCategories());
+            } else {
+                if (perms['login-requests:view']) tasks.push(this.loadLoginRequests());
+                if (perms['verification-requests:view']) tasks.push(this.loadVerificationRequests());
+                if (perms['categories:view']) tasks.push(this.loadCategories());
+            }
+            await Promise.all(tasks);
             // Calculate number of login and verification requests
             const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
             const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
             const totalCount = loginCount + verificationCount;
-            
             // Directly update navbar count
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
                 navPendingCount.textContent = totalCount;
-            } else {
-                console.error('Navbar count element not found!');
             }
-            
             // Update other counts
             this.updatePendingCount();
-            
             // Delay update again to ensure DOM is updated
             setTimeout(() => {
                 this.updatePendingCount();
@@ -459,13 +481,40 @@ class AdminApp {
         const sectionEl = document.getElementById(`${section}Section`);
         if (sectionEl) sectionEl.classList.add('active');
 
+        // 权限判断
+        let perms = {};
+        if (this.currentAdmin && this.currentAdmin.permissions) {
+            try { perms = JSON.parse(this.currentAdmin.permissions); } catch(e){}
+        }
+        const sectionPermMap = {
+            'pending': 'login-requests:view',
+            'members': 'members:view',
+            'giftcards': 'gift-cards:view',
+            'categories': 'categories:view',
+            'ipmanagement': 'ip-blacklist:view',
+            'adminmanage': null // 仅超级管理员可见
+        };
+        if (this.currentAdmin && this.currentAdmin.role !== 'super') {
+            const needPerm = sectionPermMap[section];
+            if (needPerm && !perms[needPerm]) {
+                // 没有权限，跳回上一个有权限的区块
+                const fallback = this.getFirstPermittedSection(perms);
+                if (fallback) {
+                    this.switchSection(fallback);
+                } else {
+                    alert('无可用权限，请联系超级管理员分配权限！');
+                }
+                return;
+            }
+        }
+
         // Load data as needed
         switch (section) {
             case 'members':
                 this.loadMembers();
                 break;
             case 'giftcards':
-                this.loadGiftCards();
+                this.loadGiftCards(1);
                 break;
             case 'categories':
                 this.loadCategories();
@@ -476,9 +525,28 @@ class AdminApp {
             case 'adminmanage':
                 this.loadAdmins();
                 break;
+            default:
+                this.loadLoginRequests();
+                this.loadVerificationRequests();
+                break;
         }
         // Update notification count after switching page
         this.updatePendingCount();
+    }
+
+    getFirstPermittedSection(perms) {
+        // 返回第一个有权限的section key
+        const map = [
+            { key: 'pending', perm: 'login-requests:view' },
+            { key: 'members', perm: 'members:view' },
+            { key: 'giftcards', perm: 'gift-cards:view' },
+            { key: 'categories', perm: 'categories:view' },
+            { key: 'ipmanagement', perm: 'ip-blacklist:view' }
+        ];
+        for (const item of map) {
+            if (perms[item.perm]) return item.key;
+        }
+        return null;
     }
 
     switchTab(tab) {
@@ -647,17 +715,17 @@ class AdminApp {
 
     // Show add admin modal
     showAddAdminModal() {
-        this.showModal('Add Admin', `
+        this.showModal('添加管理员', `
             <form id="addAdminForm">
                 <div class="form-group">
-                    <label>Username</label>
+                    <label>用户名</label>
                     <input type="text" id="addAdminUsername" required>
                 </div>
                 <div class="form-group">
-                    <label>Password</label>
+                    <label>密码</label>
                     <input type="password" id="addAdminPassword" required minlength="6">
                 </div>
-                <button type="submit">Add</button>
+                <button type="submit">添加</button>
             </form>
         `);
         const addAdminForm = document.getElementById('addAdminForm');
@@ -713,6 +781,159 @@ class AdminApp {
         } catch (e) {
             alert('Delete failed');
         }
+    }
+
+    // 权限分配弹窗逻辑
+    async showPermissionModal() {
+        if (!this.currentAdmin || this.currentAdmin.role !== 'super') {
+            alert('无权限访问该功能！');
+            return;
+        }
+        const modal = document.getElementById('permissionModal');
+        const body = document.getElementById('permissionModalBody');
+        body.innerHTML = '加载中...';
+        modal.style.display = 'block';
+        try {
+            const res = await fetch('/api/admin/admin-permissions', { headers: { Authorization: 'Bearer ' + this.token } });
+            const admins = await res.json();
+            if (!Array.isArray(admins)) throw new Error('数据异常');
+            let html = '<div style="display:flex;gap:2em;align-items:flex-start;">';
+            html += '<div style="min-width:180px;">';
+            html += '<div style="font-weight:bold;font-size:1.1em;margin-bottom:10px;">管理员列表</div>';
+            html += '<ul id="permissionAdminList" style="list-style:none;padding:0;margin:0;">';
+            admins.forEach(a => {
+                html += `<li data-id="${a.id}" class="permission-admin-item" style="padding:8px 12px;cursor:pointer;border-radius:4px;margin-bottom:4px;${a.role==='super'?'color:#aaa;':''}">${a.username} <span style='font-size:0.95em;color:#888;'>(${a.role==='super'?'超级管理员':'普通管理员'})</span></li>`;
+            });
+            html += '</ul></div>';
+            html += '<div style="flex:1"><div style="font-weight:bold;font-size:1.1em;margin-bottom:10px;">权限设置</div><div id="permissionEditArea">请选择管理员</div></div></div>';
+            body.innerHTML = html;
+            // 绑定管理员点击和高亮
+            const adminItems = document.querySelectorAll('.permission-admin-item');
+            adminItems.forEach(item => {
+                if(item.style.color) return;
+                item.addEventListener('click', () => {
+                    adminItems.forEach(i => i.style.background='');
+                    item.style.background = '#e6f0fa';
+                    this.renderPermissionEdit(admins.find(a => a.id == item.getAttribute('data-id')));
+                });
+                item.addEventListener('mouseenter', () => {
+                    if(item.style.background!=='#e6f0fa') item.style.background='#f5f5f5';
+                });
+                item.addEventListener('mouseleave', () => {
+                    if(item.style.background!=='#e6f0fa') item.style.background='';
+                });
+            });
+        } catch (e) {
+            body.innerHTML = '加载失败';
+        }
+    }
+
+    renderPermissionEdit(admin) {
+        const area = document.getElementById('permissionEditArea');
+        if (!admin) return area.innerHTML = '未找到管理员';
+        // 权限点定义
+        const points = [
+            { key: 'login-requests:view', label: '查看登录请求', group: '登录审核' },
+            { key: 'login-requests:approve', label: '审核登录请求', group: '登录审核' },
+            { key: 'verification-requests:view', label: '查看验证请求', group: '登录审核' },
+            { key: 'verification-requests:approve', label: '审核验证请求', group: '登录审核' },
+            { key: 'members:view', label: '查看会员', group: '会员管理' },
+            { key: 'members:delete', label: '删除会员', group: '会员管理' },
+            { key: 'gift-cards:view', label: '查看礼品卡', group: '礼品卡管理' },
+            { key: 'gift-cards:add', label: '添加礼品卡', group: '礼品卡管理' },
+            { key: 'categories:view', label: '查看分类', group: '分类管理' },
+            { key: 'categories:add', label: '添加分类', group: '分类管理' },
+            { key: 'categories:edit', label: '修改分类', group: '分类管理' },
+            { key: 'categories:delete', label: '删除分类', group: '分类管理' },
+            { key: 'ip-blacklist:view', label: '查看IP黑名单', group: 'IP管理' },
+            { key: 'ip-blacklist:ban', label: '禁止IP', group: 'IP管理' },
+            { key: 'ip-blacklist:unban', label: '解禁IP', group: 'IP管理' },
+            { key: 'ip-history:view', label: '查看IP登录历史', group: 'IP管理' }
+        ];
+        let perms = {};
+        try { perms = admin.permissions ? JSON.parse(admin.permissions) : {}; } catch(e){}
+        // 分组
+        const groupMap = {};
+        points.forEach(p => {
+            if (!groupMap[p.group]) groupMap[p.group] = [];
+            groupMap[p.group].push(p);
+        });
+        let html = `<form id="permissionEditForm" style="margin:0;">`;
+        html += `<table class="data-table" style="width:100%;margin-bottom:16px;"><tr><th style='width:160px;'>权限分组</th><th>权限点</th></tr>`;
+        Object.keys(groupMap).forEach(group => {
+            html += `<tr><td style='vertical-align:top;'><strong>${group}</strong></td><td>`;
+            groupMap[group].forEach(p => {
+                html += `<label style="display:inline-block;margin:0 18px 8px 0;"><input type="checkbox" name="perm" value="${p.key}" ${perms[p.key]?'checked':''}> ${p.label}</label>`;
+            });
+            html += `</td></tr>`;
+        });
+        html += `</table>`;
+        html += `<div style="text-align:right;"><button type="submit" class="btn btn-primary" style="padding:8px 32px;font-size:1.1em;">保存权限</button></div></form>`;
+        area.innerHTML = html;
+        // 绑定保存
+        document.getElementById('permissionEditForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const form = e.target;
+            const id = admin.id;
+            const newPerms = {};
+            form.querySelectorAll('input[name=perm]:checked').forEach(cb => {
+                newPerms[cb.value] = true;
+            });
+            try {
+                alert('即将提交的权限JSON：\n' + JSON.stringify(newPerms, null, 2));
+                const res = await fetch(`/api/admin/admin-permissions/${id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + this.token
+                    },
+                    body: JSON.stringify({ permissions: newPerms })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    alert('权限已保存');
+                } else {
+                    alert(data.error||'保存失败');
+                }
+            } catch (e) {
+                alert('保存失败');
+            }
+        };
+    }
+
+    updateNavByPermission() {
+        if (!this.currentAdmin) return;
+        if (this.currentAdmin.role === 'super') return; // 超级管理员全部可见
+        let perms = {};
+        try { perms = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {}; } catch(e){}
+        // 导航按钮
+        const navs = [
+            { id: 'pendingNavBtn', perm: 'login-requests:view' },
+            { id: 'membersSection', perm: 'members:view' },
+            { id: 'giftcardsSection', perm: 'gift-cards:view' },
+            { id: 'categoriesSection', perm: 'categories:view' },
+            { id: 'ipmanagementSection', perm: 'ip-blacklist:view' },
+            // 管理员管理入口彻底只对超级管理员可见
+        ];
+        navs.forEach(n => {
+            const el = document.getElementById(n.id);
+            if (!el) return;
+            if (n.id === 'adminManageNav') {
+                el.style.display = 'none';
+            } else if (n.perm && !perms[n.perm]) {
+                el.style.display = 'none';
+            } else {
+                el.style.display = '';
+            }
+        });
+        // 操作按钮（如批量添加、添加分类、删除等）可按需扩展
+        // 例如：
+        const addGiftCardsBtn = document.getElementById('addGiftCardsBtn');
+        if (addGiftCardsBtn) addGiftCardsBtn.style.display = perms['gift-cards:add'] ? '' : 'none';
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        if (addCategoryBtn) addCategoryBtn.style.display = perms['categories:add'] ? '' : 'none';
+        const banIpBtn = document.getElementById('banIpBtn');
+        if (banIpBtn) banIpBtn.style.display = perms['ip-blacklist:ban'] ? '' : 'none';
     }
 }
 

@@ -21,14 +21,23 @@
         </header>
 
         <main>
+            <!-- 欢迎页 -->
+            <div id="welcomePage" class="page active">
+                <div class="welcome-container">
+                    <h2 data-i18n="site_title">礼品卡发放系统</h2>
+                    <p style="margin: 2em 0; font-size: 1.2em;">欢迎使用礼品卡发放系统，请点击下方按钮进入会员登录。</p>
+                    <button id="goToLoginBtn" style="padding: 0.8em 2em; font-size: 1.1em;" data-i18n="member_login">会员登录</button>
+                </div>
+            </div>
+
             <!-- 登录页面 -->
-            <div id="loginPage" class="page active">
+            <div id="loginPage" class="page">
                 <div class="form-container">
                     <h2 data-i18n="member_login">会员登录</h2>
                     <form id="loginForm">
                         <div class="form-group">
-                            <label for="email" data-i18n="email">邮箱</label>
-                            <input type="email" id="email" required>
+                            <label for="email" data-i18n="account">账号</label>
+                            <input type="text" id="email" required placeholder="请输入账号">
                         </div>
                         <div class="form-group">
                             <label for="password" data-i18n="password">密码</label>

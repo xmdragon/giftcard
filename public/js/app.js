@@ -13,10 +13,10 @@ class GiftCardApp {
     init() {
         // 检查是否有未完成的登录会话
         this.checkPendingSession();
-        
         this.bindEvents();
         this.setupSocketListeners();
-        this.showPage('loginPage');
+        // 初始只显示欢迎页
+        this.showPage('welcomePage');
     }
     
     // 检查是否有未完成的登录会话
@@ -61,6 +61,14 @@ class GiftCardApp {
     }
 
     bindEvents() {
+        // 欢迎页登录按钮
+        const goToLoginBtn = document.getElementById('goToLoginBtn');
+        if (goToLoginBtn) {
+            goToLoginBtn.addEventListener('click', () => {
+                this.showPage('loginPage');
+            });
+        }
+
         // 登录表单
         document.getElementById('loginForm').addEventListener('submit', (e) => {
             e.preventDefault();

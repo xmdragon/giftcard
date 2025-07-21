@@ -3,7 +3,7 @@ const translations = {
     zh: {
         site_title: '礼品卡发放系统',
         member_login: '会员登录',
-        email: '邮箱',
+        account: '账号',
         password: '密码',
         login: '登录',
         waiting_approval: '等待管理员审核',
@@ -46,7 +46,7 @@ const translations = {
     en: {
         site_title: 'Gift Card Distribution System',
         member_login: 'Member Login',
-        email: 'Email',
+        account: 'Account',
         password: 'Password',
         login: 'Login',
         waiting_approval: 'Waiting for Admin Approval',
@@ -89,7 +89,7 @@ const translations = {
     ja: {
         site_title: 'ギフトカード配布システム',
         member_login: 'メンバーログイン',
-        email: 'メールアドレス',
+        account: 'アカウント',
         password: 'パスワード',
         login: 'ログイン',
         waiting_approval: '管理者の承認待ち',

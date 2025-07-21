@@ -1,3 +1,5 @@
 ssl/fullchain.pem
 ssl/privkey.pem
 .vscode/
+*.bak
+*.log

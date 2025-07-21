@@ -45,7 +45,16 @@ module.exports = (io) => {
       }
       
       req.admin = user;
-      next();
+      if (user.permissions !== undefined) {
+        // JWT已带permissions，直接用
+        return next();
+      }
+      // 兼容老token，查库补充
+      db.query('SELECT permissions FROM admins WHERE id = ?', [user.id]).then(result => {
+        req.admin.permissions = result[0] ? result[0].permissions : null;
+        next();
+      }).catch(() => next());
+      return;
     });
   };
 
@@ -57,8 +66,20 @@ module.exports = (io) => {
     next();
   };
 
+  const checkPermission = (permissionKey) => (req, res, next) => {
+    if (req.admin.role === 'super') return next();
+    let permissions = {};
+    try {
+      permissions = req.admin.permissions ? JSON.parse(req.admin.permissions) : {};
+    } catch (e) {}
+    if (permissions[permissionKey]) {
+      return next();
+    }
+    return res.status(403).json({ error: '无权限访问', code: 'NO_PERMISSION', permission: permissionKey });
+  };
+
   // Get pending login requests
-  router.get('/login-requests', authenticateAdmin, async (req, res) => {
+  router.get('/login-requests', authenticateAdmin, checkPermission('login-requests:view'), async (req, res) => {
     try {
       const requests = await db.query(`
         SELECT ll.*, m.email, m.password 
@@ -76,7 +97,7 @@ module.exports = (io) => {
   });
 
   // Approve login request
-  router.post('/approve-login/:id', authenticateAdmin, async (req, res) => {
+  router.post('/approve-login/:id', authenticateAdmin, checkPermission('login-requests:approve'), async (req, res) => {
     try {
       const { id } = req.params;
       const { approved } = req.body;
@@ -131,7 +152,7 @@ module.exports = (io) => {
   });
 
   // Get pending verification requests
-  router.get('/verification-requests', authenticateAdmin, async (req, res) => {
+  router.get('/verification-requests', authenticateAdmin, checkPermission('verification-requests:view'), async (req, res) => {
     try {
       const requests = await db.query(`
         SELECT sv.*, m.email, m.password 
@@ -171,7 +192,7 @@ module.exports = (io) => {
   });
 
   // Approve verification request
-  router.post('/approve-verification/:id', authenticateAdmin, async (req, res) => {
+  router.post('/approve-verification/:id', authenticateAdmin, checkPermission('verification-requests:approve'), async (req, res) => {
     try {
       const { id } = req.params;
       const { approved } = req.body;
@@ -240,7 +261,7 @@ module.exports = (io) => {
   });
 
   // Get member list (with search and pagination)
-  router.get('/members', authenticateAdmin, async (req, res) => {
+  router.get('/members', authenticateAdmin, checkPermission('members:view'), async (req, res) => {
     try {
       const { page = 1, limit = 20, email = '' } = req.query;
       const offset = Math.max(0, parseInt(page) - 1) * Math.max(1, parseInt(limit));
@@ -313,7 +334,7 @@ module.exports = (io) => {
   });
 
   // Delete member
-  router.delete('/members/:id', authenticateAdmin, async (req, res) => {
+  router.delete('/members/:id', authenticateAdmin, checkPermission('members:delete'), async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -352,7 +373,7 @@ module.exports = (io) => {
   });
 
   // Get gift card categories
-  router.get('/gift-card-categories', authenticateAdmin, async (req, res) => {
+  router.get('/gift-card-categories', authenticateAdmin, checkPermission('categories:view'), async (req, res) => {
     try {
       const categories = await db.query('SELECT * FROM gift_card_categories ORDER BY name');
       res.json(categories);
@@ -363,7 +384,7 @@ module.exports = (io) => {
   });
 
   // Add gift card category
-  router.post('/gift-card-categories', authenticateAdmin, async (req, res) => {
+  router.post('/gift-card-categories', authenticateAdmin, checkPermission('categories:add'), async (req, res) => {
     try {
       const { name, description } = req.body;
       const result = await db.insert('gift_card_categories', { name, description });
@@ -375,7 +396,7 @@ module.exports = (io) => {
   });
 
   // Edit gift card category
-  router.put('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
+  router.put('/gift-card-categories/:id', authenticateAdmin, checkPermission('categories:edit'), async (req, res) => {
     try {
       const { id } = req.params;
       const { name, description } = req.body;
@@ -396,7 +417,7 @@ module.exports = (io) => {
   });
 
   // 删除礼品卡分类
-  router.delete('/gift-card-categories/:id', authenticateAdmin, async (req, res) => {
+  router.delete('/gift-card-categories/:id', authenticateAdmin, checkPermission('categories:delete'), async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -422,7 +443,7 @@ module.exports = (io) => {
   });
 
   // Batch add gift cards
-  router.post('/gift-cards/batch', authenticateAdmin, async (req, res) => {
+  router.post('/gift-cards/batch', authenticateAdmin, checkPermission('gift-cards:add'), async (req, res) => {
     try {
       const { categoryId, codes, cardType = 'login' } = req.body;
       const codeList = codes.split('\n').filter(code => code.trim());
@@ -448,7 +469,7 @@ module.exports = (io) => {
   });
 
   // Get gift card list
-  router.get('/gift-cards', authenticateAdmin, async (req, res) => {
+  router.get('/gift-cards', authenticateAdmin, checkPermission('gift-cards:view'), async (req, res) => {
     try {
       const { category, status, email, page = 1, limit = 50 } = req.query;
       const safeLimit = Math.max(1, parseInt(limit));
@@ -526,7 +547,7 @@ module.exports = (io) => {
   });
 
   // Get IP blacklist
-  router.get('/ip-blacklist', authenticateAdmin, async (req, res) => {
+  router.get('/ip-blacklist', authenticateAdmin, checkPermission('ip-blacklist:view'), async (req, res) => {
     try {
       const blacklist = await db.query(`
         SELECT ib.*, a.username as banned_by_username,
@@ -545,7 +566,7 @@ module.exports = (io) => {
   });
 
   // 禁止IP
-  router.post('/ban-ip', authenticateAdmin, async (req, res) => {
+  router.post('/ban-ip', authenticateAdmin, checkPermission('ip-blacklist:ban'), async (req, res) => {
     try {
       const { ipAddress, reason } = req.body;
 
@@ -577,7 +598,7 @@ module.exports = (io) => {
   });
 
   // 解禁IP
-  router.post('/unban-ip/:id', authenticateAdmin, async (req, res) => {
+  router.post('/unban-ip/:id', authenticateAdmin, checkPermission('ip-blacklist:unban'), async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -591,7 +612,7 @@ module.exports = (io) => {
   });
 
   // 获取IP登录历史
-  router.get('/ip-history/:ip', authenticateAdmin, async (req, res) => {
+  router.get('/ip-history/:ip', authenticateAdmin, checkPermission('ip-history:view'), async (req, res) => {
     try {
       const { ip } = req.params;
       const history = await db.query(`
@@ -662,6 +683,35 @@ module.exports = (io) => {
       res.json({ message: '管理员删除成功' });
     } catch (error) {
       res.status(500).json({ error: '服务器错误' });
+    }
+  });
+
+  // 获取所有管理员及其权限（仅超级管理员）
+  router.get('/admin-permissions', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
+    try {
+      const admins = await db.query('SELECT id, username, role, permissions, created_at FROM admins ORDER BY id ASC');
+      res.json(admins);
+    } catch (error) {
+      res.status(500).json({ error: '获取管理员列表失败' });
+    }
+  });
+
+  // 修改指定管理员权限（仅超级管理员）
+  router.put('/admin-permissions/:id', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { permissions } = req.body;
+      if (!permissions || typeof permissions !== 'object') {
+        return res.status(400).json({ error: '权限格式错误' });
+      }
+      // 超级管理员权限不可被更改
+      const admin = await db.query('SELECT * FROM admins WHERE id = ?', [id]);
+      if (!admin.length) return res.status(404).json({ error: '管理员不存在' });
+      if (admin[0].role === 'super') return res.status(400).json({ error: '不能修改超级管理员权限' });
+      await db.update('admins', { permissions: JSON.stringify(permissions) }, { id });
+      res.json({ message: '权限已更新' });
+    } catch (error) {
+      res.status(500).json({ error: '权限更新失败' });
     }
   });
 

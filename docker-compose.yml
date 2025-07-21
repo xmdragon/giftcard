@@ -1,3 +1,4 @@
+# docker-compose.yml
 services:
   # MySQL数据库
   mysql:
@@ -9,7 +10,6 @@ services:
       MYSQL_DATABASE: gift_card_system
       MYSQL_USER: giftcard_user
       MYSQL_PASSWORD: GiftCard_User_2024!
-    # 添加端口映射，使本地应用能连接到Docker中的MySQL
     ports:
       - "3306:3306"
     volumes:
@@ -19,31 +19,40 @@ services:
       - gift_card_network
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect="SET NAMES utf8mb4"
 
-  # Node.js应用
+  # Node.js应用 (已修改为绑定挂载)
   app:
     build: .
     container_name: gift_card_app
     restart: unless-stopped
-    # 移除直接端口映射，由 Nginx 代理
     expose:
       - "3000"
     environment:
-      NODE_ENV: production
+      NODE_ENV: production # 注意：开发时可能需要改为 development
       DB_HOST: mysql
       DB_USER: giftcard_user
       DB_PASSWORD: GiftCard_User_2024!
       DB_NAME: gift_card_system
       JWT_SECRET: GiftCard_JWT_Secret_Key_2024_Super_Complex_String
       PORT: 3000
-      # 确保字符集设置
       LANG: zh_CN.UTF-8
       LC_ALL: zh_CN.UTF-8
     depends_on:
       - mysql
     networks:
       - gift_card_network
+    # --- 关键修改部分 ---
     volumes:
-      - ./locales:/app/locales:ro
+      # 1. 将本地的当前整个项目目录 (.) 挂载到容器的工作目录 (/app)
+      #    这样一来，你在本地对代码的任何修改都会实时同步到容器中。
+      #    假设你的 Dockerfile 中设置了 `WORKDIR /app`。
+      - .:/app
+      
+      # 2. [重要!] 创建一个匿名卷来隔离 node_modules 目录。
+      #    这可以防止本地的 node_modules (可能不存在或与容器环境不兼容) 覆盖掉
+      #    在 Docker 镜像构建过程中 (RUN npm install) 生成的 node_modules 目录。
+      #    这是 Node.js + Docker 绑定挂载的最佳实践。
+      - /app/node_modules
+    # --- 修改结束 ---
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
@@ -71,13 +80,13 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "3000:80"  # 同时映射到 3000 端口，保持兼容性
+      - "3000:80"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro  # SSL 证书挂载
+      - ./ssl:/etc/nginx/ssl:ro
       - /home/grom/wwwroot/giftcard/public:/public:ro
-      - nginx_cache:/var/cache/nginx  # Nginx 缓存
-      - nginx_logs:/var/log/nginx  # Nginx 日志
+      - nginx_cache:/var/cache/nginx
+      - nginx_logs:/var/log/nginx
     depends_on:
       - app
     networks:

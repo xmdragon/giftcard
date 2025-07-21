@@ -162,6 +162,7 @@
                         <h2>管理员管理</h2>
                         <button id="refreshAdmins">刷新</button>
                         <button id="addAdminBtn">添加管理员</button>
+                        <button id="permissionManageBtn">权限分配</button>
                     </div>
                     <div id="adminList" class="data-table">加载中...</div>
                 </section>
@@ -174,6 +175,14 @@
         <div class="modal-content">
             <span class="close">&times;</span>
             <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- 权限分配弹窗 -->
+    <div id="permissionModal" class="modal">
+        <div class="modal-content" style="min-width: 600px; max-width: 800px; border-radius: 8px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); background: #fff;">
+            <span class="close" id="closePermissionModal" style="font-size: 2em; right: 20px; top: 10px;">&times;</span>
+            <div id="permissionModalBody" style="padding: 32px 24px 24px 24px;"></div>
         </div>
     </div>
 
