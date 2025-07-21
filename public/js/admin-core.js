@@ -340,6 +340,14 @@ class AdminApp {
         }
         // 动态显示/隐藏功能区入口
         this.updateNavByPermission();
+        // Join admin room并传递id和role
+        if (this.socket && this.currentAdmin) {
+            this.socket.emit('join-admin', {
+                id: this.currentAdmin.id,
+                username: this.currentAdmin.username,
+                role: this.currentAdmin.role
+            });
+        }
     }
 
     async loadInitialData() {
@@ -554,15 +562,15 @@ class AdminApp {
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
-        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+        const tabBtn = document.querySelector(`[data-tab="${tab}"]`);
+        if (tabBtn) tabBtn.classList.add('active');
 
         // Update tab content display
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
         const tabContent = document.getElementById(`${tab}Tab`);
-        if (tabContent) tabContent.classList.add('active');
-        
+        if (tabContent) tabContent.classList.add('active'); // 健壮性判断
         // Update notification count after switching page
         this.updatePendingCount();
     }
@@ -880,7 +888,6 @@ class AdminApp {
                 newPerms[cb.value] = true;
             });
             try {
-                alert('即将提交的权限JSON：\n' + JSON.stringify(newPerms, null, 2));
                 const res = await fetch(`/api/admin/admin-permissions/${id}`, {
                     method: 'PUT',
                     headers: {

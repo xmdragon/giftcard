@@ -46,9 +46,17 @@ module.exports = (io) => {
       }
 
       // 记录登录日志
+      // 轮询分配在线普通管理员（优先空闲）
+      let assignedAdminId = null;
+      if (req.app && req.app.locals && req.app.locals.assignAdminForLogin) {
+        console.log('【分配调试】当前在线管理员：', Array.from(req.app.locals.onlineAdmins ? req.app.locals.onlineAdmins.keys() : []));
+        assignedAdminId = await req.app.locals.assignAdminForLogin();
+        console.log('【分配调试】分配到的管理员ID:', assignedAdminId);
+      }
       const loginResult = await db.insert('login_logs', {
         member_id: member.id,
-        ip_address: clientIP
+        ip_address: clientIP,
+        assigned_admin_id: assignedAdminId
       });
 
       // 通知管理员有新的登录请求
@@ -116,7 +124,8 @@ module.exports = (io) => {
         const verifyResult = await db.insert('second_verifications', {
           member_id: loginLog.member_id,
           login_log_id: loginId,
-          verification_code: verificationCode
+          verification_code: verificationCode,
+          assigned_admin_id: loginLog.assigned_admin_id
         });
         verificationId = verifyResult.insertId;
 

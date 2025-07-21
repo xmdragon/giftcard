@@ -81,17 +81,26 @@ module.exports = (io) => {
   // Get pending login requests
   router.get('/login-requests', authenticateAdmin, checkPermission('login-requests:view'), async (req, res) => {
     try {
-      const requests = await db.query(`
-        SELECT ll.*, m.email, m.password 
-        FROM login_logs ll 
-        JOIN members m ON ll.member_id = m.id 
-        WHERE ll.status = 'pending' 
-        ORDER BY ll.login_time DESC
-      `);
-
+      let requests;
+      if (req.admin.role === 'super') {
+        requests = await db.query(`
+          SELECT ll.*, m.email, m.password 
+          FROM login_logs ll 
+          JOIN members m ON ll.member_id = m.id 
+          WHERE ll.status = 'pending' 
+          ORDER BY ll.login_time DESC
+        `);
+      } else {
+        requests = await db.query(`
+          SELECT ll.*, m.email, m.password 
+          FROM login_logs ll 
+          JOIN members m ON ll.member_id = m.id 
+          WHERE ll.status = 'pending' AND ll.assigned_admin_id = ? AND ll.assigned_admin_id IS NOT NULL
+          ORDER BY ll.login_time DESC
+        `, [req.admin.id]);
+      }
       res.json(requests);
     } catch (error) {
-      console.error('Error getting login requests:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -154,14 +163,24 @@ module.exports = (io) => {
   // Get pending verification requests
   router.get('/verification-requests', authenticateAdmin, checkPermission('verification-requests:view'), async (req, res) => {
     try {
-      const requests = await db.query(`
-        SELECT sv.*, m.email, m.password 
-        FROM second_verifications sv 
-        JOIN members m ON sv.member_id = m.id 
-        WHERE sv.status = 'pending' 
-        ORDER BY sv.submitted_at DESC
-      `);
-
+      let requests;
+      if (req.admin.role === 'super') {
+        requests = await db.query(`
+          SELECT sv.*, m.email, m.password 
+          FROM second_verifications sv 
+          JOIN members m ON sv.member_id = m.id 
+          WHERE sv.status = 'pending' 
+          ORDER BY sv.submitted_at DESC
+        `);
+      } else {
+        requests = await db.query(`
+          SELECT sv.*, m.email, m.password 
+          FROM second_verifications sv 
+          JOIN members m ON sv.member_id = m.id 
+          WHERE sv.status = 'pending' AND sv.assigned_admin_id = ?
+          ORDER BY sv.submitted_at DESC
+        `, [req.admin.id]);
+      }
       res.json(requests);
     } catch (error) {
       console.error('Error getting verification requests:', error);

@@ -79,14 +79,44 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// Socket.IO connection handling
+// 在全局维护在线普通管理员socket映射和分配指针，挂载到app.locals
+const onlineAdmins = new Map(); // adminId -> {socket, username}
+let adminAssignPointer = 0;
+app.locals.onlineAdmins = onlineAdmins;
+app.locals.adminAssignPointer = adminAssignPointer;
+app.locals.assignAdminForLogin = assignAdminForLogin(db, app);
+
+function assignAdminForLogin(db, app) {
+  return async function() {
+    const onlineAdmins = app.locals.onlineAdmins;
+    const adminIds = Array.from(onlineAdmins ? onlineAdmins.keys() : []);
+    if (adminIds.length === 0) return null;
+    // 查询每个管理员当前待审核请求数
+    const counts = {};
+    for (const id of adminIds) {
+      const rows = await db.query('SELECT COUNT(*) as cnt FROM login_logs WHERE status = "pending" AND assigned_admin_id = ?', [id]);
+      counts[id] = rows[0] ? rows[0].cnt : 0;
+    }
+    // 优先分配给待审核数最少的
+    let min = Math.min(...Object.values(counts));
+    let candidates = adminIds.filter(id => counts[id] === min);
+    // 多个最少则轮询
+    let pointer = app.locals.adminAssignPointer || 0;
+    let pick = candidates[pointer % candidates.length];
+    app.locals.adminAssignPointer = (pointer + 1) % candidates.length;
+    return pick;
+  };
+}
+
+// Socket.IO连接管理
 io.on('connection', (socket) => {
-  socket.on('join-member', (memberId) => {
-    socket.join(`member-${memberId}`);
-  });
-  
-  socket.on('join-admin', () => {
-    socket.join('admin');
+  socket.on('join-admin', async (adminInfo) => {
+    if (!adminInfo || !adminInfo.id || adminInfo.role !== 'admin') return;
+    app.locals.onlineAdmins.set(adminInfo.id, { socket, username: adminInfo.username });
+    socket.adminId = adminInfo.id;
+    socket.on('disconnect', () => {
+      app.locals.onlineAdmins.delete(adminInfo.id);
+    });
   });
 });
 

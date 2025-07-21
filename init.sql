@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS login_logs (
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   admin_confirmed_by INT NULL,
   admin_confirmed_at TIMESTAMP NULL,
+  assigned_admin_id INT NULL,
   FOREIGN KEY (member_id) REFERENCES members(id)
 );
 
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS second_verifications (
   status ENUM('pending', 'approved', 'rejected') DEFAULT 'pending',
   admin_confirmed_by INT NULL,
   admin_confirmed_at TIMESTAMP NULL,
+  assigned_admin_id INT NULL,
   FOREIGN KEY (member_id) REFERENCES members(id),
   FOREIGN KEY (login_log_id) REFERENCES login_logs(id)
 );
