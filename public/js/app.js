@@ -11,7 +11,45 @@ class GiftCardApp {
     }
 
     init() {
-        // 检查是否有未完成的登录会话
+        const token = localStorage.getItem('memberToken');
+        console.log('[init] called');
+        console.log('[init] token:', token);
+        if (token) {
+            // 校验token有效性
+            fetch('/api/auth/member/verify-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            }).then(async res => {
+                console.log('[token verify] status:', res.status);
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('[token verify] data:', data);
+                    // 始终写入currentMemberId
+                    this.currentMemberId = data.memberId;
+                    if (data.memberId) {
+                        localStorage.setItem('currentMemberId', data.memberId);
+                    }
+                    console.log('[token verify] set currentMemberId:', this.currentMemberId);
+                    // 进入已登录页并加载数据
+                    this.showPage('giftCardPage');
+                    this.loadGiftCardsHistory();
+                    this.loadCheckinsHistory();
+                } else {
+                    console.log('[token verify] invalid, clearing token');
+                    localStorage.removeItem('memberToken');
+                    localStorage.removeItem('currentMemberId');
+                    this.showPage('welcomePage');
+                }
+            }).catch((e) => {
+                console.log('[token verify] error:', e);
+                localStorage.removeItem('memberToken');
+                localStorage.removeItem('currentMemberId');
+                this.showPage('welcomePage');
+            });
+            return;
+        }
+        // 只有没有token时才检查未完成会话
         this.checkPendingSession();
         this.bindEvents();
         this.setupSocketListeners();
@@ -36,6 +74,7 @@ class GiftCardApp {
                 }
             }
         }
+        console.log('[init] no token, fallback to normal flow');
     }
     
     // 检查是否有未完成的登录会话
@@ -71,12 +110,18 @@ class GiftCardApp {
     
     // 清除会话状态
     clearSession() {
-        this.currentMemberId = null;
+        console.log('[clearSession] called');
         this.currentLoginId = null;
         this.currentVerificationId = null;
-        localStorage.removeItem('currentMemberId');
         localStorage.removeItem('currentLoginId');
         localStorage.removeItem('currentVerificationId');
+        // 只有没有token时才清除currentMemberId
+        if (!localStorage.getItem('memberToken')) {
+            this.currentMemberId = null;
+            localStorage.removeItem('currentMemberId');
+            console.log('[clearSession] clear currentMemberId');
+        }
+        localStorage.removeItem('memberToken');
     }
 
     bindEvents() {
@@ -285,6 +330,11 @@ class GiftCardApp {
 
             if (response.ok) {
                 this.currentVerificationId = data.verificationId;
+                if (data.token) {
+                    localStorage.setItem('memberToken', data.token);
+                    console.log('[handleVerification] set token:', data.token);
+                    console.log('[handleVerification] localStorage:', JSON.stringify(localStorage));
+                }
                 this.showPage('waitingVerificationPage');
             } else {
                 // 显示错误并标记输入框
@@ -414,7 +464,6 @@ class GiftCardApp {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message success">
                         ${i18n.t('eligible_for_checkin')}
-                        <br>${i18n.t('days_remaining')}: ${data.daysRemaining}
                     </div>
                 `;
                 checkinBtn.disabled = false;
@@ -422,7 +471,7 @@ class GiftCardApp {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message error">
                         ${i18n.t('not_eligible_for_checkin')}
-                        <br>${data.reason}
+                        <br>${i18n.t(data.reason)}
                     </div>
                 `;
                 checkinBtn.disabled = true;
@@ -504,15 +553,19 @@ class GiftCardApp {
                 return;
             }
 
-            listDiv.innerHTML = checkins.map(checkin => `
-                <div class="record-item">
-                    <h4>${i18n.t('checkin_date')}: ${checkin.checkin_date}</h4>
-                    ${checkin.gift_card_code ? 
-                        `<p><strong>${i18n.t('gift_card_received')}:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : 
-                        '<p>无礼品卡奖励</p>'
-                    }
-                </div>
-            `).join('');
+            listDiv.innerHTML = checkins.map(checkin => {
+                const date = new Date(checkin.checkin_date);
+                const dateStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+                return `
+                    <div class="record-item">
+                        <h4>${i18n.t('checkin_date')}: ${dateStr}</h4>
+                        ${checkin.gift_card_code ? 
+                            `<p><strong>${i18n.t('gift_card_received')}:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : 
+                            '<p>无礼品卡奖励</p>'
+                        }
+                    </div>
+                `;
+            }).join('');
         } catch (error) {
         }
     }
@@ -532,6 +585,7 @@ class GiftCardApp {
     }
 
     showPage(pageId) {
+        console.log('[showPage]', pageId);
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
@@ -543,6 +597,10 @@ class GiftCardApp {
         // 如果显示的是验证页面，设置验证码输入框
         if (pageId === 'verificationPage') {
             this.setupVerificationInputs();
+        }
+        // 如果显示的是礼品卡页面，确保按钮事件绑定
+        if (pageId === 'giftCardPage') {
+            this.bindEvents();
         }
     }
     

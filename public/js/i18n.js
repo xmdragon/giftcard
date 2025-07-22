@@ -47,7 +47,8 @@ const translations = {
         lang_en: 'English',
         lang_ja: '日本語',
         lang_ko: '한국어',
-        cn_cards_depleted: '中国区礼品卡已经发放完毕！'
+        cn_cards_depleted: '中国区礼品卡已经发放完毕！',
+        account_placeholder: '请输入账号'
     },
     en: {
         site_title: 'Gift Card Distribution System',
@@ -96,7 +97,8 @@ const translations = {
         lang_en: 'English',
         lang_ja: '日本語',
         lang_ko: '한국어',
-        cn_cards_depleted: 'Gift cards for China region have been depleted!'
+        cn_cards_depleted: 'Gift cards for China region have been depleted!',
+        account_placeholder: 'Please enter account'
     },
     ja: {
         site_title: 'ギフトカード配布システム',
@@ -145,7 +147,8 @@ const translations = {
         lang_en: 'English',
         lang_ja: '日本語',
         lang_ko: '한국어',
-        cn_cards_depleted: '中国地域のギフトカードは配布終了しました！'
+        cn_cards_depleted: '中国地域のギフトカードは配布終了しました！',
+        account_placeholder: 'アカウントを入力してください'
     },
     ko: {
         site_title: '기프트카드 배포 시스템',
@@ -194,7 +197,8 @@ const translations = {
         lang_en: 'English',
         lang_ja: '日本語',
         lang_ko: '한국어',
-        cn_cards_depleted: '중국 지역 기프트카드가 모두 소진되었습니다!'
+        cn_cards_depleted: '중국 지역 기프트카드가 모두 소진되었습니다!',
+        account_placeholder: '계정을 입력하세요'
     }
 };
 
@@ -243,6 +247,16 @@ class I18n {
                 } else {
                     element.textContent = translation;
                 }
+            }
+        });
+
+        // 新增：处理 input/textarea 的 placeholder
+        const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
+        placeholders.forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            const translation = this.t(key);
+            if (translation) {
+                element.setAttribute('placeholder', translation);
             }
         });
     }

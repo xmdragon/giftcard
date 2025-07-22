@@ -46,7 +46,7 @@ class AdminApp {
             // 初始化Socket.IO
             this.socket = io();
             
-            this.setupSocketListeners();
+        this.setupSocketListeners();
 
             // 加载初始数据
             this.loadInitialData();
@@ -251,7 +251,13 @@ class AdminApp {
         });
 
         // Join admin room
-        this.socket.emit('join-admin');
+        if (this.currentAdmin) {
+            this.socket.emit('join-admin', {
+                id: this.currentAdmin.id,
+                username: this.currentAdmin.username,
+                role: this.currentAdmin.role
+            });
+        }
     }
 
     async handleAdminLogin() {
@@ -340,6 +346,7 @@ class AdminApp {
 
     // 显示仪表盘页面
     showDashboard() {
+        if (!this.currentAdmin) return;
         const loginPage = document.getElementById('adminLoginPage');
         const dashboardPage = document.getElementById('adminDashboard');
 
@@ -380,6 +387,7 @@ class AdminApp {
 
     // 加载初始数据
     async loadInitialData() {
+        if (!this.currentAdmin) return;
         try {
             
             // 加载待审核请求
@@ -488,11 +496,6 @@ class AdminApp {
         // 检查参数是否为空
         if (!section) return;
         
-        // 如果是切换到仪表盘，刷新仪表盘数据
-        if (section === 'dashboard') {
-            this.loadDashboardData();
-        }
-        
         // 验证权限
         if (!this.hasPermission(section)) {
             // 权限不足时重定向到有权限的第一个页面
@@ -529,7 +532,8 @@ class AdminApp {
         }
         
         // 处理特定区域的子标签页
-        if (section === 'pending') {
+        if (section === 'dashboard') {
+            this.loadDashboardData();
             // 确保我们至少有一个活动的标签页
             if (!document.querySelector('.tab-content.active')) {
                 this.switchTab('loginRequests');
@@ -540,11 +544,13 @@ class AdminApp {
     // 判断是否有权限访问某个区域
     hasPermission(section) {
         // dashboard和pending区域不需要单独的权限检查，所有人都可以访问
-        if (['dashboard', 'pending'].includes(section)) return true;
-        
+        if (['dashboard', 'pending'].includes(section)) {
+            return true;
+        }
         // 超级管理员有所有权限
-        if (this.currentAdmin.role === 'super') return true;
-        
+        if (this.currentAdmin && this.currentAdmin.role === 'super') {
+            return true;
+        }
         // 其他区域的权限映射
         const sectionPermissionMap = {
             'members': 'members:view',
@@ -553,18 +559,11 @@ class AdminApp {
             'ipmanagement': 'ip-blacklist:view',
             'adminmanage': false // 只有超级管理员才能访问
         };
-        
-        // 获取区域需要的权限点
         const requiredPermission = sectionPermissionMap[section];
-        
-        // 如果权限点是false，表示普通管理员无权访问
         if (requiredPermission === false) return false;
-        
-        // 检查是否有权限点
         if (requiredPermission) {
             return this.hasPermissionPoint(requiredPermission);
         }
-        
         // 默认允许访问
         return true;
     }
@@ -588,19 +587,22 @@ class AdminApp {
     
     // 获取第一个有权限的区域
     getFirstPermittedSection() {
-        // 首先尝试显示仪表盘
-        if (this.hasPermission('dashboard')) return 'dashboard';
-        
-        // 然后尝试显示待审核区
-        if (this.hasPermission('pending')) return 'pending';
-        
-        // 最后检查其他区域
+        const dashboard = this.hasPermission('dashboard');
+        if (dashboard) {
+            return 'dashboard';
+        }
+        const pending = this.hasPermission('pending');
+        if (pending) {
+            return 'pending';
+        }
         const sections = ['members', 'giftcards', 'categories', 'ipmanagement', 'adminmanage'];
         for (const section of sections) {
-            if (this.hasPermission(section)) return section;
+            const permitted = this.hasPermission(section);
+            if (permitted) {
+                return section;
+            }
         }
-        
-        return null; // 没有找到可访问的区域
+        return null;
     }
 
     switchTab(tab) {
@@ -986,6 +988,7 @@ class AdminApp {
 
     // 加载仪表盘数据
     async loadDashboardData() {
+        if (!this.currentAdmin) return;
         try {
             const response = await this.apiRequest('/api/admin/dashboard-data');
             if (response && response.ok) {
@@ -1051,23 +1054,6 @@ class AdminApp {
         }
     }
     
-    // 检查是否有指定权限
-    hasPermission(permissionKey) {
-        if (!this.currentAdmin) return false;
-        
-        // 超级管理员拥有所有权限
-        if (this.currentAdmin.role === 'super') return true;
-        
-        // 普通管理员检查权限点
-        try {
-            const permissions = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {};
-            return !!permissions[permissionKey];
-        } catch (e) {
-            console.error('解析权限数据错误:', e);
-            return false;
-        }
-    }
-
     // 添加系统设置菜单项
     addSystemSettingsMenuItem() {
         const nav = document.querySelector('nav ul');

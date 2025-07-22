@@ -140,9 +140,16 @@ io.on('connection', (socket) => {
     if (!adminInfo || !adminInfo.id || adminInfo.role !== 'admin') return;
     app.locals.onlineAdmins.set(adminInfo.id, { socket, username: adminInfo.username });
     socket.adminId = adminInfo.id;
+    socket.join('admin'); // 让管理员加入 admin 房间
     socket.on('disconnect', () => {
       app.locals.onlineAdmins.delete(adminInfo.id);
     });
+  });
+  // 新增会员房间监听
+  socket.on('join-member', (memberId) => {
+    if (memberId) {
+      socket.join(`member-${memberId}`);
+    }
   });
 });
 

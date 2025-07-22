@@ -236,7 +236,7 @@ module.exports = (io) => {
 
           // Distribute gift card
           const availableCards = await db.query(
-            'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "login" LIMIT 1'
+            'SELECT * FROM gift_cards WHERE status = "available" AND category_id = 1 LIMIT 1'
           );
 
           if (availableCards.length > 0) {
@@ -837,7 +837,7 @@ module.exports = (io) => {
   });
 
   // 获取系统设置
-  router.get('/system-settings', authenticateAdmin, async (req, res) => {
+  router.get('/system-settings', authenticateAdmin, checkPermission('system-settings:view'), async (req, res) => {
     try {
       const settings = await db.query('SELECT * FROM system_settings');
       res.json(settings);
@@ -848,7 +848,7 @@ module.exports = (io) => {
   });
 
   // 更新系统设置
-  router.put('/system-settings/:key', authenticateAdmin, checkPermission('admin:edit'), async (req, res) => {
+  router.put('/system-settings/:key', authenticateAdmin, checkPermission('system-settings:edit'), authenticateSuperAdmin, async (req, res) => {
     try {
       const { key } = req.params;
       const { value } = req.body;

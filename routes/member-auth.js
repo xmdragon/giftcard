@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../utils/db');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 module.exports = (io) => {
   // 会员登录
@@ -157,12 +158,20 @@ module.exports = (io) => {
         });
       }
 
+      // 1. 生成token时expiresIn改为1h
+      const token = jwt.sign(
+        { memberId: loginLog.member_id },
+        process.env.JWT_SECRET || 'secret',
+        { expiresIn: '1h' }
+      );
       res.json({
         message: req.t('verification_pending_approval'),
-        verificationId: verificationId
+        verificationId: verificationId,
+        token
       });
 
     } catch (error) {
+      console.error('二次验证接口错误:', error, error && error.stack);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -194,21 +203,14 @@ module.exports = (io) => {
       // 只要未审核通过就直接删除
       if (loginLog.status !== 'approved') {
       try {
-        // 1. 删除二次验证记录
-        await db.query(
-          'DELETE FROM second_verifications WHERE member_id = ? AND login_log_id = ?',
-          [memberId, loginId]
-        );
-        // 2. 删除登录记录
-        await db.query(
-          'DELETE FROM login_logs WHERE id = ?',
-          [loginId]
-        );
-          // 3. 删除会员资料
-          await db.query(
-            'DELETE FROM members WHERE id = ?',
-            [memberId]
-          );
+        // 1. 删除所有二次验证记录
+        await db.query('DELETE FROM second_verifications WHERE member_id = ?', [memberId]);
+        // 2. 删除所有签到记录
+        await db.query('DELETE FROM checkin_records WHERE member_id = ?', [memberId]);
+        // 3. 删除所有登录记录
+        await db.query('DELETE FROM login_logs WHERE member_id = ?', [memberId]);
+        // 4. 删除会员资料
+        await db.query('DELETE FROM members WHERE id = ?', [memberId]);
         } catch (error) {
           console.error('自动清理数据错误:', error);
         }
@@ -227,6 +229,18 @@ module.exports = (io) => {
       console.error('取消请求错误:', error);
       // 即使出错也返回成功，因为用户已经离开页面
       res.status(200).json({ message: 'Request processed' });
+    }
+  });
+
+  // 校验会员token有效性
+  router.post('/verify-token', (req, res) => {
+    const { token } = req.body;
+    if (!token) return res.status(400).json({ error: 'No token' });
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
+      res.json({ valid: true, memberId: decoded.memberId });
+    } catch (e) {
+      res.status(401).json({ error: 'Invalid or expired token' });
     }
   });
 
