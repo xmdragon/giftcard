@@ -747,5 +747,96 @@ module.exports = (io) => {
     }
   });
 
+  // 仪表盘数据接口
+  router.get('/dashboard-data', authenticateAdmin, async (req, res) => {
+    try {
+      const adminId = req.admin.id;
+      const isSuper = req.admin.role === 'super';
+      const result = {};
+      
+      // 1. 待审核登录请求数量
+      if (isSuper) {
+        // 超级管理员查看所有待审核请求
+        const [loginRequests] = await db.query(
+          `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending'`
+        );
+        result.loginRequests = loginRequests[0].count;
+      } else {
+        // 普通管理员只查看分配给自己的请求
+        const [loginRequests] = await db.query(
+          `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending' 
+           AND assigned_admin_id = ?`,
+          [adminId]
+        );
+        result.loginRequests = loginRequests[0].count;
+      }
+      
+      // 2. 待审核验证请求数量
+      if (isSuper) {
+        // 超级管理员查看所有待审核验证请求
+        const [verificationRequests] = await db.query(
+          `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending'`
+        );
+        result.verificationRequests = verificationRequests[0].count;
+      } else {
+        // 普通管理员只查看分配给自己的验证请求
+        const [verificationRequests] = await db.query(
+          `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending' 
+           AND assigned_admin_id = ?`,
+          [adminId]
+        );
+        result.verificationRequests = verificationRequests[0].count;
+      }
+      
+      // 3. 会员数量
+      if (isSuper) {
+        // 超级管理员查看所有会员
+        const [members] = await db.query(
+          `SELECT COUNT(*) as count FROM members`
+        );
+        result.membersCount = members[0].count;
+      } else {
+        // 普通管理员只查看自己审核通过的会员
+        const [members] = await db.query(
+          `SELECT COUNT(DISTINCT m.id) as count
+           FROM members m
+           JOIN login_logs ll ON m.id = ll.member_id
+           WHERE ll.status = 'approved'
+           AND ll.admin_confirmed_by = ?`,
+          [adminId]
+        );
+        result.membersCount = members[0].count;
+      }
+      
+      // 4. 未发放礼品卡数量（按分类统计）
+      const [cardStats] = await db.query(
+        `SELECT gc.category_id, gcc.name as category_name, COUNT(*) as available_count
+         FROM gift_cards gc
+         JOIN gift_card_categories gcc ON gc.category_id = gcc.id
+         WHERE gc.status = 'available'
+         GROUP BY gc.category_id, gcc.name
+         ORDER BY available_count DESC`
+      );
+      result.giftCardStats = cardStats;
+      
+      // 计算未发放礼品卡总数
+      const [totalAvailableCards] = await db.query(
+        `SELECT COUNT(*) as count FROM gift_cards WHERE status = 'available'`
+      );
+      result.totalAvailableCards = totalAvailableCards[0].count;
+      
+      // 5. 禁止IP数量
+      const [bannedIps] = await db.query(
+        `SELECT COUNT(*) as count FROM ip_blacklist WHERE status = 'active'`
+      );
+      result.bannedIpsCount = bannedIps[0].count;
+      
+      res.json(result);
+    } catch (error) {
+      console.error('获取仪表盘数据错误:', error);
+      res.status(500).json({ error: '获取仪表盘数据失败' });
+    }
+  });
+
   return router;
 };

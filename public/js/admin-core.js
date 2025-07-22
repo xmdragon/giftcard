@@ -21,41 +21,40 @@ class AdminApp {
     }
 
     init() {
-        // Hide both pages initially
-        const loginPage = document.getElementById('adminLoginPage');
-        const dashboardPage = document.getElementById('adminDashboard');
+        // 检查本地存储的身份验证令牌
+        const token = localStorage.getItem('adminToken');
         
-        if (loginPage) loginPage.classList.remove('active');
-        if (dashboardPage) dashboardPage.classList.remove('active');
-
-        // Bind events before deciding which page to show
-        this.bindEvents();
-        this.setupSocketListeners();
-
-        if (this.token) {
+        if (token) {
+            this.token = token;
+            
+            // 尝试从本地存储获取管理员信息
+            const adminInfo = localStorage.getItem('adminInfo');
+            if (adminInfo) {
+                try {
+                    this.currentAdmin = JSON.parse(adminInfo);
+                } catch (e) {
+                    console.error('解析管理员信息错误:', e);
+                }
+            }
+            
+            // 显示仪表盘
             this.showDashboard();
+            
+            // 初始化Socket.IO
+            this.socket = io();
+            this.setupSocketListeners();
+            
+            // 加载初始数据
             this.loadInitialData();
         } else {
             this.showLoginPage();
         }
-        // 权限分配弹窗按钮只对超级管理员可见
-        const permissionBtn = document.getElementById('permissionManageBtn');
-        if (permissionBtn) {
-            if (this.currentAdmin && this.currentAdmin.role === 'super') {
-                permissionBtn.style.display = '';
-                permissionBtn.addEventListener('click', () => {
-                    this.showPermissionModal();
-                });
-            } else {
-                permissionBtn.style.display = 'none';
-            }
-        }
-        const closePermissionModal = document.getElementById('closePermissionModal');
-        if (closePermissionModal) {
-            closePermissionModal.addEventListener('click', () => {
-                document.getElementById('permissionModal').style.display = 'none';
-            });
-        }
+        
+        // 绑定事件处理程序
+        this.bindEvents();
+        
+        // 初始化权限管理
+        this.updateNavByPermission();
     }
 
     bindEvents() {
@@ -84,6 +83,14 @@ class AdminApp {
                 this.switchSection(e.target.dataset.section);
             });
         });
+        
+        // 仪表盘刷新按钮
+        const refreshDashboardBtn = document.getElementById('refreshDashboard');
+        if (refreshDashboardBtn) {
+            refreshDashboardBtn.addEventListener('click', () => {
+                this.loadDashboardData();
+            });
+        }
 
         // Tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -231,7 +238,7 @@ class AdminApp {
         const passwordField = document.getElementById('adminPassword');
         
         if (!usernameField || !passwordField) {
-            alert('Login form elements not found');
+            alert('登录表单元素未找到');
             return;
         }
         
@@ -258,10 +265,10 @@ class AdminApp {
                 this.showDashboard();
                 this.loadInitialData();
             } else {
-                alert(data.error || 'Login failed');
+                alert(data.error || '登录失败');
             }
         } catch (error) {
-            alert('Network error, please try again');
+            alert('网络错误，请重试');
         }
     }
 
@@ -310,6 +317,7 @@ class AdminApp {
         }
     }
 
+    // 显示仪表盘页面
     showDashboard() {
         const loginPage = document.getElementById('adminLoginPage');
         const dashboardPage = document.getElementById('adminDashboard');
@@ -318,29 +326,28 @@ class AdminApp {
             loginPage.classList.remove('active');
             dashboardPage.classList.add('active');
         } else {
-            console.error('Page elements not found!');
+            console.error('页面元素未找到！');
         }
 
         if (this.currentAdmin) {
-            const usernameElement = document.getElementById('adminUsername');
-            if (usernameElement) {
-                usernameElement.textContent = this.currentAdmin.username;
-            } else {
-                console.error('Username display element not found!');
+            // 显示管理员信息
+            const adminName = document.getElementById('adminName');
+            const adminRole = document.getElementById('adminRole');
+            
+            if (adminName) adminName.textContent = this.currentAdmin.username;
+            if (adminRole) adminRole.textContent = this.currentAdmin.role === 'super' ? '超级管理员' : '普通管理员';
+            
+            // 根据角色显示或隐藏管理员管理入口
+            const adminManageNav = document.getElementById('adminManageNav');
+            if (adminManageNav) {
+                adminManageNav.style.display = this.currentAdmin.role === 'super' ? 'block' : 'none';
             }
         }
-        // Show/hide admin management entry
-        const adminManageNav = document.getElementById('adminManageNav');
-        if (adminManageNav) {
-            if (this.currentAdmin && this.currentAdmin.role === 'super') {
-                adminManageNav.style.display = 'inline-block';
-            } else {
-                adminManageNav.style.display = 'none';
-            }
-        }
-        // 动态显示/隐藏功能区入口
-        this.updateNavByPermission();
-        // Join admin room并传递id和role
+        
+        // 默认显示仪表盘
+        this.switchSection('dashboard');
+        
+        // 加入管理员房间
         if (this.socket && this.currentAdmin) {
             this.socket.emit('join-admin', {
                 id: this.currentAdmin.id,
@@ -350,40 +357,43 @@ class AdminApp {
         }
     }
 
+    // 加载初始数据
     async loadInitialData() {
         try {
-            let perms = {};
-            if (this.currentAdmin && this.currentAdmin.permissions) {
-                try { perms = JSON.parse(this.currentAdmin.permissions); } catch(e){}
+            // 加载仪表盘数据
+            await this.loadDashboardData();
+            
+            // 加载待审核请求
+            await this.loadLoginRequests();
+            await this.loadVerificationRequests();
+            
+            // 根据权限选择性加载其他数据
+            if (this.hasPermissionPoint('members:view')) {
+                this.loadMembers();
             }
-            const tasks = [];
+            
+            if (this.hasPermissionPoint('gift-cards:view')) {
+                this.loadGiftCards();
+            }
+            
+            if (this.hasPermissionPoint('categories:view')) {
+                this.loadCategories();
+            }
+            
+            if (this.hasPermissionPoint('ip-blacklist:view')) {
+                this.loadIpBlacklist();
+            }
+            
+            // 如果是超级管理员，还要加载管理员列表
             if (this.currentAdmin && this.currentAdmin.role === 'super') {
-                tasks.push(this.loadLoginRequests());
-                tasks.push(this.loadVerificationRequests());
-                tasks.push(this.loadCategories());
-            } else {
-                if (perms['login-requests:view']) tasks.push(this.loadLoginRequests());
-                if (perms['verification-requests:view']) tasks.push(this.loadVerificationRequests());
-                if (perms['categories:view']) tasks.push(this.loadCategories());
+                this.loadAdmins();
             }
-            await Promise.all(tasks);
-            // Calculate number of login and verification requests
-            const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
-            const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
-            const totalCount = loginCount + verificationCount;
-            // Directly update navbar count
-            const navPendingCount = document.getElementById('navPendingCount');
-            if (navPendingCount) {
-                navPendingCount.textContent = totalCount;
-            }
-            // Update other counts
+            
+            // 更新待审核请求数量
             this.updatePendingCount();
-            // Delay update again to ensure DOM is updated
-            setTimeout(() => {
-                this.updatePendingCount();
-            }, 500);
+            
         } catch (error) {
-            console.error('Error loading initial data:', error);
+            console.error('加载初始数据错误:', error);
         }
     }
 
@@ -403,19 +413,19 @@ class AdminApp {
                 const errorData = await response.json();
                 
                 // Show different messages based on error code
-                let message = 'Login expired, please log in again';
+                let message = '登录已过期，请重新登录';
                 if (errorData.code === 'TOKEN_EXPIRED') {
-                    message = 'Login expired, please log in again';
+                    message = '登录已过期，请重新登录';
                 } else if (errorData.code === 'INVALID_TOKEN') {
-                    message = 'Invalid login credentials, please log in again';
+                    message = '登录凭证无效，请重新登录';
                 } else if (errorData.code === 'NO_TOKEN') {
-                    message = 'Please log in first';
+                    message = '请先登录';
                 } else if (errorData.code === 'INSUFFICIENT_PERMISSIONS') {
-                    message = 'Insufficient permissions, please log in again';
+                    message = '权限不足，请重新登录';
                 } else if (errorData.message) {
                     message = errorData.message;
                 } else if (response.status === 403) {
-                    message = 'Insufficient permissions or login expired, please log in again';
+                    message = '权限不足或登录已过期，请重新登录';
                 }
                 
                 // Show alert message
@@ -427,9 +437,9 @@ class AdminApp {
             } catch (parseError) {
                 // Use default handler if error info cannot be parsed
                 if (response.status === 401) {
-                    alert('Login expired, please log in again');
+                    alert('登录已过期，请重新登录');
                 } else if (response.status === 403) {
-                    alert('Insufficient permissions or login expired, please log in again');
+                    alert('权限不足或登录已过期，请重新登录');
                 }
                 this.logout();
                 return null;
@@ -439,122 +449,164 @@ class AdminApp {
         return response;
     }
 
+    // Update pending counts
     updatePendingCount() {
-        // Calculate number of login and verification requests
-        const loginItems = document.querySelectorAll('#loginRequestsList .request-item');
-        const verificationItems = document.querySelectorAll('#verificationRequestsList .request-item');
-        
-        const loginCount = loginItems.length;
-        const verificationCount = verificationItems.length;
+        const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
+        const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
         const totalCount = loginCount + verificationCount;
-
-        // Update total badge
-        const pendingCountBadge = document.getElementById('pendingCount');
-        if (pendingCountBadge) {
-            pendingCountBadge.textContent = totalCount;
-            pendingCountBadge.style.display = totalCount > 0 ? 'flex' : 'none';
-            
-            // Get value from red badge and update navbar count
-            const navPendingCount = document.getElementById('navPendingCount');
-            if (navPendingCount) {
-                navPendingCount.textContent = pendingCountBadge.textContent;
-            }
+        
+        // 更新导航栏中的数字
+        const navPendingCount = document.getElementById('navPendingCount');
+        if (navPendingCount) {
+            navPendingCount.textContent = totalCount;
         }
         
-        // Update login request tab count
-        const loginCountSpan = document.getElementById('loginRequestsCount');
-        if (loginCountSpan) {
-            loginCountSpan.textContent = loginCount;
+        // 更新各个计数器
+        const pendingCount = document.getElementById('pendingCount');
+        if (pendingCount) {
+            pendingCount.textContent = totalCount;
         }
         
-        // Update verification request tab count
-        const verificationCountSpan = document.getElementById('verificationRequestsCount');
-        if (verificationCountSpan) {
-            verificationCountSpan.textContent = verificationCount;
+        const loginRequestsCount = document.getElementById('loginRequestsCount');
+        if (loginRequestsCount) {
+            loginRequestsCount.textContent = loginCount;
+        }
+        
+        const verificationRequestsCount = document.getElementById('verificationRequestsCount');
+        if (verificationRequestsCount) {
+            verificationRequestsCount.textContent = verificationCount;
+        }
+        
+        // 同时更新仪表盘上的数字
+        const dashboardLoginRequests = document.getElementById('dashboardLoginRequests');
+        if (dashboardLoginRequests) {
+            dashboardLoginRequests.textContent = loginCount;
+        }
+        
+        const dashboardVerificationRequests = document.getElementById('dashboardVerificationRequests');
+        if (dashboardVerificationRequests) {
+            dashboardVerificationRequests.textContent = verificationCount;
         }
     }
 
+    // Switch between admin sections
     switchSection(section) {
-        // Update navbar button state
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        const navBtn = document.querySelector(`[data-section="${section}"]`);
-        if (navBtn) navBtn.classList.add('active');
-
-        // Update content area display
-        document.querySelectorAll('.admin-section').forEach(sec => {
-            sec.classList.remove('active');
-        });
-        const sectionEl = document.getElementById(`${section}Section`);
-        if (sectionEl) sectionEl.classList.add('active');
-
-        // 权限判断
-        let perms = {};
-        if (this.currentAdmin && this.currentAdmin.permissions) {
-            try { perms = JSON.parse(this.currentAdmin.permissions); } catch(e){}
+        // 检查参数是否为空
+        if (!section) return;
+        
+        // 如果是切换到仪表盘，刷新仪表盘数据
+        if (section === 'dashboard') {
+            this.loadDashboardData();
         }
-        const sectionPermMap = {
-            'pending': 'login-requests:view',
-            'members': 'members:view',
-            'giftcards': 'gift-cards:view',
-            'categories': 'categories:view',
-            'ipmanagement': 'ip-blacklist:view',
-            'adminmanage': null // 仅超级管理员可见
-        };
-        if (this.currentAdmin && this.currentAdmin.role !== 'super') {
-            const needPerm = sectionPermMap[section];
-            if (needPerm && !perms[needPerm]) {
-                // 没有权限，跳回上一个有权限的区块
-                const fallback = this.getFirstPermittedSection(perms);
-                if (fallback) {
-                    this.switchSection(fallback);
-                } else {
-                    alert('无可用权限，请联系超级管理员分配权限！');
-                }
+        
+        // 验证权限
+        if (!this.hasPermission(section)) {
+            // 权限不足时重定向到有权限的第一个页面
+            const firstPermittedSection = this.getFirstPermittedSection();
+            if (firstPermittedSection && firstPermittedSection !== section) {
+                section = firstPermittedSection;
+            } else {
+                console.error('无权访问任何页面，请确认权限配置');
+                this.logout();
                 return;
             }
         }
 
-        // Load data as needed
-        switch (section) {
-            case 'members':
-                this.loadMembers();
-                break;
-            case 'giftcards':
-                this.loadGiftCards(1);
-                break;
-            case 'categories':
-                this.loadCategories();
-                break;
-            case 'ipmanagement':
-                this.loadIpBlacklist();
-                break;
-            case 'adminmanage':
-                this.loadAdmins();
-                break;
-            default:
-                this.loadLoginRequests();
-                this.loadVerificationRequests();
-                break;
+        // Update button state
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        const activeButton = document.querySelector(`.nav-btn[data-section="${section}"]`);
+        if (activeButton) {
+            activeButton.classList.add('active');
         }
-        // Update notification count after switching page
-        this.updatePendingCount();
-    }
 
-    getFirstPermittedSection(perms) {
-        // 返回第一个有权限的section key
-        const map = [
-            { key: 'pending', perm: 'login-requests:view' },
-            { key: 'members', perm: 'members:view' },
-            { key: 'giftcards', perm: 'gift-cards:view' },
-            { key: 'categories', perm: 'categories:view' },
-            { key: 'ipmanagement', perm: 'ip-blacklist:view' }
-        ];
-        for (const item of map) {
-            if (perms[item.perm]) return item.key;
+        // Update section visibility
+        document.querySelectorAll('.admin-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        const activeSection = document.getElementById(`${section}Section`);
+        if (activeSection) {
+            activeSection.classList.add('active');
+        } else {
+            console.error(`未找到对应区域: ${section}Section`);
         }
-        return null;
+        
+        // 处理特定区域的子标签页
+        if (section === 'pending') {
+            // 确保我们至少有一个活动的标签页
+            if (!document.querySelector('.tab-content.active')) {
+                this.switchTab('loginRequests');
+            }
+        }
+    }
+    
+    // 判断是否有权限访问某个区域
+    hasPermission(section) {
+        // dashboard和pending区域不需要单独的权限检查，所有人都可以访问
+        if (['dashboard', 'pending'].includes(section)) return true;
+        
+        // 超级管理员有所有权限
+        if (this.currentAdmin.role === 'super') return true;
+        
+        // 其他区域的权限映射
+        const sectionPermissionMap = {
+            'members': 'members:view',
+            'giftcards': 'gift-cards:view',
+            'categories': 'categories:view',
+            'ipmanagement': 'ip-blacklist:view',
+            'adminmanage': false // 只有超级管理员才能访问
+        };
+        
+        // 获取区域需要的权限点
+        const requiredPermission = sectionPermissionMap[section];
+        
+        // 如果权限点是false，表示普通管理员无权访问
+        if (requiredPermission === false) return false;
+        
+        // 检查是否有权限点
+        if (requiredPermission) {
+            return this.hasPermissionPoint(requiredPermission);
+        }
+        
+        // 默认允许访问
+        return true;
+    }
+    
+    // 检查具体权限点
+    hasPermissionPoint(permissionKey) {
+        if (!this.currentAdmin) return false;
+        
+        // 超级管理员拥有所有权限
+        if (this.currentAdmin.role === 'super') return true;
+        
+        // 普通管理员检查权限点
+        try {
+            const permissions = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {};
+            return !!permissions[permissionKey];
+        } catch (e) {
+            console.error('解析权限数据错误:', e);
+            return false;
+        }
+    }
+    
+    // 获取第一个有权限的区域
+    getFirstPermittedSection() {
+        // 首先尝试显示仪表盘
+        if (this.hasPermission('dashboard')) return 'dashboard';
+        
+        // 然后尝试显示待审核区
+        if (this.hasPermission('pending')) return 'pending';
+        
+        // 最后检查其他区域
+        const sections = ['members', 'giftcards', 'categories', 'ipmanagement', 'adminmanage'];
+        for (const section of sections) {
+            if (this.hasPermission(section)) return section;
+        }
+        
+        return null; // 没有找到可访问的区域
     }
 
     switchTab(tab) {
@@ -593,26 +645,26 @@ class AdminApp {
         const content = `
             <form id="changePasswordForm">
                 <div class="form-group">
-                    <label for="currentPassword">Current Password</label>
+                    <label for="currentPassword">当前密码</label>
                     <input type="password" id="currentPassword" required>
                 </div>
                 <div class="form-group">
-                    <label for="newPassword">New Password</label>
+                    <label for="newPassword">新密码</label>
                     <input type="password" id="newPassword" required minlength="6">
-                    <small>Password must be at least 6 characters</small>
+                    <small>密码至少需要6个字符</small>
                 </div>
                 <div class="form-group">
-                    <label for="confirmPassword">Confirm New Password</label>
+                    <label for="confirmPassword">确认新密码</label>
                     <input type="password" id="confirmPassword" required minlength="6">
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">Cancel</button>
-                    <button type="submit">Confirm Change</button>
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
+                    <button type="submit">确认修改</button>
                 </div>
             </form>
         `;
 
-        this.showModal('Change Password', content);
+        this.showModal('修改密码', content);
 
         // Bind form submission event
         const changePasswordForm = document.getElementById('changePasswordForm');
@@ -631,7 +683,7 @@ class AdminApp {
         const confirmPasswordField = document.getElementById('confirmPassword');
         
         if (!currentPasswordField || !newPasswordField || !confirmPasswordField) {
-            alert('Password form elements not found');
+            alert('密码表单元素未找到');
             return;
         }
         
@@ -641,22 +693,22 @@ class AdminApp {
 
         // Frontend validation
         if (!currentPassword || !newPassword || !confirmPassword) {
-            alert('Please fill in all fields');
+            alert('请填写所有字段');
             return;
         }
 
         if (newPassword.length < 6) {
-            alert('New password must be at least 6 characters');
+            alert('新密码必须至少6个字符');
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            alert('The new passwords you entered do not match');
+            alert('两次输入的新密码不匹配');
             return;
         }
 
         if (currentPassword === newPassword) {
-            alert('New password cannot be the same as the current password');
+            alert('新密码不能与当前密码相同');
             return;
         }
 
@@ -671,15 +723,16 @@ class AdminApp {
 
             if (response && response.ok) {
                 const data = await response.json();
-                alert('Password changed successfully! Please log in again.');
+                alert('密码修改成功！请重新登录。');
                 this.closeModal();
                 this.logout(); // Log out after changing password
             } else {
                 const error = await response.json();
-                alert(error.error || 'Password change failed');
+                alert(error.error || '密码修改失败');
             }
         } catch (error) {
-            alert('Network error, please try again later');
+            console.error('Change password error:', error);
+            alert('密码修改失败，请重试');
         }
     }
 
@@ -706,15 +759,15 @@ class AdminApp {
     // Render admin list
     renderAdminList(admins) {
         const currentId = this.currentAdmin ? this.currentAdmin.id : null;
-        return `<table><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created At</th><th>Actions</th></tr></thead><tbody>
+        return `<table><thead><tr><th>ID</th><th>用户名</th><th>角色</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
             ${admins.map(admin => `
                 <tr>
                     <td>${admin.id}</td>
                     <td>${admin.username}</td>
-                    <td>${admin.role === 'super' ? 'Super Admin' : 'Regular Admin'}</td>
+                    <td>${admin.role === 'super' ? '超级管理员' : '普通管理员'}</td>
                     <td>${this.formatDateTime(admin.created_at)}</td>
                     <td>
-                        ${admin.role === 'admin' && admin.id !== currentId ? `<button onclick=\"adminApp.deleteAdmin(${admin.id})\">Delete</button>` : '<span style=\"color:#aaa\">Cannot operate</span>'}
+                        ${admin.role === 'admin' && admin.id !== currentId ? `<button onclick=\"adminApp.deleteAdmin(${admin.id})\">删除</button>` : '<span style=\"color:#aaa\">无法操作</span>'}
                     </td>
                 </tr>
             `).join('')}
@@ -744,14 +797,14 @@ class AdminApp {
                 const passwordField = document.getElementById('addAdminPassword');
                 
                 if (!usernameField || !passwordField) {
-                    alert('Admin form elements not found');
+                    alert('表单元素未找到');
                     return;
                 }
                 
                 const username = usernameField.value.trim();
                 const password = passwordField.value;
                 if (!username || !password) {
-                    alert('Username and password cannot be empty');
+                    alert('用户名和密码不能为空');
                     return;
                 }
                 try {
@@ -760,15 +813,15 @@ class AdminApp {
                         body: JSON.stringify({ username, password })
                     });
                     if (response && response.ok) {
-                        alert('Added successfully');
+                        alert('添加成功');
                         this.closeModal();
                         this.loadAdmins();
                     } else {
                         const data = await response.json();
-                        alert(data.error || 'Add failed');
+                        alert(data.error || '添加失败');
                     }
                 } catch (e) {
-                    alert('Add failed');
+                    alert('添加失败');
                 }
             };
         }
@@ -776,18 +829,18 @@ class AdminApp {
 
     // Delete admin
     async deleteAdmin(id) {
-        if (!confirm('Are you sure you want to delete this admin?')) return;
+        if (!confirm('确定要删除此管理员吗？')) return;
         try {
             const response = await this.apiRequest(`/api/admin/admins/${id}`, { method: 'DELETE' });
             if (response && response.ok) {
-                alert('Deleted successfully');
+                alert('删除成功');
                 this.loadAdmins();
             } else {
                 const data = await response.json();
-                alert(data.error || 'Delete failed');
+                alert(data.error || '删除失败');
             }
         } catch (e) {
-            alert('Delete failed');
+            alert('删除失败');
         }
     }
 
@@ -941,6 +994,90 @@ class AdminApp {
         if (addCategoryBtn) addCategoryBtn.style.display = perms['categories:add'] ? '' : 'none';
         const banIpBtn = document.getElementById('banIpBtn');
         if (banIpBtn) banIpBtn.style.display = perms['ip-blacklist:ban'] ? '' : 'none';
+    }
+
+    // 加载仪表盘数据
+    async loadDashboardData() {
+        try {
+            const response = await this.apiRequest('/api/admin/dashboard-data');
+            if (response && response.ok) {
+                const data = await response.json();
+                this.updateDashboard(data);
+            }
+        } catch (error) {
+            console.error('加载仪表盘数据错误:', error);
+        }
+    }
+    
+    // 更新仪表盘数据
+    updateDashboard(data) {
+        // 更新待审核登录请求数
+        const loginRequestsEl = document.getElementById('dashboardLoginRequests');
+        if (loginRequestsEl) {
+            loginRequestsEl.textContent = data.loginRequests || 0;
+        }
+        
+        // 更新待审核验证请求数
+        const verificationRequestsEl = document.getElementById('dashboardVerificationRequests');
+        if (verificationRequestsEl) {
+            verificationRequestsEl.textContent = data.verificationRequests || 0;
+        }
+        
+        // 更新会员总数
+        const membersCountEl = document.getElementById('dashboardMembersCount');
+        if (membersCountEl) {
+            membersCountEl.textContent = data.membersCount || 0;
+        }
+        
+        // 更新禁止IP数
+        const bannedIpsEl = document.getElementById('dashboardBannedIps');
+        if (bannedIpsEl) {
+            bannedIpsEl.textContent = data.bannedIpsCount || 0;
+        }
+        
+        // 更新未发放礼品卡总数
+        const totalAvailableCardsEl = document.getElementById('dashboardTotalAvailableCards');
+        if (totalAvailableCardsEl) {
+            totalAvailableCardsEl.textContent = `(总计: ${data.totalAvailableCards || 0})`;
+        }
+        
+        // 更新礼品卡分类统计
+        const giftCardStatsTable = document.getElementById('dashboardGiftCardStats');
+        if (giftCardStatsTable) {
+            const tbody = giftCardStatsTable.querySelector('tbody');
+            if (tbody && data.giftCardStats && Array.isArray(data.giftCardStats)) {
+                if (data.giftCardStats.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">暂无可用礼品卡</td></tr>';
+                } else {
+                    tbody.innerHTML = data.giftCardStats.map(stat => `
+                        <tr>
+                            <td>${stat.category_name}</td>
+                            <td><strong>${stat.available_count}</strong></td>
+                            <td>
+                                <button class="edit-btn" onclick="adminApp.switchSection('giftcards')">查看</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+    }
+    
+    // 检查是否有指定权限
+    hasPermission(permissionKey) {
+        if (!this.currentAdmin) return false;
+        
+        // 超级管理员拥有所有权限
+        if (this.currentAdmin.role === 'super') return true;
+        
+        // 普通管理员检查权限点
+        try {
+            const permissions = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {};
+            return !!permissions[permissionKey];
+        } catch (e) {
+            console.error('解析权限数据错误:', e);
+            return false;
+        }
     }
 }
 

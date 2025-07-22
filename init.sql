@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS members (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   last_login TIMESTAMP NULL,
   status ENUM('active', 'inactive') DEFAULT 'active'
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建登录记录表
 CREATE TABLE IF NOT EXISTS login_logs (
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS login_logs (
   admin_confirmed_at TIMESTAMP NULL,
   assigned_admin_id INT NULL,
   FOREIGN KEY (member_id) REFERENCES members(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建二次验证表
 CREATE TABLE IF NOT EXISTS second_verifications (
@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS second_verifications (
   assigned_admin_id INT NULL,
   FOREIGN KEY (member_id) REFERENCES members(id),
   FOREIGN KEY (login_log_id) REFERENCES login_logs(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建礼品卡分类表
 CREATE TABLE IF NOT EXISTS gift_card_categories (
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS gift_card_categories (
   name VARCHAR(100) NOT NULL,
   description TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建礼品卡表
 CREATE TABLE IF NOT EXISTS gift_cards (
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS gift_cards (
   card_type ENUM('login', 'checkin') DEFAULT 'login',
   FOREIGN KEY (category_id) REFERENCES gift_card_categories(id),
   FOREIGN KEY (distributed_to) REFERENCES members(id)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建签到记录表
 CREATE TABLE IF NOT EXISTS checkin_records (
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS checkin_records (
   FOREIGN KEY (member_id) REFERENCES members(id),
   FOREIGN KEY (gift_card_id) REFERENCES gift_cards(id),
   UNIQUE KEY unique_member_date (member_id, checkin_date)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建管理员表
 CREATE TABLE IF NOT EXISTS admins (
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS admins (
   role ENUM('super','admin') NOT NULL DEFAULT 'admin',
   permissions TEXT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 创建IP黑名单表
 CREATE TABLE IF NOT EXISTS ip_blacklist (
@@ -93,7 +93,21 @@ CREATE TABLE IF NOT EXISTS ip_blacklist (
   status ENUM('active', 'inactive') DEFAULT 'active',
   FOREIGN KEY (banned_by) REFERENCES admins(id),
   UNIQUE KEY unique_ip (ip_address)
-);
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 管理员权限表（如需细粒度扩展，可用）
+CREATE TABLE IF NOT EXISTS admin_permissions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  admin_id INT NOT NULL,
+  permission_key VARCHAR(100) NOT NULL,
+  can_view TINYINT(1) DEFAULT 0,
+  can_add TINYINT(1) DEFAULT 0,
+  can_edit TINYINT(1) DEFAULT 0,
+  can_delete TINYINT(1) DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES admins(id),
+  UNIQUE KEY unique_admin_permission (admin_id, permission_key)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 插入默认管理员账号 (密码: admin123, MD5格式)
 INSERT INTO admins (username, password, role, permissions) VALUES ('admin', '0192023a7bbd73250516f069df18b500', 'super', '{}');

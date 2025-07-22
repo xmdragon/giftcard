@@ -8,13 +8,35 @@
     // Gift card status translation
     AdminApp.prototype.translateGiftCardStatus = function(status) {
         const statusMap = {
-            'available': 'Available',
-            'distributed': 'Distributed',
-            'used': 'Used',
-            'expired': 'Expired',
-            'cancelled': 'Cancelled'
+            'available': '可用',
+            'distributed': '已发放',
+            'used': '已使用',
+            'expired': '已过期',
+            'cancelled': '已取消'
         };
         return statusMap[status] || status;
+    };
+    
+    // Gift card type translation
+    AdminApp.prototype.translateGiftCardType = function(type) {
+        const typeMap = {
+            'login': '登录奖励',
+            'checkin': '签到奖励'
+        };
+        return typeMap[type] || type;
+    };
+    
+    // Format date time as "month-day hour:minute"
+    AdminApp.prototype.formatDateTime = function(dateString) {
+        if (!dateString) return '';
+        
+        const date = new Date(dateString);
+        const month = date.getMonth() + 1; // 月份从0开始，需要+1
+        const day = date.getDate();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        
+        return `${month}-${day} ${hours}:${minutes}`;
     };
 
     // Gift card management state
@@ -63,7 +85,7 @@
         }
 
         if (giftCards.length === 0) {
-            container.innerHTML = '<p>No gift card data</p>';
+            container.innerHTML = '<p>暂无礼品卡数据</p>';
             return;
         }
 
@@ -77,26 +99,26 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Category</th>
-                        <th>Code</th>
-                        <th>Type</th>
-                        <th>Status</th>
-                        <th>Distributed To</th>
-                        <th>Distribution Time</th>
-                        <th>Created At</th>
+                        <th>分类</th>
+                        <th>卡号</th>
+                        <th>类型</th>
+                        <th>状态</th>
+                        <th>发放给</th>
+                        <th>发放时间</th>
+                        <th>创建时间</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${giftCards.map(card => `
                         <tr>
                             <td>${card.id}</td>
-                            <td>${card.category_name || 'No Category'}</td>
+                            <td>${card.category_name || '无分类'}</td>
                             <td><code>${card.code}</code></td>
-                            <td>${card.card_type}</td>
+                            <td>${this.translateGiftCardType(card.card_type)}</td>
                             <td><span class="status-badge status-${card.status}">${this.translateGiftCardStatus(card.status)}</span></td>
-                            <td>${card.distributed_to_email || 'Not Distributed'}</td>
-                            <td>${card.distributed_at ? new Date(card.distributed_at).toLocaleString() : 'Not Distributed'}</td>
-                            <td>${new Date(card.created_at).toLocaleString()}</td>
+                            <td>${card.distributed_to_email || '未发放'}</td>
+                            <td>${card.distributed_at ? this.formatDateTime(card.distributed_at) : '未发放'}</td>
+                            <td>${this.formatDateTime(card.created_at)}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -115,7 +137,7 @@
         
         // Previous button
         if (currentPage > 1) {
-            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage - 1})">Previous</button>`;
+            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage - 1})">上一页</button>`;
         }
         
         // Page numbers
@@ -132,10 +154,10 @@
         
         // Next button
         if (currentPage < totalPages) {
-            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage + 1})">Next</button>`;
+            paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage + 1})">下一页</button>`;
         }
         
-        paginationHtml += `<span class="total-info">Total: ${total} items</span>`;
+        paginationHtml += `<span class="total-info">总计: ${total} 条记录</span>`;
         paginationHtml += '</div>';
         
         return paginationHtml;
@@ -146,30 +168,30 @@
         const content = `
             <form id="addGiftCardsForm">
                 <div class="form-group">
-                    <label for="giftCardCategory">Select Category</label>
+                    <label for="giftCardCategory">选择分类</label>
                     <select id="giftCardCategory" required>
-                        <option value="">Please select a category</option>
+                        <option value="">请选择一个分类</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="cardType">Card Type</label>
+                    <label for="cardType">卡片类型</label>
                     <select id="cardType" required>
-                        <option value="login">Login Reward</option>
-                        <option value="checkin">Check-in Reward</option>
+                        <option value="login">登录奖励</option>
+                        <option value="checkin">签到奖励</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="giftCardCodes">Gift Card Codes (one per line)</label>
-                    <textarea id="giftCardCodes" placeholder="Please enter gift card codes, one per line" required></textarea>
+                    <label for="giftCardCodes">礼品卡代码（每行一个）</label>
+                    <textarea id="giftCardCodes" placeholder="请输入礼品卡代码，每行一个" required></textarea>
                 </div>
                 <div class="form-actions">
-                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">Cancel</button>
-                    <button type="submit">Add</button>
+                    <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
+                    <button type="submit">添加</button>
                 </div>
             </form>
         `;
 
-        this.showModal('Batch Add Gift Cards', content);
+        this.showModal('批量添加礼品卡', content);
 
         // Populate category options
         this.populateCategorySelect('giftCardCategory');
@@ -193,7 +215,7 @@
                 const select = document.getElementById(selectId);
                 
                 if (!select) {
-                    console.error(`Category select element with id '${selectId}' not found`);
+                    console.error(`未找到分类选择元素 '${selectId}'`);
                     return;
                 }
 
@@ -216,7 +238,7 @@
         const codesField = document.getElementById('giftCardCodes');
         
         if (!categoryField || !cardTypeField || !codesField) {
-            alert('Gift card form elements not found');
+            alert('未找到礼品卡表单元素');
             return;
         }
         
@@ -232,13 +254,13 @@
 
             if (response && response.ok) {
                 const result = await response.json();
-                alert(`Successfully added ${result.count} gift cards`);
+                alert(`成功添加 ${result.count} 张礼品卡`);
                 this.closeModal();
                 this.loadGiftCards(1); // Reset to first page
             }
         } catch (error) {
             console.error('Error adding gift cards:', error);
-            alert('Add failed, please try again');
+            alert('添加失败，请重试');
         }
     };
 })();
