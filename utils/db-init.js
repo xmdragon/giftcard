@@ -26,8 +26,8 @@ async function initDatabase() {
         ...dbConfig,
         connectTimeout: 10000, // 10秒连接超时
         debug: process.env.NODE_ENV === 'development',
-        charset: 'utf8mb4',
-        collation: 'utf8mb4_unicode_ci'
+        charset: 'utf8mb4'
+        // 移除无效的collation选项
       });
 
       connected = true;
@@ -184,8 +184,8 @@ function getDbPool() {
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    charset: 'utf8mb4',
-    collation: 'utf8mb4_unicode_ci'
+    charset: 'utf8mb4'
+    // 移除无效的collation选项
   });
 }
 

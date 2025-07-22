@@ -101,7 +101,6 @@
                         <th>ID</th>
                         <th>分类</th>
                         <th>卡号</th>
-                        <th>类型</th>
                         <th>状态</th>
                         <th>发放给</th>
                         <th>发放时间</th>
@@ -114,7 +113,6 @@
                             <td>${card.id}</td>
                             <td>${card.category_name || '无分类'}</td>
                             <td><code>${card.code}</code></td>
-                            <td>${this.translateGiftCardType(card.card_type)}</td>
                             <td><span class="status-badge status-${card.status}">${this.translateGiftCardStatus(card.status)}</span></td>
                             <td>${card.distributed_to_email || '未发放'}</td>
                             <td>${card.distributed_at ? this.formatDateTime(card.distributed_at) : '未发放'}</td>
@@ -173,10 +171,10 @@
                         <option value="">请选择一个分类</option>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="display:none;">
                     <label for="cardType">卡片类型</label>
-                    <select id="cardType" required>
-                        <option value="login">登录奖励</option>
+                    <select id="cardType">
+                        <option value="login" selected>登录奖励</option>
                         <option value="checkin">签到奖励</option>
                     </select>
                 </div>

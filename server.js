@@ -55,11 +55,19 @@ app.use((req, res, next) => {
   if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
   const geo = geoip.lookup(ip);
   let lang = 'en';
+  let isChineseIP = false;
+  
   if (geo && geo.country) {
-    if (geo.country === 'CN') lang = 'zh';
+    if (geo.country === 'CN') {
+      lang = 'zh';
+      isChineseIP = true;
+    }
     else if (geo.country === 'JP') lang = 'ja';
+    else if (geo.country === 'KR') lang = 'ko';
   }
+  
   res.locals.recommendLang = lang;
+  res.locals.isChineseIP = isChineseIP;
   next();
 });
 
@@ -176,10 +184,18 @@ async function startServer() {
       res.sendFile(path.join(__dirname, 'favicon.ico'));
     });
     
-    // Default route
+    // 主页路由
     app.get('/', (req, res) => {
-      res.render('index', { title: '首页', user: req.user });
+      res.render('index', { title: '礼品卡发放系统' });
     });
+
+    // 临时测试入口 - 强制显示中国区IP效果
+    app.get('/test-cn', (req, res) => {
+      res.locals.isChineseIP = true;
+      res.render('index', { title: '礼品卡发放系统' });
+    });
+
+    // 管理员页面路由
     
     // Start HTTP server
     const PORT = process.env.PORT || 3000;

@@ -41,7 +41,13 @@ const translations = {
         distributed_at: '发放时间',
         checkin_date: '签到日期',
         gift_card_received: '获得礼品卡',
-        member_password: '会员密码'
+        member_password: '会员密码',
+        welcome_message: '欢迎使用礼品卡发放系统，请点击下方按钮进入会员登录。',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '中国区礼品卡已经发放完毕！'
     },
     en: {
         site_title: 'Gift Card Distribution System',
@@ -84,7 +90,13 @@ const translations = {
         distributed_at: 'Distributed At',
         checkin_date: 'Check-in Date',
         gift_card_received: 'Gift Card Received',
-        member_password: 'Member Password'
+        member_password: 'Member Password',
+        welcome_message: 'Welcome to the Gift Card Distribution System. Please click the button below to login as a member.',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: 'Gift cards for China region have been depleted!'
     },
     ja: {
         site_title: 'ギフトカード配布システム',
@@ -127,7 +139,62 @@ const translations = {
         distributed_at: '配布日時',
         checkin_date: 'チェックイン日',
         gift_card_received: 'ギフトカード受領',
-        member_password: 'メンバーパスワード'
+        member_password: 'メンバーパスワード',
+        welcome_message: 'ギフトカード配布システムへようこそ。下のボタンをクリックして、メンバーとしてログインしてください。',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '中国地域のギフトカードは配布終了しました！'
+    },
+    ko: {
+        site_title: '기프트카드 배포 시스템',
+        member_login: '회원 로그인',
+        account: '계정',
+        password: '비밀번호',
+        login: '로그인',
+        waiting_approval: '관리자 승인 대기 중',
+        login_pending_message: '로그인 요청이 제출되었습니다. 관리자 확인을 기다려주세요...',
+        second_verification: '이차 인증',
+        enter_verification_code: '인증 코드를 입력하세요',
+        verification_code: '인증 코드',
+        submit: '제출',
+        waiting_verification_approval: '인증 승인 대기 중',
+        verification_pending_message: '인증 코드가 제출되었습니다. 관리자 확인을 기다려주세요...',
+        your_gift_card: '귀하의 기프트카드',
+        gift_card_message: '축하합니다! 이것이 귀하의 기프트카드 코드입니다',
+        daily_checkin: '일일 체크인',
+        view_history: '기록 보기',
+        checkin_now: '지금 체크인',
+        back: '돌아가기',
+        history_records: '기록',
+        gift_cards: '기프트카드',
+        checkin_records: '체크인 기록',
+        login_approved: '로그인이 승인되었습니다. 이차 인증을 진행해주세요',
+        login_rejected: '로그인이 거부되었습니다',
+        verification_approved: '인증이 승인되었습니다!',
+        verification_rejected: '인증이 거부되었습니다',
+        no_gift_cards_available: '사용 가능한 기프트카드가 없습니다',
+        checkin_successful: '체크인 성공!',
+        already_checked_in_today: '오늘 이미 체크인했습니다',
+        no_checkin_eligibility: '아직 체크인 자격이 없습니다',
+        checkin_period_expired: '체크인 기간이 만료되었습니다',
+        days_remaining: '남은 일수',
+        eligible_for_checkin: '체크인 가능',
+        not_eligible_for_checkin: '체크인 불가능',
+        category: '카테고리',
+        code: '코드',
+        status: '상태',
+        distributed_at: '배포 시간',
+        checkin_date: '체크인 날짜',
+        gift_card_received: '기프트카드 수령',
+        member_password: '회원 비밀번호',
+        welcome_message: '기프트카드 배포 시스템에 오신 것을 환영합니다. 아래 버튼을 클릭하여 회원으로 로그인하세요.',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '중국 지역 기프트카드가 모두 소진되었습니다!'
     }
 };
 
@@ -148,6 +215,7 @@ class I18n {
         const browserLang = navigator.language || navigator.userLanguage;
         if (browserLang.startsWith('zh')) return 'zh';
         if (browserLang.startsWith('ja')) return 'ja';
+        if (browserLang.startsWith('ko')) return 'ko';
         return 'en'; // 默认英语
     }
 

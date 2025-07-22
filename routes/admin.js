@@ -477,15 +477,15 @@ module.exports = (io) => {
   // Batch add gift cards
   router.post('/gift-cards/batch', authenticateAdmin, checkPermission('gift-cards:add'), async (req, res) => {
     try {
-      const { categoryId, codes, cardType = 'login' } = req.body;
+      const { categoryId, codes } = req.body;
       const codeList = codes.split('\n').filter(code => code.trim());
 
       // Use transaction for batch insertion
       await db.transaction(async (connection) => {
         for (const code of codeList) {
           await connection.execute(
-            'INSERT INTO gift_cards (category_id, code, card_type) VALUES (?, ?, ?)',
-            [categoryId, code.trim(), cardType]
+            'INSERT INTO gift_cards (category_id, code) VALUES (?, ?)',
+            [categoryId, code.trim()]
           );
         }
       });

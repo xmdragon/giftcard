@@ -15,8 +15,26 @@ class GiftCardApp {
         this.checkPendingSession();
         this.bindEvents();
         this.setupSocketListeners();
+        
         // 初始只显示欢迎页
         this.showPage('welcomePage');
+        
+        // 如果是中国IP，显示礼品卡发放完毕提示
+        if (typeof isChineseIP !== 'undefined' && isChineseIP) {
+            const welcomeMsg = document.querySelector('#welcomePage p[data-i18n="welcome_message"]');
+            if (welcomeMsg) {
+                welcomeMsg.setAttribute('data-i18n', 'cn_cards_depleted');
+                welcomeMsg.textContent = i18n.t('cn_cards_depleted');
+                welcomeMsg.style.color = '#ff4d4f';
+                welcomeMsg.style.fontWeight = 'bold';
+                
+                // 隐藏登录按钮
+                const loginBtn = document.getElementById('goToLoginBtn');
+                if (loginBtn) {
+                    loginBtn.style.display = 'none';
+                }
+            }
+        }
     }
     
     // 检查是否有未完成的登录会话

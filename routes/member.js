@@ -44,9 +44,9 @@ module.exports = (io) => {
 
       // 使用事务处理签到和礼品卡分配
       return await db.transaction(async (connection) => {
-        // 获取可用的签到礼品卡
+        // 获取可用的签到礼品卡 - 从签到奖励分类中获取
         const [availableCardsResult] = await connection.execute(
-          'SELECT * FROM gift_cards WHERE status = "available" AND card_type = "checkin" LIMIT 1 FOR UPDATE'
+          'SELECT gc.* FROM gift_cards gc JOIN gift_card_categories gcc ON gc.category_id = gcc.id WHERE gc.status = "available" AND gcc.id = 2 LIMIT 1 FOR UPDATE'
         );
         
         let giftCardId = null;

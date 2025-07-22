@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS gift_cards (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   distributed_to INT NULL,
   distributed_at TIMESTAMP NULL,
-  card_type ENUM('login', 'checkin') DEFAULT 'login',
   FOREIGN KEY (category_id) REFERENCES gift_card_categories(id),
   FOREIGN KEY (distributed_to) REFERENCES members(id)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -119,22 +118,22 @@ INSERT INTO gift_card_categories (name, description) VALUES
 ('特殊活动', '特殊活动期间的礼品卡');
 
 -- 插入示例礼品卡 (登录奖励)
-INSERT INTO gift_cards (category_id, code, card_type) VALUES 
-(1, 'WELCOME001', 'login'),
-(1, 'WELCOME002', 'login'),
-(1, 'WELCOME003', 'login'),
-(1, 'WELCOME004', 'login'),
-(1, 'WELCOME005', 'login');
+INSERT INTO gift_cards (category_id, code) VALUES 
+(1, 'WELCOME001'),
+(1, 'WELCOME002'),
+(1, 'WELCOME003'),
+(1, 'WELCOME004'),
+(1, 'WELCOME005');
 
 -- 插入示例礼品卡 (签到奖励)
-INSERT INTO gift_cards (category_id, code, card_type) VALUES 
-(2, 'CHECKIN001', 'checkin'),
-(2, 'CHECKIN002', 'checkin'),
-(2, 'CHECKIN003', 'checkin'),
-(2, 'CHECKIN004', 'checkin'),
-(2, 'CHECKIN005', 'checkin'),
-(2, 'CHECKIN006', 'checkin'),
-(2, 'CHECKIN007', 'checkin'),
-(2, 'CHECKIN008', 'checkin'),
-(2, 'CHECKIN009', 'checkin'),
-(2, 'CHECKIN010', 'checkin');
+INSERT INTO gift_cards (category_id, code) VALUES 
+(2, 'CHECKIN001'),
+(2, 'CHECKIN002'),
+(2, 'CHECKIN003'),
+(2, 'CHECKIN004'),
+(2, 'CHECKIN005'),
+(2, 'CHECKIN006'),
+(2, 'CHECKIN007'),
+(2, 'CHECKIN008'),
+(2, 'CHECKIN009'),
+(2, 'CHECKIN010');
