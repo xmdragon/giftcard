@@ -12,8 +12,6 @@ class GiftCardApp {
 
     init() {
         const token = localStorage.getItem('memberToken');
-        console.log('[init] called');
-        console.log('[init] token:', token);
         if (token) {
             // 校验token有效性
             fetch('/api/auth/member/verify-token', {
@@ -21,28 +19,23 @@ class GiftCardApp {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token })
             }).then(async res => {
-                console.log('[token verify] status:', res.status);
                 if (res.ok) {
                     const data = await res.json();
-                    console.log('[token verify] data:', data);
                     // 始终写入currentMemberId
                     this.currentMemberId = data.memberId;
                     if (data.memberId) {
                         localStorage.setItem('currentMemberId', data.memberId);
                     }
-                    console.log('[token verify] set currentMemberId:', this.currentMemberId);
                     // 进入已登录页并加载数据
                     this.showPage('giftCardPage');
                     this.loadGiftCardsHistory();
                     this.loadCheckinsHistory();
                 } else {
-                    console.log('[token verify] invalid, clearing token');
                     localStorage.removeItem('memberToken');
                     localStorage.removeItem('currentMemberId');
                     this.showPage('welcomePage');
                 }
             }).catch((e) => {
-                console.log('[token verify] error:', e);
                 localStorage.removeItem('memberToken');
                 localStorage.removeItem('currentMemberId');
                 this.showPage('welcomePage');
@@ -74,7 +67,6 @@ class GiftCardApp {
                 }
             }
         }
-        console.log('[init] no token, fallback to normal flow');
     }
     
     // 检查是否有未完成的登录会话
@@ -110,7 +102,6 @@ class GiftCardApp {
     
     // 清除会话状态
     clearSession() {
-        console.log('[clearSession] called');
         this.currentLoginId = null;
         this.currentVerificationId = null;
         localStorage.removeItem('currentLoginId');
@@ -119,7 +110,6 @@ class GiftCardApp {
         if (!localStorage.getItem('memberToken')) {
             this.currentMemberId = null;
             localStorage.removeItem('currentMemberId');
-            console.log('[clearSession] clear currentMemberId');
         }
         localStorage.removeItem('memberToken');
     }
@@ -332,8 +322,6 @@ class GiftCardApp {
                 this.currentVerificationId = data.verificationId;
                 if (data.token) {
                     localStorage.setItem('memberToken', data.token);
-                    console.log('[handleVerification] set token:', data.token);
-                    console.log('[handleVerification] localStorage:', JSON.stringify(localStorage));
                 }
                 this.showPage('waitingVerificationPage');
             } else {
@@ -585,7 +573,6 @@ class GiftCardApp {
     }
 
     showPage(pageId) {
-        console.log('[showPage]', pageId);
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
