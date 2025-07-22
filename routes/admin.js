@@ -83,7 +83,6 @@ module.exports = (io) => {
     try {
       let requests;
       const adminId = Number(req.admin.id);
-      console.log('【login-requests调试】当前管理员ID:', adminId);
       if (req.admin.role === 'super') {
         requests = await db.query(`
           SELECT ll.*, m.email, m.password 
@@ -100,7 +99,6 @@ module.exports = (io) => {
           WHERE ll.status = 'pending' AND CAST(ll.assigned_admin_id AS UNSIGNED) = ? AND ll.assigned_admin_id IS NOT NULL
           ORDER BY ll.login_time DESC
         `, [adminId]);
-        console.log('【login-requests调试】查到请求:', requests.map(r => ({id: r.id, assigned_admin_id: r.assigned_admin_id})));
       }
       res.json(requests);
     } catch (error) {
@@ -855,7 +853,7 @@ module.exports = (io) => {
       const { key } = req.params;
       const { value } = req.body;
       
-      await db.execute(
+      await db.query(
         'UPDATE system_settings SET setting_value = ?, updated_by = ? WHERE setting_key = ?',
         [value, req.admin.id, key]
       );

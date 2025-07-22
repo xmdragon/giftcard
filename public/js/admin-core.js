@@ -5,6 +5,7 @@
 
 class AdminApp {
     constructor() {
+        this.isLoggingOut = false;
         this.socket = io();
         this.token = localStorage.getItem('adminToken');
         this.currentAdmin = localStorage.getItem('adminInfo') ? JSON.parse(localStorage.getItem('adminInfo')) : null;
@@ -33,8 +34,10 @@ class AdminApp {
                 try {
                     this.currentAdmin = JSON.parse(adminInfo);
                 } catch (e) {
-                    console.error('解析管理员信息错误:', e);
+                    console.error('[init] 解析管理员信息错误:', e);
                 }
+            } else {
+                console.log('[init] localStorage adminInfo 为空');
             }
             
             // 显示仪表盘
@@ -42,6 +45,7 @@ class AdminApp {
             
             // 初始化Socket.IO
             this.socket = io();
+            
             this.setupSocketListeners();
 
             // 加载初始数据
@@ -186,6 +190,10 @@ class AdminApp {
         if (refreshAdminsBtn) {
             refreshAdminsBtn.addEventListener('click', () => this.loadAdmins());
         }
+        const permissionManageBtn = document.getElementById('permissionManageBtn');
+        if (permissionManageBtn) {
+            permissionManageBtn.addEventListener('click', () => this.showPermissionModal());
+        }
 
 
         // Modal close
@@ -206,6 +214,13 @@ class AdminApp {
         // Initialize member management events (if method exists)
         if (typeof this.initMembersEvents === 'function') {
             this.initMembersEvents();
+        }
+
+        const closePermissionModalBtn = document.getElementById('closePermissionModal');
+        if (closePermissionModalBtn) {
+            closePermissionModalBtn.addEventListener('click', () => {
+                document.getElementById('permissionModal').style.display = 'none';
+            });
         }
     }
 
@@ -267,9 +282,8 @@ class AdminApp {
                 this.currentAdmin = data.admin;
                 localStorage.setItem('adminToken', this.token);
                 localStorage.setItem('adminInfo', JSON.stringify(data.admin));
-
-                this.showDashboard();
-                this.loadInitialData();
+                window.location.reload(); // 登录成功后强制刷新页面
+                return;
             } else {
                 alert(data.error || '登录失败');
             }
@@ -282,6 +296,7 @@ class AdminApp {
         // Clear authentication data
         this.token = null;
         this.currentAdmin = null;
+        console.log('[logout] currentAdmin 被清空');
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
         
@@ -402,20 +417,29 @@ class AdminApp {
     }
 
     async apiRequest(url, options = {}) {
+        if (this.isLoggingOut) return;
+        // 默认加上 Content-Type: application/json
+        const method = (options.method || 'GET').toUpperCase();
+        const defaultHeaders = (method === 'POST' || method === 'PUT')
+            ? { 'Content-Type': 'application/json' }
+            : {};
         const response = await fetch(url, {
             ...options,
             headers: {
+                ...defaultHeaders,
                 ...(options.headers || {}),
                 'Authorization': 'Bearer ' + this.token
             }
         });
-
         if (response.status === 401) {
-            alert('登录已过期，请重新登录');
-            this.logout();
+            if (!this.isLoggingOut) {
+                this.isLoggingOut = true;
+                alert('登录已过期，请重新登录');
+                this.logout();
+                console.log('[apiRequest] 401后 currentAdmin:', this.currentAdmin);
+            }
             throw new Error('登录已过期');
         }
-
         return response;
     }
 
@@ -765,14 +789,9 @@ class AdminApp {
                 e.preventDefault();
                 const usernameField = document.getElementById('addAdminUsername');
                 const passwordField = document.getElementById('addAdminPassword');
-                
-                if (!usernameField || !passwordField) {
-                    alert('表单元素未找到');
-                    return;
-                }
-                
+                const now = new Date().toISOString();
                 const username = usernameField.value.trim();
-                const password = passwordField.value;
+                const password = passwordField.value.trim();
                 if (!username || !password) {
                     alert('用户名和密码不能为空');
                     return;
@@ -780,7 +799,7 @@ class AdminApp {
                 try {
                     const response = await this.apiRequest('/api/admin/admins', {
                         method: 'POST',
-                        body: JSON.stringify({ username, password })
+                        body: JSON.stringify({ username: username, password: password })
                     });
                     if (response && response.ok) {
                         alert('添加成功');
