@@ -113,7 +113,6 @@ h1, h2, h3, h4, h5, h6 {
 #changePasswordBtn {
     background-color: #34c759;
     color: white;
-    padding: 6px 12px;
     border: none;
     border-radius: 3px;
     cursor: pointer;
@@ -124,24 +123,36 @@ h1, h2, h3, h4, h5, h6 {
     background-color: #28a745;
 }
 
+/* 导航栏基础样式 */
+.admin-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+}
+.admin-nav li {
+  margin-right: 10px;
+}
+.admin-nav button {
+  padding: 8px 16px;
+  border: none;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.admin-nav button.active {
+  background: #1976d2;
+  color: #fff;
+}
+.admin-nav button:hover:not(.active) {
+  background: #e3eafc;
+  color: #1976d2;
+}
+
 .admin-nav {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-}
-
-.nav-btn {
-    padding: 10px 15px;
-    background-color: transparent;
-    color: #333;
-    border: none;
-    cursor: pointer;
-    position: relative;
-}
-
-.nav-btn.active {
-    color: #0071e3;
-    border-bottom: 2px solid #0071e3;
+  margin-bottom: 24px;
 }
 
 /* 待审核请求样式 */

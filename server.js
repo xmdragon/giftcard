@@ -50,7 +50,7 @@ i18next
 app.use(middleware.handle(i18next));
 
 // Language detection based on IP
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
   const geo = geoip.lookup(ip);
@@ -64,6 +64,24 @@ app.use((req, res, next) => {
     }
     else if (geo.country === 'JP') lang = 'ja';
     else if (geo.country === 'KR') lang = 'ko';
+  }
+  
+  // 获取系统设置中是否阻止中国IP的设置
+  try {
+    if (isChineseIP) {
+      const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['block_cn_ip']);
+      if (settings && settings.length > 0) {
+        const blockCnIP = settings[0].setting_value === 'true';
+        res.locals.blockChineseIP = blockCnIP;
+      } else {
+        res.locals.blockChineseIP = true; // 默认阻止
+      }
+    } else {
+      res.locals.blockChineseIP = false;
+    }
+  } catch (error) {
+    console.error('获取系统设置失败:', error);
+    res.locals.blockChineseIP = false; // 出错时不阻止
   }
   
   res.locals.recommendLang = lang;

@@ -66,6 +66,28 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
+  // 系统设置表
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS system_settings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      setting_key VARCHAR(100) UNIQUE NOT NULL,
+      setting_value TEXT,
+      description TEXT,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      updated_by INT NULL
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
+
+  // 插入默认设置
+  try {
+    await db.execute(`
+      INSERT IGNORE INTO system_settings (setting_key, setting_value, description) VALUES 
+      ('block_cn_ip', 'true', '是否阻止中国IP访问（显示礼品卡已发放完毕）')
+    `);
+  } catch (error) {
+    console.error('插入默认系统设置失败:', error);
+  }
+
   // 登录记录表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS login_logs (

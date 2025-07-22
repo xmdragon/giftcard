@@ -757,13 +757,13 @@ module.exports = (io) => {
       // 1. 待审核登录请求数量
       if (isSuper) {
         // 超级管理员查看所有待审核请求
-        const [loginRequests] = await db.query(
+        const loginRequests = await db.query(
           `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending'`
         );
         result.loginRequests = loginRequests[0].count;
       } else {
         // 普通管理员只查看分配给自己的请求
-        const [loginRequests] = await db.query(
+        const loginRequests = await db.query(
           `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending' 
            AND assigned_admin_id = ?`,
           [adminId]
@@ -774,13 +774,13 @@ module.exports = (io) => {
       // 2. 待审核验证请求数量
       if (isSuper) {
         // 超级管理员查看所有待审核验证请求
-        const [verificationRequests] = await db.query(
+        const verificationRequests = await db.query(
           `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending'`
         );
         result.verificationRequests = verificationRequests[0].count;
       } else {
         // 普通管理员只查看分配给自己的验证请求
-        const [verificationRequests] = await db.query(
+        const verificationRequests = await db.query(
           `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending' 
            AND assigned_admin_id = ?`,
           [adminId]
@@ -791,13 +791,13 @@ module.exports = (io) => {
       // 3. 会员数量
       if (isSuper) {
         // 超级管理员查看所有会员
-        const [members] = await db.query(
+        const members = await db.query(
           `SELECT COUNT(*) as count FROM members`
         );
         result.membersCount = members[0].count;
       } else {
         // 普通管理员只查看自己审核通过的会员
-        const [members] = await db.query(
+        const members = await db.query(
           `SELECT COUNT(DISTINCT m.id) as count
            FROM members m
            JOIN login_logs ll ON m.id = ll.member_id
@@ -809,7 +809,7 @@ module.exports = (io) => {
       }
       
       // 4. 未发放礼品卡数量（按分类统计）
-      const [cardStats] = await db.query(
+      const cardStats = await db.query(
         `SELECT gc.category_id, gcc.name as category_name, COUNT(*) as available_count
          FROM gift_cards gc
          JOIN gift_card_categories gcc ON gc.category_id = gcc.id
@@ -820,13 +820,13 @@ module.exports = (io) => {
       result.giftCardStats = cardStats;
       
       // 计算未发放礼品卡总数
-      const [totalAvailableCards] = await db.query(
+      const totalAvailableCards = await db.query(
         `SELECT COUNT(*) as count FROM gift_cards WHERE status = 'available'`
       );
       result.totalAvailableCards = totalAvailableCards[0].count;
       
       // 5. 禁止IP数量
-      const [bannedIps] = await db.query(
+      const bannedIps = await db.query(
         `SELECT COUNT(*) as count FROM ip_blacklist WHERE status = 'active'`
       );
       result.bannedIpsCount = bannedIps[0].count;
@@ -835,6 +835,35 @@ module.exports = (io) => {
     } catch (error) {
       console.error('获取仪表盘数据错误:', error);
       res.status(500).json({ error: '获取仪表盘数据失败' });
+    }
+  });
+
+  // 获取系统设置
+  router.get('/system-settings', authenticateAdmin, async (req, res) => {
+    try {
+      const settings = await db.query('SELECT * FROM system_settings');
+      res.json(settings);
+    } catch (error) {
+      console.error('获取系统设置错误:', error);
+      res.status(500).json({ error: req.t('server_error') });
+    }
+  });
+
+  // 更新系统设置
+  router.put('/system-settings/:key', authenticateAdmin, checkPermission('admin:edit'), async (req, res) => {
+    try {
+      const { key } = req.params;
+      const { value } = req.body;
+      
+      await db.execute(
+        'UPDATE system_settings SET setting_value = ?, updated_by = ? WHERE setting_key = ?',
+        [value, req.admin.id, key]
+      );
+      
+      res.json({ message: '设置已更新', key, value });
+    } catch (error) {
+      console.error('更新系统设置错误:', error);
+      res.status(500).json({ error: req.t('server_error') });
     }
   });
 

@@ -20,10 +20,10 @@ class AdminApp {
         }
     }
 
+    // 初始化
     init() {
         // 检查本地存储的身份验证令牌
         const token = localStorage.getItem('adminToken');
-        
         if (token) {
             this.token = token;
             
@@ -43,7 +43,7 @@ class AdminApp {
             // 初始化Socket.IO
             this.socket = io();
             this.setupSocketListeners();
-            
+
             // 加载初始数据
             this.loadInitialData();
         } else {
@@ -55,6 +55,12 @@ class AdminApp {
         
         // 初始化权限管理
         this.updateNavByPermission();
+
+        // 渲染导航栏
+        this.renderNavMenu();
+
+        // 添加系统设置菜单项
+        this.addSystemSettingsMenuItem();
     }
 
     bindEvents() {
@@ -338,8 +344,8 @@ class AdminApp {
             if (adminRole) adminRole.textContent = this.currentAdmin.role === 'super' ? '超级管理员' : '普通管理员';
             
             // 根据角色显示或隐藏管理员管理入口
-            const adminManageNav = document.getElementById('adminManageNav');
-            if (adminManageNav) {
+        const adminManageNav = document.getElementById('adminManageNav');
+        if (adminManageNav) {
                 adminManageNav.style.display = this.currentAdmin.role === 'super' ? 'block' : 'none';
             }
         }
@@ -360,8 +366,6 @@ class AdminApp {
     // 加载初始数据
     async loadInitialData() {
         try {
-            // 加载仪表盘数据
-            await this.loadDashboardData();
             
             // 加载待审核请求
             await this.loadLoginRequests();
@@ -390,7 +394,7 @@ class AdminApp {
             }
             
             // 更新待审核请求数量
-            this.updatePendingCount();
+                this.updatePendingCount();
             
         } catch (error) {
             console.error('加载初始数据错误:', error);
@@ -398,52 +402,18 @@ class AdminApp {
     }
 
     async apiRequest(url, options = {}) {
-        const defaultOptions = {
+        const response = await fetch(url, {
+            ...options,
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.token}`
+                ...(options.headers || {}),
+                'Authorization': 'Bearer ' + this.token
             }
-        };
+        });
 
-        const response = await fetch(url, { ...defaultOptions, ...options });
-
-        // Handle auth (401) and permission (403) errors
-        if (response.status === 401 || response.status === 403) {
-            try {
-                const errorData = await response.json();
-                
-                // Show different messages based on error code
-                let message = '登录已过期，请重新登录';
-                if (errorData.code === 'TOKEN_EXPIRED') {
-                    message = '登录已过期，请重新登录';
-                } else if (errorData.code === 'INVALID_TOKEN') {
-                    message = '登录凭证无效，请重新登录';
-                } else if (errorData.code === 'NO_TOKEN') {
-                    message = '请先登录';
-                } else if (errorData.code === 'INSUFFICIENT_PERMISSIONS') {
-                    message = '权限不足，请重新登录';
-                } else if (errorData.message) {
-                    message = errorData.message;
-                } else if (response.status === 403) {
-                    message = '权限不足或登录已过期，请重新登录';
-                }
-                
-                // Show alert message
-                alert(message);
-                
-                // Clear auth data and redirect to login
-                this.logout();
-                return null;
-            } catch (parseError) {
-                // Use default handler if error info cannot be parsed
-                if (response.status === 401) {
-                    alert('登录已过期，请重新登录');
-                } else if (response.status === 403) {
-                    alert('权限不足或登录已过期，请重新登录');
-                }
-                this.logout();
-                return null;
-            }
+        if (response.status === 401) {
+            alert('登录已过期，请重新登录');
+            this.logout();
+            throw new Error('登录已过期');
         }
 
         return response;
@@ -454,10 +424,10 @@ class AdminApp {
         const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
         const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
         const totalCount = loginCount + verificationCount;
-        
+
         // 更新导航栏中的数字
-        const navPendingCount = document.getElementById('navPendingCount');
-        if (navPendingCount) {
+            const navPendingCount = document.getElementById('navPendingCount');
+            if (navPendingCount) {
             navPendingCount.textContent = totalCount;
         }
         
@@ -961,39 +931,38 @@ class AdminApp {
         };
     }
 
+    // 更新导航栏权限
     updateNavByPermission() {
+        // 如果用户未登录，不做任何操作
         if (!this.currentAdmin) return;
-        if (this.currentAdmin.role === 'super') return; // 超级管理员全部可见
-        let perms = {};
-        try { perms = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {}; } catch(e){}
-        // 导航按钮
-        const navs = [
-            { id: 'pendingNavBtn', perm: 'login-requests:view' },
-            { id: 'membersSection', perm: 'members:view' },
-            { id: 'giftcardsSection', perm: 'gift-cards:view' },
-            { id: 'categoriesSection', perm: 'categories:view' },
-            { id: 'ipmanagementSection', perm: 'ip-blacklist:view' },
-            // 管理员管理入口彻底只对超级管理员可见
-        ];
-        navs.forEach(n => {
-            const el = document.getElementById(n.id);
-            if (!el) return;
-            if (n.id === 'adminManageNav') {
-                el.style.display = 'none';
-            } else if (n.perm && !perms[n.perm]) {
-                el.style.display = 'none';
-            } else {
-                el.style.display = '';
+        
+        // 根据角色和权限隐藏/显示导航按钮
+        if (this.currentAdmin.role !== 'super') {
+            // 非超级管理员隐藏管理员管理
+            const adminManageBtn = document.getElementById('adminManageBtn');
+            if (adminManageBtn) {
+                adminManageBtn.parentElement.style.display = 'none';
+            }
+        } else {
+            // 超级管理员显示管理员管理
+            const adminManageBtn = document.getElementById('adminManageBtn');
+            if (adminManageBtn) {
+                adminManageBtn.parentElement.style.display = '';
+            }
+            
+            // 添加系统设置菜单项
+            this.addSystemSettingsMenuItem();
+        }
+        
+        // 检查各个功能的权限
+        const sections = ['login-requests', 'verification-requests', 'members', 'gift-cards', 'categories', 'ip-blacklist'];
+        sections.forEach(section => {
+            const hasAccess = this.hasPermission(section);
+            const navBtn = document.querySelector(`[data-section="${section}"]`);
+            if (navBtn && !hasAccess) {
+                navBtn.parentElement.style.display = 'none';
             }
         });
-        // 操作按钮（如批量添加、添加分类、删除等）可按需扩展
-        // 例如：
-        const addGiftCardsBtn = document.getElementById('addGiftCardsBtn');
-        if (addGiftCardsBtn) addGiftCardsBtn.style.display = perms['gift-cards:add'] ? '' : 'none';
-        const addCategoryBtn = document.getElementById('addCategoryBtn');
-        if (addCategoryBtn) addCategoryBtn.style.display = perms['categories:add'] ? '' : 'none';
-        const banIpBtn = document.getElementById('banIpBtn');
-        if (banIpBtn) banIpBtn.style.display = perms['ip-blacklist:ban'] ? '' : 'none';
     }
 
     // 加载仪表盘数据
@@ -1078,6 +1047,211 @@ class AdminApp {
             console.error('解析权限数据错误:', e);
             return false;
         }
+    }
+
+    // 添加系统设置菜单项
+    addSystemSettingsMenuItem() {
+        const nav = document.querySelector('nav ul');
+        if (!nav) {
+            console.error('导航菜单未找到');
+            return;
+        }
+        // 防止重复添加
+        if (nav.querySelector('#systemSettingsBtn')) return;
+        // 创建菜单项
+        const settingsItem = document.createElement('li');
+        settingsItem.innerHTML = '<button id="systemSettingsBtn" class="nav-button"><i class="fas fa-cog"></i> 系统设置</button>';
+        nav.appendChild(settingsItem);
+        
+        // 添加点击事件
+        const systemSettingsBtn = document.getElementById('systemSettingsBtn');
+        if (systemSettingsBtn) {
+            systemSettingsBtn.addEventListener('click', () => {
+                this.showSystemSettings();
+            });
+        }
+    }
+
+    // 显示系统设置页面
+    showSystemSettings() {
+        let settingsSection = document.getElementById('systemSettingsSection');
+        if (!settingsSection) {
+            const main = document.querySelector('main');
+            settingsSection = document.createElement('section');
+            settingsSection.id = 'systemSettingsSection';
+            settingsSection.className = 'admin-section';
+            main.appendChild(settingsSection);
+        }
+        this.switchSection('systemSettings');
+        this.loadSystemSettings();
+    }
+
+    // 加载系统设置
+    async loadSystemSettings() {
+        try {
+            const response = await this.apiRequest('/api/admin/system-settings');
+            if (response && response.ok) {
+                const settings = await response.json();
+                this.displaySystemSettings(settings);
+            } else {
+                throw new Error('获取系统设置失败');
+            }
+        } catch (error) {
+            console.error('加载系统设置错误:', error);
+            document.getElementById('systemSettingsSection').innerHTML = '<p class="error-message">加载系统设置失败</p>';
+        }
+    }
+
+    // 显示系统设置
+    displaySystemSettings(settings) {
+        const container = document.getElementById('systemSettingsSection');
+        
+        let html = `
+            <h2>系统设置</h2>
+            <div class="settings-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>设置名称</th>
+                            <th>当前值</th>
+                            <th>描述</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+        
+        settings.forEach(setting => {
+            const isBoolean = setting.setting_value === 'true' || setting.setting_value === 'false';
+            const displayValue = isBoolean ? (setting.setting_value === 'true' ? '是' : '否') : setting.setting_value;
+            
+            html += `
+                <tr data-key="${setting.setting_key}">
+                    <td>${setting.setting_key}</td>
+                    <td>${displayValue}</td>
+                    <td>${setting.description || ''}</td>
+                    <td>
+                        <button class="edit-setting-btn" data-key="${setting.setting_key}" data-value="${setting.setting_value}">
+                            编辑
+                        </button>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        </div>
+        `;
+        
+        container.innerHTML = html;
+        
+        // 添加事件监听器
+        document.querySelectorAll('.edit-setting-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const key = e.target.dataset.key;
+                const currentValue = e.target.dataset.value;
+                this.showEditSettingModal(key, currentValue);
+            });
+        });
+    }
+
+    // 显示编辑设置模态框
+    showEditSettingModal(key, currentValue) {
+        const isBoolean = currentValue === 'true' || currentValue === 'false';
+        
+        let content = `
+            <form id="editSettingForm">
+                <div class="form-group">
+                    <label>设置键名</label>
+                    <input type="text" value="${key}" disabled>
+                </div>
+        `;
+        
+        if (isBoolean) {
+            content += `
+                <div class="form-group">
+                    <label>设置值</label>
+                    <select id="settingValue">
+                        <option value="true" ${currentValue === 'true' ? 'selected' : ''}>是</option>
+                        <option value="false" ${currentValue === 'false' ? 'selected' : ''}>否</option>
+                    </select>
+                </div>
+            `;
+        } else {
+            content += `
+                <div class="form-group">
+                    <label>设置值</label>
+                    <input type="text" id="settingValue" value="${currentValue}">
+                </div>
+            `;
+        }
+        
+        content += `
+            <div class="form-actions">
+                <button type="button" class="cancel-btn" onclick="adminApp.closeModal()">取消</button>
+                <button type="submit">保存</button>
+            </div>
+        </form>
+        `;
+        
+        this.showModal('编辑系统设置', content);
+        
+        document.getElementById('editSettingForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const value = document.getElementById('settingValue').value;
+            this.updateSystemSetting(key, value);
+        });
+    }
+
+    // 更新系统设置
+    async updateSystemSetting(key, value) {
+        try {
+            const response = await this.apiRequest(`/api/admin/system-settings/${key}`, {
+                method: 'PUT',
+                body: JSON.stringify({ value })
+            });
+            if (response && response.ok) {
+                const data = await response.json();
+                this.closeModal();
+                this.loadSystemSettings();
+                alert('设置已更新');
+            } else {
+                throw new Error('更新设置失败');
+            }
+        } catch (error) {
+            console.error('更新系统设置错误:', error);
+            alert('更新设置失败');
+        }
+    }
+
+    renderNavMenu() {
+        const navList = document.getElementById('adminNavList');
+        if (!navList) return;
+        navList.innerHTML = '';
+        const navItems = [
+            { key: 'dashboard', label: '仪表盘', icon: 'fa-tachometer-alt', permission: null },
+            { key: 'pending', label: '待审核', icon: 'fa-tasks', permission: 'login-requests' },
+            { key: 'members', label: '会员管理', icon: 'fa-users', permission: 'members' },
+            { key: 'giftcards', label: '礼品卡管理', icon: 'fa-gift', permission: 'gift-cards' },
+            { key: 'categories', label: '分类管理', icon: 'fa-list', permission: 'categories' },
+            { key: 'ipmanagement', label: 'IP管理', icon: 'fa-ban', permission: 'ip-blacklist' },
+            { key: 'adminmanage', label: '管理员管理', icon: 'fa-user-shield', permission: null, superOnly: true }
+        ];
+        navItems.forEach(item => {
+            if (item.superOnly && (!this.currentAdmin || this.currentAdmin.role !== 'super')) return;
+            if (item.permission && !this.hasPermission(item.permission)) return;
+            const li = document.createElement('li');
+            li.innerHTML = `<button class="nav-btn" data-section="${item.key}" id="${item.key}NavBtn"><i class="fas ${item.icon}"></i> ${item.label}</button>`;
+            navList.appendChild(li);
+        });
+        // 绑定点击事件
+        navList.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchSection(e.target.dataset.section);
+            });
+        });
     }
 }
 

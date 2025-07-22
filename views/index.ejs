@@ -9,6 +9,7 @@
         // 服务器端传递的语言推荐
         const recommendLang = "<%= locals.recommendLang || 'en' %>";
         const isChineseIP = <%= locals.isChineseIP ? 'true' : 'false' %>;
+        const blockChineseIP = <%= locals.blockChineseIP ? 'true' : 'false' %>;
     </script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
