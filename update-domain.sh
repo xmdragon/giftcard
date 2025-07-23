@@ -173,6 +173,18 @@ fix_docker_compose_ssl_mount() {
   fi
 }
 
+add_https_server_block() {
+    local domains="$@"
+    local nginx_conf="nginx.conf"
+    local server_names="$domains"
+    local tmp_conf="${nginx_conf}.tmp"
+    # 生成443 server配置
+    local https_block="\n    # HTTPS 服务器\n    server {\n        listen 443 ssl http2;\n        server_name $server_names;\n\n        ssl_certificate /etc/nginx/ssl/fullchain.pem;\n        ssl_certificate_key /etc/nginx/ssl/privkey.pem;\n        ssl_session_timeout 1d;\n        ssl_session_cache off;\n        ssl_session_tickets off;\n\n        ssl_protocols TLSv1.2 TLSv1.3;\n        ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;\n        ssl_prefer_server_ciphers off;\n\n        # 其它安全头部、反向代理、静态资源等配置\n        location = /favicon.ico {\n            alias /public/favicon.ico;\n            expires 30d;\n        }\n        location ~* \\.(jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {\n            proxy_pass http://app:3000;\n            proxy_cache STATIC;\n            proxy_cache_valid 200 30d;\n            proxy_cache_use_stale error timeout updating http_500 http_502 http_503 http_504;\n            proxy_cache_lock on;\n            expires off;\n            add_header Cache-Control \"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0\";\n            add_header X-Proxy-Cache $upstream_cache_status;\n        }\n        location ~* \\.(css|js)$ {\n            proxy_pass http://app:3000;\n            add_header Cache-Control \"no-cache, no-store, must-revalidate\";\n            add_header Pragma \"no-cache\";\n            add_header Expires \"0\";\n        }\n        location /health {\n            access_log off;\n            proxy_pass http://app:3000/health;\n            proxy_http_version 1.1;\n            proxy_set_header Upgrade $http_upgrade;\n            proxy_set_header Connection 'upgrade';\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n        }\n        location / {\n            proxy_pass http://app:3000;\n            proxy_http_version 1.1;\n            proxy_set_header Upgrade $http_upgrade;\n            proxy_set_header Connection 'upgrade';\n            proxy_set_header Host $host;\n            proxy_set_header X-Real-IP $remote_addr;\n            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n            proxy_set_header X-Forwarded-Proto $scheme;\n            proxy_connect_timeout 60s;\n            proxy_send_timeout 60s;\n            proxy_read_timeout 60s;\n            proxy_buffer_size 4k;\n            proxy_buffers 4 32k;\n            proxy_busy_buffers_size 64k;\n            proxy_temp_file_write_size 64k;\n        }\n    }\n"
+    # 在http块最后一个}之前插入
+    awk -v block="$https_block" 'BEGIN{c=0} /http[ ]*{/ {c++} /}/ {if (c>0) {c--; if (c==0) {print block}}} {print}' "$nginx_conf" > "$tmp_conf" && mv "$tmp_conf" "$nginx_conf"
+    log_success "已自动插入HTTPS 443端口server配置到nginx.conf的http{}内部"
+}
+
 main() {
     echo ""
     log_info "=== 礼品卡系统 - 域名更新脚本（增强版） ==="
@@ -197,6 +209,7 @@ main() {
     check_ssl_cert_path
     check_ssl_cert "${DOMAINS[0]}"
     fix_ssl_permissions
+    add_https_server_block "${DOMAINS[@]}"
     fix_docker_compose_ssl_mount
     check_restart_nginx
     show_completion_info "${DOMAINS[0]}"
