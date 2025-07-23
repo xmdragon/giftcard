@@ -48,7 +48,8 @@ const translations = {
         lang_ja: '日本語',
         lang_ko: '한국어',
         cn_cards_depleted: '中国区礼品卡已经发放完毕！',
-        account_placeholder: '请输入账号'
+        account_placeholder: '请输入账号',
+        blocked_cn_ip: '很抱歉，因政策原因，中国大陆IP暂时无法访问本系统。'
     },
     en: {
         site_title: 'Gift Card Distribution System',
@@ -98,7 +99,8 @@ const translations = {
         lang_ja: '日本語',
         lang_ko: '한국어',
         cn_cards_depleted: 'Gift cards for China region have been depleted!',
-        account_placeholder: 'Please enter account'
+        account_placeholder: 'Please enter account',
+        blocked_cn_ip: 'Sorry, due to policy reasons, access from Mainland China is temporarily unavailable.'
     },
     ja: {
         site_title: 'ギフトカード配布システム',
@@ -148,7 +150,8 @@ const translations = {
         lang_ja: '日本語',
         lang_ko: '한국어',
         cn_cards_depleted: '中国地域のギフトカードは配布終了しました！',
-        account_placeholder: 'アカウントを入力してください'
+        account_placeholder: 'アカウントを入力してください',
+        blocked_cn_ip: '申し訳ありませんが、ポリシー上の理由により、中国本土からのアクセスは一時的にご利用いただけません。'
     },
     ko: {
         site_title: '기프트카드 배포 시스템',
@@ -198,7 +201,8 @@ const translations = {
         lang_ja: '日本語',
         lang_ko: '한국어',
         cn_cards_depleted: '중국 지역 기프트카드가 모두 소진되었습니다!',
-        account_placeholder: '계정을 입력하세요'
+        account_placeholder: '계정을 입력하세요',
+        blocked_cn_ip: '죄송합니다. 정책상의 이유로 중국 본토에서는 현재 시스템을 이용하실 수 없습니다.'
     }
 };
 

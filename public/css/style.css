@@ -555,6 +555,15 @@ button:active {
     letter-spacing: 0.5px;
 }
 
+/* 新增中国IP被限制访问提示样式 */
+.blocked-cn-ip-message {
+    margin: 3em auto;
+    text-align: center;
+    font-size: 1.3em;
+    color: #c00;
+    max-width: 500px;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;
