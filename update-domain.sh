@@ -27,14 +27,14 @@ validate_domain() {
 }
 
 update_domain() {
-    local domain=$1
+    local domains="$@"
     local nginx_conf="nginx.conf"
     local backup_file="nginx.conf.bak.$(date +%Y%m%d%H%M%S)"
     cp "$nginx_conf" "$backup_file"
     log_info "已创建配置文件备份: $backup_file"
-    # 批量替换所有server_name行
-    sed -i -E "s/server_name[ ]+[^;]+;/server_name $domain;/g" "$nginx_conf"
-    log_success "已将所有server_name批量更新为: $domain"
+    # 批量替换所有server_name行，支持多个域名
+    sed -i -E "s/server_name[ ]+[^;]+;/server_name $domains;/g" "$nginx_conf"
+    log_success "已将所有server_name批量更新为: $domains"
 }
 
 add_http_to_https_redirect() {
@@ -183,20 +183,23 @@ main() {
         shift
     fi
     if ! check_nginx_conf; then exit 1; fi
-    if [[ -z "$1" ]]; then
-        read -p "请输入您的域名 (例如: example.com): " DOMAIN
+    if [[ $# -eq 0 ]]; then
+        read -p "请输入您的域名（可用空格分隔多个域名）: " DOMAIN_INPUT
+        read -a DOMAINS <<< "$DOMAIN_INPUT"
     else
-        DOMAIN=$1
+        DOMAINS=("$@")
     fi
-    if ! validate_domain "$DOMAIN"; then exit 1; fi
-    update_domain "$DOMAIN"
+    for d in "${DOMAINS[@]}"; do
+        if ! validate_domain "$d"; then exit 1; fi
+    done
+    update_domain "${DOMAINS[@]}"
     add_http_to_https_redirect
     check_ssl_cert_path
-    check_ssl_cert "$DOMAIN"
+    check_ssl_cert "${DOMAINS[0]}"
     fix_ssl_permissions
     fix_docker_compose_ssl_mount
     check_restart_nginx
-    show_completion_info "$DOMAIN"
+    show_completion_info "${DOMAINS[0]}"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
