@@ -137,7 +137,7 @@ function assignAdminForLogin(db, app) {
 // Socket.IO连接管理
 io.on('connection', (socket) => {
   socket.on('join-admin', async (adminInfo) => {
-    if (!adminInfo || !adminInfo.id || adminInfo.role !== 'admin') return;
+    if (!adminInfo || !adminInfo.id || (adminInfo.role !== 'admin' && adminInfo.role !== 'super')) return;
     app.locals.onlineAdmins.set(adminInfo.id, { socket, username: adminInfo.username });
     socket.adminId = adminInfo.id;
     socket.join('admin'); // 让管理员加入 admin 房间

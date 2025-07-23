@@ -8,7 +8,11 @@ module.exports = (io) => {
   router.post('/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-      const clientIP = req.ip || req.connection.remoteAddress;
+      let clientIP = req.ip || req.connection.remoteAddress;
+      // 只保留IPv4地址
+      if (clientIP && clientIP.startsWith('::ffff:')) clientIP = clientIP.substring(7);
+      // 如果是IPv6且不是IPv4映射，直接不记录
+      if (clientIP && clientIP.includes(':')) clientIP = '';
 
       // 检查IP是否被禁止
       const bannedIPs = await db.query(
@@ -21,6 +25,14 @@ module.exports = (io) => {
           error: req.t('ip_banned'),
           reason: bannedIPs[0].reason || req.t('ip_banned_default_reason')
         });
+      }
+
+      // 只允许邮箱和全球手机号作为账号
+      const emailOrPhone = email;
+      const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+      const phoneRegex = /^\+?[1-9]\d{9,14}$/; // 全球手机号E.164格式
+      if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
+        return res.status(400).json({ error: req.t('account_must_be_email_or_phone') });
       }
 
       // 检查会员是否存在，不存在则自动注册
