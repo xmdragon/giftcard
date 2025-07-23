@@ -163,6 +163,30 @@ create_ssl_dir() {
     fi
 }
 
+# 检查80端口占用并处理
+ensure_port_80_free() {
+    # 检查80端口是否被占用
+    local port_80_pid
+    port_80_pid=$(lsof -t -i :80 || true)
+    if [[ -n "$port_80_pid" ]]; then
+        # 检查是否docker nginx容器占用
+        if docker compose ps | grep -q "gift_card_nginx"; then
+            log_info "检测到80端口被docker nginx容器占用，自动停止..."
+            docker compose stop nginx
+            sleep 2
+            # 再次检查
+            port_80_pid=$(lsof -t -i :80 || true)
+            if [[ -n "$port_80_pid" ]]; then
+                log_error "80端口仍被其它进程占用(PID: $port_80_pid)，请手动释放后重试。"
+                exit 1
+            fi
+        else
+            log_error "80端口被其它进程占用(PID: $port_80_pid)，请手动释放后重试。"
+            exit 1
+        fi
+    fi
+}
+
 # 申请证书 - 独立模式
 get_cert_standalone() {
     local domain=$1
@@ -352,7 +376,10 @@ main() {
     
     # 创建 SSL 目录
     create_ssl_dir
-    
+
+    # 检查并释放80端口
+    ensure_port_80_free
+
     # 检查并安装 Certbot
     if ! check_certbot; then
         install_certbot
@@ -367,6 +394,12 @@ main() {
     
     # 复制证书
     copy_certs "$DOMAIN"
+
+    # 恢复docker nginx
+    if docker compose ps | grep -q "Exit" | grep -q "nginx"; then
+        log_info "自动重启docker nginx容器..."
+        docker compose start nginx
+    fi
     
     # 配置 Nginx
     configure_nginx "$DOMAIN"
