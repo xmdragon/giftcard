@@ -160,8 +160,32 @@ add_https_server_block() {
     echo "✅ 已自动插入HTTPS 443端口server配置到nginx.conf的http{}内部"
 }
 
+# 新增：自动为80端口server添加301跳转
+add_http_to_https_redirect() {
+    local nginx_conf="nginx.conf"
+    # 检查HTTP server块是否有return 301
+    if grep -A 10 'listen 80' "$nginx_conf" | grep -q 'return 301'; then
+        echo "✅ HTTP server块已包含301跳转，无需添加"
+    else
+        # 使用awk在listen 80;后插入301跳转
+        local temp_file=$(mktemp)
+        awk '
+        /listen 80;/ {
+            print
+            print "        return 301 https://$host$request_uri;"
+            next
+        }
+        { print }
+        ' "$nginx_conf" > "$temp_file"
+        mv "$temp_file" "$nginx_conf"
+        echo "✅ 已为HTTP server块添加301跳转到HTTPS"
+    fi
+}
+
 # 证书生成后插入443 server配置
 add_https_server_block
+# 新增：插入HTTPS配置后自动加301跳转
+add_http_to_https_redirect
 
 echo ""
 echo "🎉 开发环境 SSL 设置完成！"
