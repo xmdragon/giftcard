@@ -21,12 +21,10 @@ class GiftCardApp {
             }).then(async res => {
                 if (res.ok) {
                     const data = await res.json();
-                    // 始终写入currentMemberId
                     this.currentMemberId = data.memberId;
                     if (data.memberId) {
                         localStorage.setItem('currentMemberId', data.memberId);
                     }
-                    // 进入已登录页并加载数据
                     this.showPage('giftCardPage');
                     this.loadGiftCardsHistory();
                     this.loadCheckinsHistory();
@@ -40,33 +38,26 @@ class GiftCardApp {
                 localStorage.removeItem('currentMemberId');
                 this.showPage('welcomePage');
             });
-            return;
-        }
-        // 只有没有token时才检查未完成会话
-        this.checkPendingSession();
-        this.bindEvents();
-        this.setupSocketListeners();
-        
-        // 初始只显示欢迎页
-        this.showPage('welcomePage');
-        
-        // 如果是中国IP且设置了阻止，显示礼品卡发放完毕提示
-        if (typeof isChineseIP !== 'undefined' && isChineseIP && 
-            typeof blockChineseIP !== 'undefined' && blockChineseIP) {
-            const welcomeMsg = document.querySelector('#welcomePage p[data-i18n="welcome_message"]');
-            if (welcomeMsg) {
-                welcomeMsg.setAttribute('data-i18n', 'cn_cards_depleted');
-                welcomeMsg.textContent = i18n.t('cn_cards_depleted');
-                welcomeMsg.style.color = '#ff4d4f';
-                welcomeMsg.style.fontWeight = 'bold';
-                
-                // 隐藏登录按钮
-                const loginBtn = document.getElementById('goToLoginBtn');
-                if (loginBtn) {
-                    loginBtn.style.display = 'none';
+        } else {
+            this.checkPendingSession();
+            this.setupSocketListeners();
+            this.showPage('welcomePage');
+            if (typeof isChineseIP !== 'undefined' && isChineseIP && 
+                typeof blockChineseIP !== 'undefined' && blockChineseIP) {
+                const welcomeMsg = document.querySelector('#welcomePage p[data-i18n="welcome_message"]');
+                if (welcomeMsg) {
+                    welcomeMsg.setAttribute('data-i18n', 'cn_cards_depleted');
+                    welcomeMsg.textContent = i18n.t('cn_cards_depleted');
+                    welcomeMsg.style.color = '#ff4d4f';
+                    welcomeMsg.style.fontWeight = 'bold';
+                    const loginBtn = document.getElementById('goToLoginBtn');
+                    if (loginBtn) {
+                        loginBtn.style.display = 'none';
+                    }
                 }
             }
         }
+        this.bindEvents();
     }
     
     // 检查是否有未完成的登录会话
@@ -120,6 +111,15 @@ class GiftCardApp {
         if (goToLoginBtn) {
             goToLoginBtn.addEventListener('click', () => {
                 this.showPage('loginPage');
+            });
+        }
+
+        // 退出按钮
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
             });
         }
 
@@ -294,9 +294,9 @@ class GiftCardApp {
     }
 
     async handleVerification() {
-        // 获取验证码输入框的值
-        const verificationCode = document.getElementById('verificationCode').value;
-        
+        // 获取6个验证码输入框的值
+        const inputs = Array.from(document.querySelectorAll('.form-security-code-input'));
+        const verificationCode = inputs.map(input => input.value).join('');
         
         // 验证是否填写完整
         if (verificationCode.length !== 6) {
@@ -340,97 +340,68 @@ class GiftCardApp {
         }
     }
     
-    // 设置验证码输入框的自动跳转
+    // 新的 setupVerificationInputs 适配6个input
     setupVerificationInputs() {
-        // 获取验证码输入框和显示数字的元素
-        const codeInput = document.getElementById('verificationCode');
-        const digitElements = document.querySelectorAll('.code-digit');
-        
-        // 清空输入框和显示
-        codeInput.value = '';
-        digitElements.forEach(digit => {
-            digit.textContent = '';
-            digit.classList.remove('filled');
-        });
-        
-        // 移除之前的事件监听器，避免重复绑定
-        // 使用更简单的方法：移除旧的监听器
-        if (codeInput._inputHandler) {
-            codeInput.removeEventListener('input', codeInput._inputHandler);
-        }
-        if (codeInput._pasteHandler) {
-            codeInput.removeEventListener('paste', codeInput._pasteHandler);
-        }
-        
-        // 移除数字框的旧事件监听器
-        digitElements.forEach(digit => {
-            if (digit._clickHandler) {
-                digit.removeEventListener('click', digit._clickHandler);
-            }
-        });
-        
-        // 聚焦输入框
-        setTimeout(() => codeInput.focus(), 100);
-        
-        // 创建新的输入事件处理器
-        const inputHandler = (e) => {
-            // 只允许输入数字
-            codeInput.value = codeInput.value.replace(/[^0-9]/g, '');
-            const code = codeInput.value;
-            
-            // 更新显示的数字
-            digitElements.forEach((digit, index) => {
-                if (index < code.length) {
-                    digit.textContent = code[index];
-                    digit.classList.add('filled');
-                } else {
-                    digit.textContent = '';
-                    digit.classList.remove('filled');
+        const inputs = Array.from(document.querySelectorAll('.form-security-code-input'));
+        const form = document.getElementById('verificationForm');
+        if (!inputs.length || !form) return;
+
+        // 清空所有输入
+        inputs.forEach(input => input.value = '');
+        inputs[0].focus();
+
+        // 监听输入
+        inputs.forEach((input, idx) => {
+            input.addEventListener('input', (e) => {
+                const val = input.value.replace(/[^0-9]/g, '');
+                input.value = val;
+                if (val && idx < 5) {
+                    inputs[idx + 1].focus();
+                }
+                // 自动提交
+                if (inputs.every(inp => inp.value.length === 1)) {
+                    setTimeout(() => form.dispatchEvent(new Event('submit')), 100);
                 }
             });
-            
-            // 如果输入了6位数字，自动提交
-            if (code.length === 6) {
-                setTimeout(() => {
-                    document.getElementById('verificationForm').dispatchEvent(new Event('submit'));
-                }, 300);
-            }
-        };
-        
-        // 创建新的粘贴事件处理器
-        const pasteHandler = (e) => {
-            setTimeout(() => {
-                // 只保留数字
-                codeInput.value = codeInput.value.replace(/[^0-9]/g, '').slice(0, 6);
-                
-                // 触发input事件以更新显示
-                codeInput.dispatchEvent(new Event('input'));
-            }, 10);
-        };
-        
-        // 绑定新的事件监听器
-        codeInput.addEventListener('input', inputHandler);
-        codeInput.addEventListener('paste', pasteHandler);
-        
-        // 保存处理器引用以便后续移除
-        codeInput._inputHandler = inputHandler;
-        codeInput._pasteHandler = pasteHandler;
-        
-        // 为数字框绑定点击事件
-        digitElements.forEach(digit => {
-            const clickHandler = () => {
-                codeInput.focus();
-            };
-            digit.addEventListener('click', clickHandler);
-            digit._clickHandler = clickHandler;
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !input.value && idx > 0) {
+                    inputs[idx - 1].focus();
+                }
+            });
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+                for (let i = 0; i < paste.length && i < 6; i++) {
+                    inputs[i].value = paste[i];
+                }
+                if (paste.length === 6) {
+                    setTimeout(() => form.dispatchEvent(new Event('submit')), 100);
+                } else if (paste.length > 0) {
+                    inputs[Math.min(paste.length, 5)].focus();
+                }
+            });
         });
     }
 
     showGiftCardPage(giftCardCode) {
+        const giftCardCodeDiv = document.getElementById('giftCardCode');
+        const giftCardDisplay = giftCardCodeDiv && giftCardCodeDiv.closest('.gift-card-display');
+        // 移除旧的发放完毕提示
+        const oldNotice = document.getElementById('noGiftCardNotice');
+        if (oldNotice) oldNotice.remove();
         if (giftCardCode) {
-            document.getElementById('giftCardCode').textContent = giftCardCode;
+            giftCardCodeDiv.textContent = giftCardCode;
         } else {
-            document.getElementById('giftCardCode').textContent = i18n.t('no_gift_cards_available');
+            giftCardCodeDiv.textContent = i18n.t('no_gift_cards_available');
+            // 新增发放完毕提示
+            if (giftCardDisplay) {
+                const notice = document.createElement('div');
+                notice.id = 'noGiftCardNotice';
+                notice.className = 'status-message error';
+                notice.style.marginTop = '24px';
+                notice.textContent = i18n.t('no_gift_cards_available');
+                giftCardDisplay.parentNode.insertBefore(notice, giftCardDisplay.nextSibling);
+            }
         }
         this.showPage('giftCardPage');
     }
@@ -572,6 +543,20 @@ class GiftCardApp {
         document.getElementById(`${tabName}Tab`).classList.add('active');
     }
 
+    // 会员退出
+    logout() {
+        // 清空本地存储
+        localStorage.removeItem('memberToken');
+        localStorage.removeItem('currentMemberId');
+        localStorage.removeItem('currentLoginId');
+        localStorage.removeItem('currentVerificationId');
+        // 返回首页
+        this.showPage('welcomePage');
+        // 隐藏退出按钮（用class控制）
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) logoutLink.classList.remove('show');
+    }
+
     showPage(pageId) {
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
@@ -588,6 +573,15 @@ class GiftCardApp {
         // 如果显示的是礼品卡页面，确保按钮事件绑定
         if (pageId === 'giftCardPage') {
             this.bindEvents();
+        }
+        // 登录后显示退出按钮，未登录时隐藏（用class控制）
+        const logoutLink = document.getElementById('logoutLink');
+        if (logoutLink) {
+            if (localStorage.getItem('memberToken')) {
+                logoutLink.classList.add('show');
+            } else {
+                logoutLink.classList.remove('show');
+            }
         }
     }
     

@@ -27,8 +27,8 @@ echo "执行数据库修复..."
 cat > /tmp/fix_db.sql << 'EOF'
 USE gift_card_system;
 SET NAMES utf8mb4;
-DELETE FROM gift_cards WHERE category_id IN (1, 2, 3);
-DELETE FROM gift_card_categories WHERE id IN (1, 2, 3);
+DELETE FROM gift_cards WHERE 1;
+DELETE FROM gift_card_categories WHERE 1;
 INSERT INTO gift_card_categories (id, name, description, created_at) VALUES 
 (1, '新手礼包', '新用户登录奖励礼品卡', '2025-07-19 10:20:11'),
 (2, '签到奖励', '每日签到获得的礼品卡', '2025-07-19 10:20:11'),

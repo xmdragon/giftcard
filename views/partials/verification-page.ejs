@@ -1,0 +1,100 @@
+<!-- 二次验证页面 -->
+<div class="si-body si-container container-fluid auto-resize page" id="verificationPage" role="main"
+aria-labelledby="contentheader" data-theme="dark">
+<form id="verificationForm">
+    <apple-auth app-loading-defaults="{appLoadingDefaults}" pmrpc-hook="{pmrpcHook}">
+        <div class="widget-container  widget-container--v2  widget-container--v2__auto  fade-in restrict-min-content  restrict-max-wh  fade-in"
+            data-mode="inline" data-isiebutnotedge="false">
+            <div id="resize-container" class="resize-container">
+                <div class="resize-wrapper--resize  ">
+
+                    <div id="step" class="si-step  ">
+                        <logo {hide-app-logo}="hideAppLogo" {show-fade-in}="showFadeIn" {(section)}="section">
+
+                        </logo>
+                        <div id="stepEl" class="   ">
+                            <div class="sk7"><hsa2-sk7>
+                                    <div class="verify-device">
+                                        <div class="sa-sk7__app-title">
+                                            <h1 class=" tk-callout  " tabindex="-1" data-i18n="two_factor_auth">双重认证</h1>
+                                        </div>
+                                        <div class="sa-sk7__content">
+                                            <div class="verify-device__sec-code">
+                                                <div class="form-security-code">
+                                                    <div class="form-security-code-inputs">
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 1" value="" id="digit-0" data-i18n-label="digit_1">
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 2" value="" id="digit-1" data-i18n-label="digit_2">
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 3" value="" id="digit-2" data-i18n-label="digit_3">
+                                                        <div class="form-security-code-divider"></div>
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 4" value="" id="digit-3" data-i18n-label="digit_4">
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 5" value="" id="digit-4" data-i18n-label="digit_5">
+                                                        <input class="form-security-code-input" type="tel"
+                                                            maxlength="1" autocapitalize="off" autocorrect="off"
+                                                            spellcheck="false" autocomplete="off"
+                                                            aria-label="位数 6" value="" id="digit-5" data-i18n-label="digit_6">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="tel" id="verificationCode" class="verification-input"
+                                                maxlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                                                autocomplete="one-time-code">
+                                            <div class="signin-container-footer">
+                                                <div class="signin-container-footer__info" data-i18n="enter_verification_code_desc">请输入发送到你的 Apple
+                                                    设备的验证码。
+                                                </div>
+                                                <div class="fixed-h">
+                                                    <div class="signin-container-footer__link">
+                                                        <div class="text text-typography-body-reduced">
+                                                            <div class="inline-links">
+                                                                <div class="inline-links__link"><button
+                                                                        class="button button-link button-rounded-rectangle"
+                                                                        type="button" id="resend-code-link">
+                                                                        <span
+                                                                            class="text text-typography-body-reduced" data-i18n="resend_code">重新发送验证码到设备</span></button>
+                                                                </div>
+                                                            </div>
+                                                            <div class="inline-links">
+                                                                <div class="inline-links__link">
+                                                                    <button
+                                                                        class="button button-link button-rounded-rectangle"
+                                                                        type="button" id="alt-options-btn">
+                                                                        <span
+                                                                            class="text text-typography-body-reduced" data-i18n="cannot_use_device">无法使用你的设备？</span>
+                                                                    </button>
+                                                                </div>
+                                                                <button type="submit"
+                                                                    data-i18n="submit">提交</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </hsa2-sk7>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="stocking" class="hidden-element"></div>
+                </div>
+            </div>
+        </div>
+
+    </apple-auth>
+</form>
+</div>
