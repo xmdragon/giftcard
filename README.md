@@ -339,22 +339,6 @@ chmod +x debug-and-fix.sh
 - 自定义错误页面
 - 添加安全头部
 
-### Redis 高级配置
-Redis 服务可用于：
-- 会话存储
-- 缓存频繁访问的数据
-- 实现分布式锁
-- 提高系统响应速度
-
-### 负载均衡设置
-对于高流量场景，可以配置多个应用实例：
-```yaml
-# docker-compose.yml 示例
-app:
-  deploy:
-    replicas: 3
-```
-
 ## 系统架构 / Architecture
 
 ### 组件关系图
