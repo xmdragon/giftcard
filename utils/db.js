@@ -99,11 +99,6 @@ async function transaction(callback) {
   }
 }
 
-exports.execute = async (sql, params) => {
-  const [rows] = await pool.execute(sql, params);
-  return rows;
-};
-
 module.exports = {
   pool,
   query,
@@ -111,5 +106,9 @@ module.exports = {
   insert,
   update,
   remove,
-  transaction
+  transaction,
+  execute: async (sql, params) => {
+    const [rows] = await pool.execute(sql, params);
+    return rows;
+  }
 };

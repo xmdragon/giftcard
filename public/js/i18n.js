@@ -361,6 +361,11 @@ class I18n {
     }
 
     detectLanguage() {
+        // 检查服务器推荐的语言（优先级最高）
+        if (typeof recommendLang !== 'undefined' && translations[recommendLang]) {
+            return recommendLang;
+        }
+
         // 从localStorage获取保存的语言设置
         const savedLang = localStorage.getItem('language');
         if (savedLang && translations[savedLang]) {
@@ -435,20 +440,8 @@ class I18n {
     }
 }
 
-// 初始化多语言
-const i18n = new I18n();
-
+// 等待DOM加载完成后初始化多语言
 document.addEventListener('DOMContentLoaded', function() {
-  var lang = window.recommendLang || 'en';
-  // 如果本地存储有用户选择，则优先用用户选择
-  if (localStorage.getItem('selectedLang')) {
-    lang = localStorage.getItem('selectedLang');
-  }
-  var langSelect = document.getElementById('languageSelect');
-  if (langSelect) langSelect.value = lang;
-  // 触发语言切换逻辑（假设有change事件）
-  if (langSelect) {
-    var event = new Event('change');
-    langSelect.dispatchEvent(event);
-  }
+    const i18n = new I18n();
+    window.i18n = i18n; // 使i18n全局可访问
 });

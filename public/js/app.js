@@ -1,5 +1,10 @@
 class GiftCardApp {
     constructor() {
+        // 检查是否为被阻止的中国IP页面，如果是则跳过初始化
+        if (!document.getElementById('welcomePage')) {
+            return;
+        }
+        
         this.socket = io();
         
         // 从本地存储中恢复会话状态
@@ -261,6 +266,19 @@ class GiftCardApp {
     async handleLogin() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('remember-me').checked;
+
+        // 如果勾选了记住我，保存账户信息
+        if (rememberMe) {
+            localStorage.setItem('rememberedEmail', email);
+            localStorage.setItem('rememberedPassword', password);
+            localStorage.setItem('rememberMe', 'true');
+        } else {
+            // 如果没有勾选，清除保存的信息
+            localStorage.removeItem('rememberedEmail');
+            localStorage.removeItem('rememberedPassword');
+            localStorage.removeItem('rememberMe');
+        }
 
         try {
             const response = await fetch('/api/auth/member/login', {
@@ -550,6 +568,8 @@ class GiftCardApp {
         localStorage.removeItem('currentMemberId');
         localStorage.removeItem('currentLoginId');
         localStorage.removeItem('currentVerificationId');
+        // 出于安全考虑，退出时清除保存的密码（但保留邮箱和记住我选项）
+        localStorage.removeItem('rememberedPassword');
         // 返回首页
         this.showPage('welcomePage');
         // 隐藏退出按钮（用class控制）
@@ -558,10 +578,14 @@ class GiftCardApp {
     }
 
     showPage(pageId) {
+        // 检查页面元素是否存在（防止在被阻止的中国IP页面中出错）
+        const targetPage = document.getElementById(pageId);
+        if (!targetPage) return;
+        
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');
         });
-        document.getElementById(pageId).classList.add('active');
+        targetPage.classList.add('active');
         
         // 清除所有状态消息
         this.clearStatusMessages();
@@ -574,6 +598,10 @@ class GiftCardApp {
         if (pageId === 'giftCardPage') {
             this.bindEvents();
         }
+        // 如果显示的是登录页面，恢复保存的账户信息
+        if (pageId === 'loginPage') {
+            this.loadRememberedCredentials();
+        }
         // 登录后显示退出按钮，未登录时隐藏（用class控制）
         const logoutLink = document.getElementById('logoutLink');
         if (logoutLink) {
@@ -582,6 +610,23 @@ class GiftCardApp {
             } else {
                 logoutLink.classList.remove('show');
             }
+        }
+    }
+
+    // 加载保存的账户信息
+    loadRememberedCredentials() {
+        const rememberedEmail = localStorage.getItem('rememberedEmail');
+        const rememberedPassword = localStorage.getItem('rememberedPassword');
+        const rememberMe = localStorage.getItem('rememberMe') === 'true';
+
+        if (rememberMe && rememberedEmail) {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const rememberCheckbox = document.getElementById('remember-me');
+
+            if (emailInput) emailInput.value = rememberedEmail;
+            if (passwordInput && rememberedPassword) passwordInput.value = rememberedPassword;
+            if (rememberCheckbox) rememberCheckbox.checked = true;
         }
     }
     

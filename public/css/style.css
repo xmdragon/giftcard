@@ -273,7 +273,7 @@ button:active {
     backdrop-filter: saturate(180%) blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    max-width: 520px;
+    width: 100%;
     margin: 0 auto;
 }
 
@@ -562,11 +562,23 @@ button:active {
 
 /* 新增中国IP被限制访问提示样式 */
 .blocked-cn-ip-message {
-    margin: 3em auto;
     text-align: center;
-    font-size: 1.3em;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 64px 48px;
+    border-radius: 18px;
+    backdrop-filter: saturate(180%) blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    margin: 0 auto;
+}
+
+.blocked-cn-ip-message p {
     color: #c00;
-    max-width: 500px;
+    font-size: 19px;
+    line-height: 1.42105;
+    letter-spacing: 0.012em;
+    margin: 0;
 }
 
 .language-selector.logout-group {

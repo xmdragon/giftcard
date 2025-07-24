@@ -215,8 +215,24 @@ async function startServer() {
     });
 
     // 临时测试入口 - 强制显示中国区IP效果
-    app.get('/test-cn', (req, res) => {
+    app.get('/test-cn', async (req, res) => {
       res.locals.isChineseIP = true;
+      res.locals.recommendLang = 'zh';  // 设置推荐语言为中文
+      
+      // 获取系统设置中是否阻止中国IP的设置
+      try {
+        const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['block_cn_ip']);
+        if (settings && settings.length > 0) {
+          const blockCnIP = settings[0].setting_value === 'true';
+          res.locals.blockChineseIP = blockCnIP;
+        } else {
+          res.locals.blockChineseIP = true; // 默认阻止
+        }
+      } catch (error) {
+        console.error('获取系统设置失败:', error);
+        res.locals.blockChineseIP = false; // 出错时不阻止
+      }
+      
       res.render('index', { title: '礼品卡发放系统' });
     });
 
