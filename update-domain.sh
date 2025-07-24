@@ -113,9 +113,21 @@ is_cert_expired() {
 
 check_ssl_cert() {
     local domain=$1
+    local nginx_conf="nginx.conf"
+    
+    # 检查nginx.conf中是否有443配置
+    local has_https_config=false
+    if grep -q "listen 443 ssl" "$nginx_conf"; then
+        has_https_config=true
+    fi
+    
     if [[ -f "ssl/fullchain.pem" && -f "ssl/privkey.pem" ]]; then
       if ! is_cert_expired; then
-        log_info "检测到已存在且有效的SSL证书，跳过证书申请"
+        if [[ "$has_https_config" == "true" ]]; then
+            log_info "检测到已存在且有效的SSL证书和HTTPS配置，跳过证书申请"
+        else
+            log_info "检测到已存在且有效的SSL证书，但nginx.conf缺少HTTPS配置，跳过证书申请"
+        fi
         return 0
       fi
     fi
@@ -189,8 +201,15 @@ add_https_server_block() {
     
     # 检查是否已经存在HTTPS配置
     if grep -q "listen 443 ssl" "$nginx_conf"; then
-        log_info "HTTPS 配置已存在，跳过添加"
+        log_info "HTTPS 443配置已存在，跳过添加"
         return
+    fi
+    
+    # 检查是否有SSL证书文件
+    if [[ ! -f "ssl/fullchain.pem" || ! -f "ssl/privkey.pem" ]]; then
+        log_warning "SSL证书文件不存在，但仍将添加HTTPS配置。请确保稍后申请证书。"
+    else
+        log_info "检测到SSL证书文件，添加HTTPS 443配置"
     fi
     
     # 创建临时文件
