@@ -60,18 +60,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # Redis (可选，用于会话存储和缓存)
-  redis:
-    image: redis:7-alpine
-    container_name: gift_card_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    networks:
-      - gift_card_network
-    volumes:
-      - redis_data:/data
-      
   # Nginx 反向代理
   nginx:
     image: nginx:1.25-alpine
@@ -99,8 +87,6 @@ services:
 
 volumes:
   mysql_data:
-    driver: local
-  redis_data:
     driver: local
   nginx_cache:
     driver: local
