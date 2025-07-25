@@ -19,6 +19,10 @@ class AdminApprovals {
             if (response && response.ok) {
                 const requests = await response.json();
                 this.displayLoginRequests(requests);
+            } else if (response === null) {
+                // API请求失败，可能是认证问题，已在apiRequest中处理
+                container.innerHTML = 'Authentication failed';
+                return;
             } else {
                 container.innerHTML = 'Load failed';
             }
@@ -67,6 +71,10 @@ class AdminApprovals {
             if (response && response.ok) {
                 const requests = await response.json();
                 this.displayVerificationRequests(requests);
+            } else if (response === null) {
+                // API请求失败，可能是认证问题，已在apiRequest中处理
+                container.innerHTML = 'Authentication failed';
+                return;
             } else {
                 container.innerHTML = 'Load failed';
             }
@@ -126,6 +134,9 @@ class AdminApprovals {
                     element.remove();
                 }
                 this.adminApp.updatePendingCount();
+            } else if (response === null) {
+                // API请求失败，可能是认证问题，已在apiRequest中处理
+                return;
             } else {
                 const error = await response.json();
                 console.error('审核登录请求失败:', error.error || '操作失败');
@@ -155,6 +166,9 @@ class AdminApprovals {
                     element.remove();
                 }
                 this.adminApp.updatePendingCount();
+            } else if (response === null) {
+                // API请求失败，可能是认证问题，已在apiRequest中处理
+                return;
             } else {
                 const error = await response.json();
                 console.error('审核验证请求失败:', error.error || '操作失败');

@@ -37,14 +37,8 @@ Object.assign(AdminApp.prototype, {
                 console.log('[init] localStorage adminInfo 为空');
             }
             
-            // 初始化Socket.IO
-            this.socket = this.socketManager.init();
-            
-            // 显示仪表盘
-            this.auth.showDashboard();
-
-            // 加载初始数据
-            this.loadInitialData();
+            // 验证token有效性
+            this.validateTokenAndInit();
         } else {
             this.auth.showLoginPage();
         }
@@ -130,6 +124,45 @@ Object.assign(AdminApp.prototype, {
         });
     },
 
+    // 验证token有效性并初始化
+    async validateTokenAndInit() {
+        try {
+            // 尝试发起一个简单的API请求来验证token
+            const response = await fetch('/api/admin/dashboard-data', {
+                headers: {
+                    'Authorization': 'Bearer ' + this.token
+                }
+            });
+            
+            if (response.ok) {
+                // Token有效，继续初始化
+                // 初始化Socket.IO
+                this.socket = this.socketManager.init();
+                
+                // 显示仪表盘
+                this.auth.showDashboard();
+
+                // 加载初始数据
+                this.loadInitialData();
+            } else if (response.status === 401) {
+                // Token无效或过期，清除并显示登录页面
+                console.log('Token已过期，清除本地存储');
+                this.auth.logout();
+            } else {
+                // 其他错误，仍然尝试显示仪表盘
+                console.warn('验证token时发生错误，但仍尝试初始化:', response.status);
+                this.socket = this.socketManager.init();
+                this.auth.showDashboard();
+                this.loadInitialData();
+            }
+        } catch (error) {
+            console.error('验证token时发生网络错误:', error);
+            // 网络错误时仍尝试显示仪表盘，让用户手动重试
+            this.socket = this.socketManager.init();
+            this.auth.showDashboard();
+        }
+    },
+
     // 加载初始数据
     async loadInitialData() {
         if (!this.currentAdmin) return;
@@ -147,30 +180,39 @@ Object.assign(AdminApp.prototype, {
     },
 
     async apiRequest(url, options = {}) {
-        if (this.isLoggingOut) return;
+        if (this.isLoggingOut) return null;
         // 默认加上 Content-Type: application/json
         const method = (options.method || 'GET').toUpperCase();
         const defaultHeaders = (method === 'POST' || method === 'PUT')
             ? { 'Content-Type': 'application/json' }
             : {};
-        const response = await fetch(url, {
-            ...options,
-            headers: {
-                ...defaultHeaders,
-                ...(options.headers || {}),
-                'Authorization': 'Bearer ' + this.token
+        
+        try {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    ...defaultHeaders,
+                    ...(options.headers || {}),
+                    'Authorization': 'Bearer ' + this.token
+                }
+            });
+            
+            if (response.status === 401) {
+                if (!this.isLoggingOut) {
+                    this.isLoggingOut = true;
+                    alert('登录已过期，请重新登录');
+                    this.auth.logout();
+                    console.log('[apiRequest] 401后 currentAdmin:', this.currentAdmin);
+                }
+                return null;
             }
-        });
-        if (response.status === 401) {
+            return response;
+        } catch (error) {
             if (!this.isLoggingOut) {
-                this.isLoggingOut = true;
-                alert('登录已过期，请重新登录');
-                this.auth.logout();
-                console.log('[apiRequest] 401后 currentAdmin:', this.currentAdmin);
+                console.error('API请求错误:', error);
             }
-            throw new Error('登录已过期');
+            return null;
         }
-        return response;
     },
 
     // Update pending counts
@@ -303,6 +345,9 @@ Object.assign(AdminApp.prototype, {
             if (response && response.ok) {
                 const data = await response.json();
                 this.updateDashboard(data);
+            } else if (response === null) {
+                // API请求失败，可能是认证问题，已在apiRequest中处理
+                return;
             }
         } catch (error) {
             console.error('加载仪表盘数据错误:', error);
