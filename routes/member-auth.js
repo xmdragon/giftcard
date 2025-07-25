@@ -62,9 +62,9 @@ module.exports = (io) => {
       // 轮询分配在线普通管理员（优先空闲）
       let assignedAdminId = null;
       if (req.app && req.app.locals && req.app.locals.assignAdminForLogin) {
-        console.log('【分配调试】当前在线管理员：', Array.from(req.app.locals.onlineAdmins ? req.app.locals.onlineAdmins.keys() : []));
+        console.log('[Assignment Debug] Current online admins:', Array.from(req.app.locals.onlineAdmins ? req.app.locals.onlineAdmins.keys() : []));
         assignedAdminId = await req.app.locals.assignAdminForLogin();
-        console.log('【分配调试】分配到的管理员ID:', assignedAdminId);
+        console.log('[Assignment Debug] Assigned admin ID:', assignedAdminId);
       }
       const loginResult = await db.insert('login_logs', {
         member_id: member.id,
@@ -81,7 +81,6 @@ module.exports = (io) => {
         ip_address: clientIP,
         login_time: new Date()
       };
-      console.log('[Socket] 发送新登录请求到admin房间:', loginRequestData);
       io.to('admin').emit('new-login-request', loginRequestData);
 
       res.json({
@@ -179,7 +178,7 @@ module.exports = (io) => {
       });
 
     } catch (error) {
-      console.error('二次验证接口错误:', error, error && error.stack);
+      console.error('Second verification API error:', error, error && error.stack);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -204,7 +203,7 @@ module.exports = (io) => {
       
       if (loginLogs.length === 0) {
         // 登录记录不存在，可能已经被清理，直接返回成功
-        console.log(`登录记录 ${loginId} 不存在，可能已被清理`);
+        console.log(`Login record ${loginId} does not exist, may have been cleaned`);
         return res.status(200).json({ message: 'Login record already processed or cleaned' });
       }
       
@@ -222,7 +221,7 @@ module.exports = (io) => {
         // 4. 删除会员资料
         await db.query('DELETE FROM members WHERE id = ?', [memberId]);
         } catch (error) {
-          console.error('自动清理数据错误:', error);
+          console.error('Auto cleanup data error:', error);
         }
       }
       
@@ -232,11 +231,11 @@ module.exports = (io) => {
         member_id: memberId
       });
       
-      console.log(`已通知管理员取消登录请求 ${loginId}`);
+      console.log(`Notified admin to cancel login request ${loginId}`);
       
       res.status(200).json({ message: 'Request cancelled successfully' });
     } catch (error) {
-      console.error('取消请求错误:', error);
+      console.error('Cancel request error:', error);
       // 即使出错也返回成功，因为用户已经离开页面
       res.status(200).json({ message: 'Request processed' });
     }

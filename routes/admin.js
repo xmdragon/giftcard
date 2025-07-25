@@ -75,7 +75,7 @@ module.exports = (io) => {
     if (permissions[permissionKey]) {
       return next();
     }
-    return res.status(403).json({ error: '无权限访问', code: 'NO_PERMISSION', permission: permissionKey });
+    return res.status(403).json({ error: req.t('no_permission'), code: 'NO_PERMISSION', permission: permissionKey });
   };
 
   // Get pending login requests

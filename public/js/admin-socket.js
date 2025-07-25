@@ -22,7 +22,6 @@ class AdminSocket {
 
         // 新登录请求
         this.socket.on('new-login-request', (data) => {
-            console.log('[Socket] 收到 new-login-request:', data);
             const container = document.getElementById('loginRequestsList');
             if (!container) {
                 console.warn('[Socket] loginRequestsList 容器不存在，自动刷新登录请求列表');
@@ -54,7 +53,6 @@ class AdminSocket {
 
         // 取消登录请求
         this.socket.on('cancel-login-request', (data) => {
-            console.log('[Socket] 收到取消登录请求:', data);
             // 从界面移除对应的请求项
             const requestElement = document.querySelector(`[data-id="${data.id}"]`);
             if (requestElement) {
@@ -70,7 +68,6 @@ class AdminSocket {
     // 加入管理员房间
     joinAdminRoom() {
         if (this.adminApp.currentAdmin && this.socket) {
-            console.log('[Socket] 加入admin房间:', this.adminApp.currentAdmin);
             this.socket.emit('join-admin', {
                 id: this.adminApp.currentAdmin.id,
                 username: this.adminApp.currentAdmin.username,

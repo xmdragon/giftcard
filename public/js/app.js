@@ -7,6 +7,13 @@ class GiftCardApp {
         
         this.socket = io();
         
+        // Socket.IO重连时重新加入房间
+        this.socket.on('connect', () => {
+            if (this.currentMemberId) {
+                this.socket.emit('join-member', this.currentMemberId);
+            }
+        });
+        
         // 从本地存储中恢复会话状态
         this.currentMemberId = localStorage.getItem('currentMemberId');
         this.currentLoginId = localStorage.getItem('currentLoginId');
@@ -30,9 +37,12 @@ class GiftCardApp {
                     if (data.memberId) {
                         localStorage.setItem('currentMemberId', data.memberId);
                     }
+                    
+                    
+                    // 先加载礼品卡历史记录，然后显示页面
+                    await this.loadGiftCardsHistory();
+                    await this.loadCheckinsHistory();
                     this.showPage('giftCardPage');
-                    this.loadGiftCardsHistory();
-                    this.loadCheckinsHistory();
                 } else {
                     localStorage.removeItem('memberToken');
                     localStorage.removeItem('currentMemberId');
@@ -45,7 +55,6 @@ class GiftCardApp {
             });
         } else {
             this.checkPendingSession();
-            this.setupSocketListeners();
             this.showPage('welcomePage');
             if (typeof isChineseIP !== 'undefined' && isChineseIP && 
                 typeof blockChineseIP !== 'undefined' && blockChineseIP) {
@@ -62,6 +71,9 @@ class GiftCardApp {
                 }
             }
         }
+        
+        // 始终设置Socket监听器
+        this.setupSocketListeners();
         this.bindEvents();
     }
     
@@ -69,7 +81,7 @@ class GiftCardApp {
     checkPendingSession() {
         if (this.currentLoginId && this.currentMemberId) {
             // 页面初始化时直接清理无效的本地状态，不发送cancel请求
-            console.log('检测到本地存储的登录状态，清理旧数据');
+            console.log('Detected local stored login state, cleaning old data');
             this.clearSession();
             return;
             
@@ -91,14 +103,14 @@ class GiftCardApp {
                     this.clearSession();
                 } else {
                     // 即使失败也清理本地状态，因为可能记录已经不存在了
-                    console.log('取消请求返回错误，但仍清理本地状态');
+                    console.log('Cancel request returned error, but still cleaning local state');
                     this.clearSession();
                     return response.text().then(text => {
                         console.log('Cancel response error:', text);
                     });
                 }
             }).catch(error => {
-                console.log('取消请求网络错误，清理本地状态:', error);
+                console.log('Cancel request network error, cleaning local state:', error);
                 // 网络错误时也清理本地状态
                 this.clearSession();
             });
@@ -145,11 +157,14 @@ class GiftCardApp {
             this.handleLogin();
         });
 
-        // 验证表单
-        document.getElementById('verificationForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.handleVerification();
-        });
+        // 验证提交按钮（手动点击）
+        const verifySubmitBtn = document.querySelector('#verificationForm button[type="button"]');
+        if (verifySubmitBtn) {
+            verifySubmitBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.handleVerification();
+            });
+        }
 
         // 签到按钮
         document.getElementById('checkinBtn').addEventListener('click', () => {
@@ -203,7 +218,6 @@ class GiftCardApp {
         
         // 登录状态更新
         this.socket.on('login-status-update', (data) => {
-            console.log('[调试] 收到 login-status-update:', data);
             const statusDiv = document.getElementById('loginStatus');
             if (data.status === 'approved') {
                 statusDiv.innerHTML = `<div class="status-message success">${i18n.t('login_approved')}</div>`;
@@ -221,39 +235,34 @@ class GiftCardApp {
         // 验证状态更新
         this.socket.on('verification-approved', (data) => {
             const statusDiv = document.getElementById('verificationStatus');
-            console.log('[调试] 收到 verification-approved:', data);
             
-            // 保存token
+            // 保存token和会员ID
             if (data.token) {
                 localStorage.setItem('memberToken', data.token);
             }
+            if (this.currentMemberId) {
+                localStorage.setItem('currentMemberId', this.currentMemberId);
+            }
+            
+            // 清理会话状态（但保留token和memberId）
+            this.currentLoginId = null;
+            this.currentVerificationId = null;
+            localStorage.removeItem('currentLoginId');
+            localStorage.removeItem('currentVerificationId');
             
             if (data.giftCardCode) {
-                statusDiv.innerHTML = `<div class="status-message success">${i18n.t('verification_approved')}</div>`;
-                setTimeout(() => {
-                    console.log('[调试] 跳转到 showGiftCardPage, code:', data.giftCardCode);
-                    this.showGiftCardPage(data.giftCardCode);
-                }, 2000);
+                this.showGiftCardPage(data.giftCardCode);
             } else {
-                statusDiv.innerHTML = `<div class="status-message success">${i18n.t('verification_approved')}<br>${i18n.t('no_gift_cards_available')}</div>`;
-                setTimeout(() => {
-                    console.log('[调试] 跳转到 showGiftCardPage, code: null');
-                    this.showGiftCardPage(null);
-                }, 3000);
+                this.showGiftCardPage(null);
             }
         });
 
         this.socket.on('verification-rejected', (data) => {
-            console.log('[调试] 收到 verification-rejected:', data);
-            
-            // 无论ID是否匹配，都处理拒绝事件
-            // 这样可以确保用户在任何情况下都能回到验证页面
-            
             const statusDiv = document.getElementById('verificationStatus');
+            statusDiv.style.display = 'block';
             statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
             
             setTimeout(() => {
-                // 重定向到二次验证表单页面，而不是登录页面
                 this.showPage('verificationPage');
             }, 3000);
         });
@@ -298,6 +307,7 @@ class GiftCardApp {
                 // 加入Socket房间
                 this.socket.emit('join-member', this.currentMemberId);
                 
+                // 清理之前的状态信息然后显示等待页面
                 this.showPage('waitingPage');
             } else {
                 this.showError(data.error);
@@ -334,6 +344,7 @@ class GiftCardApp {
 
             if (response.ok) {
                 this.currentVerificationId = data.verificationId;
+                // 清理之前的状态信息然后显示等待验证页面
                 this.showPage('waitingVerificationPage');
             } else {
                 // 显示错误并标记输入框
@@ -378,7 +389,7 @@ class GiftCardApp {
                 }
                 // 自动提交
                 if (inputs.every(inp => inp.value.length === 1)) {
-                    setTimeout(() => form.dispatchEvent(new Event('submit')), 100);
+                    setTimeout(() => this.handleVerification(), 100);
                 }
             });
             input.addEventListener('keydown', (e) => {
@@ -393,7 +404,7 @@ class GiftCardApp {
                     inputs[i].value = paste[i];
                 }
                 if (paste.length === 6) {
-                    setTimeout(() => form.dispatchEvent(new Event('submit')), 100);
+                    setTimeout(() => this.handleVerification(), 100);
                 } else if (paste.length > 0) {
                     inputs[Math.min(paste.length, 5)].focus();
                 }
@@ -410,29 +421,57 @@ class GiftCardApp {
         if (targetPage) {
             targetPage.classList.add('active');
         }
-        // 自动初始化验证码输入框
-        if (pageId === 'verificationPage') {
+        
+        // 页面特定的初始化和清理
+        if (pageId === 'loginPage') {
+            // 清理登录页面的表单状态
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                // 不清理表单内容，只清理错误状态
+                const inputs = loginForm.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.classList.remove('error');
+                });
+            }
+        } else if (pageId === 'verificationPage') {
+            // 自动初始化验证码输入框
             this.setupVerificationInputs();
+        } else if (pageId === 'waitingPage') {
+            // 清理登录状态显示，等待Socket.IO事件更新
+            const loginStatus = document.getElementById('loginStatus');
+            if (loginStatus) {
+                loginStatus.innerHTML = '';
+            }
+        } else if (pageId === 'waitingVerificationPage') {
+            // 清理验证状态显示
+            const verificationStatus = document.getElementById('verificationStatus');
+            if (verificationStatus) {
+                verificationStatus.style.display = 'none';
+                verificationStatus.innerHTML = '';
+            }
         }
-        // 可选：清理状态、初始化输入框等
     }
 
-    // showGiftCardPage 前后打印 session 信息，确保不会丢失
     showGiftCardPage(giftCardCode) {
-        console.log('[调试] showGiftCardPage 前 session:', {
-            memberToken: localStorage.getItem('memberToken'),
-            currentMemberId: localStorage.getItem('currentMemberId'),
-            currentLoginId: localStorage.getItem('currentLoginId')
-        });
+        // 先显示页面
+        this.showPage('giftCardPage');
+        
         const giftCardCodeDiv = document.getElementById('giftCardCode');
         const giftCardDisplay = giftCardCodeDiv && giftCardCodeDiv.closest('.gift-card-display');
         // 移除旧的发放完毕提示
         const oldNotice = document.getElementById('noGiftCardNotice');
         if (oldNotice) oldNotice.remove();
+        
         if (giftCardCode) {
-            giftCardCodeDiv.textContent = giftCardCode;
+            if (giftCardCodeDiv) {
+                giftCardCodeDiv.textContent = giftCardCode;
+            }
+            // 刷新礼品卡历史记录以显示新获得的礼品卡
+            this.loadGiftCardsHistory();
         } else {
-            giftCardCodeDiv.textContent = i18n.t('no_gift_cards_available');
+            if (giftCardCodeDiv) {
+                giftCardCodeDiv.textContent = i18n.t('no_gift_cards_available');
+            }
             // 新增发放完毕提示
             if (giftCardDisplay) {
                 const notice = document.createElement('div');
@@ -442,13 +481,12 @@ class GiftCardApp {
                 notice.textContent = i18n.t('no_gift_cards_available');
                 giftCardDisplay.parentNode.insertBefore(notice, giftCardDisplay.nextSibling);
             }
+            // 即使没有新礼品卡，也加载历史记录
+            this.loadGiftCardsHistory();
         }
-        this.showPage('giftCardPage');
-        console.log('[调试] showGiftCardPage 后 session:', {
-            memberToken: localStorage.getItem('memberToken'),
-            currentMemberId: localStorage.getItem('currentMemberId'),
-            currentLoginId: localStorage.getItem('currentLoginId')
-        });
+        
+        // 加载签到历史
+        this.loadCheckinsHistory();
     }
 
     async showCheckinPage() {
@@ -481,6 +519,18 @@ class GiftCardApp {
                 checkinBtn.disabled = true;
             }
         } catch (error) {
+            const eligibilityDiv = document.getElementById('checkinEligibility');
+            const checkinBtn = document.getElementById('performCheckin');
+            if (eligibilityDiv) {
+                eligibilityDiv.innerHTML = `
+                    <div class="status-message error">
+                        ${i18n.t('network_error')}
+                    </div>
+                `;
+            }
+            if (checkinBtn) {
+                checkinBtn.disabled = true;
+            }
         }
     }
 
@@ -509,11 +559,11 @@ class GiftCardApp {
                     this.checkCheckinEligibility();
                 }, 2000);
             } else {
-                resultDiv.innerHTML = `<div class="status-message error">${data.error}</div>`;
+                resultDiv.innerHTML = `<div class="status-message error">${i18n.t(data.error) || data.error}</div>`;
             }
         } catch (error) {
             document.getElementById('checkinResult').innerHTML = 
-                `<div class="status-message error">网络错误，请重试</div>`;
+                `<div class="status-message error">${i18n.t('network_error')}</div>`;
         }
     }
 
@@ -530,7 +580,7 @@ class GiftCardApp {
 
             const listDiv = document.getElementById('giftCardsList');
             if (giftCards.length === 0) {
-                listDiv.innerHTML = '<p>暂无礼品卡记录</p>';
+                listDiv.innerHTML = `<p>${i18n.t('no_gift_card_records')}</p>`;
                 return;
             }
 
@@ -540,6 +590,31 @@ class GiftCardApp {
                     <p><strong>${i18n.t('code')}:</strong> <span class="gift-code">${card.code}</span></p>
                     <p><strong>${i18n.t('status')}:</strong> ${card.status}</p>
                     <p><strong>${i18n.t('distributed_at')}:</strong> ${new Date(card.distributed_at).toLocaleString()}</p>
+                </div>
+            `).join('');
+        } catch (error) {
+            // 可以根据需要添加错误处理逻辑
+        }
+    }
+
+    async loadCheckinsHistory() {
+        try {
+            const response = await fetch(`/api/member/checkin-history/${this.currentMemberId}`);
+            const checkins = await response.json();
+
+            const listDiv = document.getElementById('checkinsList');
+            if (!listDiv) return; // 如果页面没有签到历史列表，直接返回
+            
+            if (checkins.length === 0) {
+                listDiv.innerHTML = `<p>${i18n.t('no_checkin_records')}</p>`;
+                return;
+            }
+
+            listDiv.innerHTML = checkins.map(checkin => `
+                <div class="record-item">
+                    <h4>${i18n.t('checkin_date')}</h4>
+                    <p><strong>${i18n.t('date')}:</strong> ${new Date(checkin.checkin_date).toLocaleDateString()}</p>
+                    ${checkin.gift_card_code ? `<p><strong>${i18n.t('reward')}:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : ''}
                 </div>
             `).join('');
         } catch (error) {

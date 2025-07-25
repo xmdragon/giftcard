@@ -118,7 +118,7 @@ class AdminApprovals {
 
             if (response && response.ok) {
                 const data = await response.json();
-                alert(data.message || (approved ? '登录请求已通过' : '登录请求已拒绝'));
+                // 移除调试用的alert提示
                 
                 // 移除已处理的请求
                 const element = document.querySelector(`#loginRequestsList .request-item[data-id="${id}"]`);
@@ -128,10 +128,11 @@ class AdminApprovals {
                 this.adminApp.updatePendingCount();
             } else {
                 const error = await response.json();
-                alert(error.error || '操作失败');
+                console.error('审核登录请求失败:', error.error || '操作失败');
             }
         } catch (error) {
             console.error('审核登录请求错误:', error);
+            // 保留网络错误等严重错误的提示
             alert('操作失败，请重试');
         }
     }
@@ -146,7 +147,7 @@ class AdminApprovals {
 
             if (response && response.ok) {
                 const data = await response.json();
-                alert(data.message || (approved ? '验证请求已通过' : '验证请求已拒绝'));
+                // 移除调试用的alert提示
                 
                 // 移除已处理的请求
                 const element = document.querySelector(`#verificationRequestsList .request-item[data-id="${id}"]`);
@@ -156,10 +157,11 @@ class AdminApprovals {
                 this.adminApp.updatePendingCount();
             } else {
                 const error = await response.json();
-                alert(error.error || '操作失败');
+                console.error('审核验证请求失败:', error.error || '操作失败');
             }
         } catch (error) {
             console.error('审核验证请求错误:', error);
+            // 保留网络错误等严重错误的提示
             alert('操作失败，请重试');
         }
     }

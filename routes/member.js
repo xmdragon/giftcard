@@ -78,7 +78,7 @@ module.exports = (io) => {
       });
 
     } catch (error) {
-      console.error('签到错误:', error);
+      console.error('Checkin error:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -98,7 +98,7 @@ module.exports = (io) => {
 
       res.json(history);
     } catch (error) {
-      console.error('获取签到历史错误:', error);
+      console.error('Get checkin history error:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -118,7 +118,7 @@ module.exports = (io) => {
 
       res.json(giftCards);
     } catch (error) {
-      console.error('获取礼品卡历史错误:', error);
+      console.error('Get gift card history error:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
@@ -169,7 +169,7 @@ module.exports = (io) => {
       });
 
     } catch (error) {
-      console.error('检查签到资格错误:', error);
+      console.error('Check checkin eligibility error:', error);
       res.status(500).json({ error: req.t('server_error') });
     }
   });
