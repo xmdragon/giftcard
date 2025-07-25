@@ -1,0 +1,255 @@
+/* 修复容器溢出问题 */
+
+/* 基础容器样式 */
+.container-fluid {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+    box-sizing: border-box;
+}
+
+/* 自动调整大小的容器 */
+.auto-resize {
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 限制最大宽高 */
+.restrict-max-wh {
+    max-width: 100vw;
+    max-height: 100vh;
+    overflow: hidden;
+}
+
+/* 限制最小内容 */
+.restrict-min-content {
+    min-width: 320px;
+    box-sizing: border-box;
+}
+
+/* 小部件容器修复 */
+.widget-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.widget-container--v2 {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.widget-container--v2__auto {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* 登录容器修复 */
+.si-container {
+    text-align: center;
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.si-body {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 应用主体容器修复 */
+.app-body-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.app-body-container-auth {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+/* 调整大小容器 */
+.resize-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.resize-wrapper--resize {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* 登录页面特定修复 */
+.landing {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.landing__top {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.landing__interaction {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.sign-in {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.sign-in__auth {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.sign-in__auth--full {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 登录表单容器 */
+.signin {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.signin--v2 {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.signin-v2 {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 表单容器 */
+.signin-form {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.signin-content {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.signin-content-area {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 小步骤容器 */
+.si-step {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 字段容器 */
+.si-field-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 选项容器 */
+.swp-option-container {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 全局溢出修复 */
+* {
+    box-sizing: border-box;
+}
+
+/* 移动端特殊处理 */
+@media (max-width: 768px) {
+    .container-fluid,
+    .auto-resize,
+    .widget-container,
+    .widget-container--v2,
+    .widget-container--v2__auto,
+    .si-container,
+    .si-body,
+    .app-body-container,
+    .app-body-container-auth {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .landing,
+    .sign-in,
+    .signin,
+    .signin--v2,
+    .signin-v2 {
+        overflow-x: hidden;
+    }
+}
+
+/* 确保语言选择器可点击 */
+.language-selector {
+    position: relative;
+    z-index: 1000;
+    pointer-events: auto;
+}
+
+.language-selector select {
+    position: relative;
+    z-index: 1001;
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+/* 修复可能被遮挡的元素 */
+header {
+    position: relative;
+    z-index: 999;
+    pointer-events: auto;
+}
+
+#languageSelect {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 1002 !important;
+    position: relative !important;
+}
