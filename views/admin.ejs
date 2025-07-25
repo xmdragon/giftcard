@@ -275,18 +275,26 @@
         </div>
     </div>
 
-    <!-- 核心模块 -->
-    <script src="js/admin-core.js" type="text/javascript"></script>
+    <!-- 基础类定义（必须最先加载） -->
+    <script src="/js/admin-base.js"></script>
+    
+    <!-- 基础模块类 -->
+    <script src="/js/admin-auth.js"></script>
+    <script src="/js/admin-socket.js"></script>
+    <script src="/js/admin-approvals.js"></script>
+    
+    <!-- 功能模块 -->
     <script src="/js/admin-dashboard.js"></script>
     <script src="/js/admin-admins.js"></script>
     <script src="/js/admin-system-settings.js"></script>
     <script src="/js/admin-nav.js"></script>
-    <!-- 功能模块 -->
-    <script src="js/admin-members.js" type="text/javascript"></script>
-    <script src="js/admin-categories.js" type="text/javascript"></script>
-    <script src="js/admin-giftcards.js" type="text/javascript"></script>
-    <script src="js/admin-ip.js" type="text/javascript"></script>
-    <script src="js/admin-approvals.js" type="text/javascript"></script>
+    <script src="/js/admin-members.js"></script>
+    <script src="/js/admin-categories.js"></script>
+    <script src="/js/admin-giftcards.js"></script>
+    <script src="/js/admin-ip.js"></script>
+    
+    <!-- 核心模块（需要最后加载） -->
+    <script src="/js/admin-app.js"></script>
     
     <!-- 调试模块 -->
     

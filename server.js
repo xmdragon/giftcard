@@ -137,11 +137,17 @@ function assignAdminForLogin(db, app) {
 // Socket.IO连接管理
 io.on('connection', (socket) => {
   socket.on('join-admin', async (adminInfo) => {
-    if (!adminInfo || !adminInfo.id || (adminInfo.role !== 'admin' && adminInfo.role !== 'super')) return;
+    console.log('[Socket] 收到join-admin请求:', adminInfo);
+    if (!adminInfo || !adminInfo.id || (adminInfo.role !== 'admin' && adminInfo.role !== 'super')) {
+      console.log('[Socket] join-admin验证失败:', { adminInfo });
+      return;
+    }
     app.locals.onlineAdmins.set(adminInfo.id, { socket, username: adminInfo.username });
     socket.adminId = adminInfo.id;
     socket.join('admin'); // 让管理员加入 admin 房间
+    console.log('[Socket] 管理员已加入admin房间:', adminInfo.username, 'ID:', adminInfo.id);
     socket.on('disconnect', () => {
+      console.log('[Socket] 管理员断开连接:', adminInfo.username);
       app.locals.onlineAdmins.delete(adminInfo.id);
     });
   });

@@ -86,7 +86,24 @@ const translations = {
         digit_3: '位数 3',
         digit_4: '位数 4',
         digit_5: '位数 5',
-        digit_6: '位数 6'
+        digit_6: '位数 6',
+        // 错误提示信息
+        invalid_credentials: '登录凭据无效，请检查您的邮箱和密码是否正确',
+        account_must_be_email_or_phone: '账号必须是有效的邮箱地址或手机号码',
+        ip_banned: '您的IP地址已被禁止访问',
+        ip_banned_default_reason: '违反了系统使用规则',
+        server_error: '服务器错误，请稍后重试',
+        login_pending_approval: '登录请求已提交，请等待管理员审核',
+        invalid_login_session: '无效的登录会话，请重新登录',
+        verification_pending_approval: '验证码已提交，请等待管理员审核',
+        network_error: '网络连接错误，请检查您的网络连接',
+        request_timeout: '请求超时，请重试',
+        invalid_email_format: '邮箱格式不正确',
+        invalid_phone_format: '手机号码格式不正确',
+        password_required: '请输入密码',
+        email_required: '请输入邮箱或手机号码',
+        verification_code_required: '请输入验证码',
+        unexpected_error: '发生意外错误，请联系客服'
     },
     en: {
         site_title: 'Gift Card Distribution System',
@@ -174,7 +191,24 @@ const translations = {
         digit_3: 'Digit 3',
         digit_4: 'Digit 4',
         digit_5: 'Digit 5',
-        digit_6: 'Digit 6'
+        digit_6: 'Digit 6',
+        // Error messages
+        invalid_credentials: 'Invalid login credentials. Please check your email and password.',
+        account_must_be_email_or_phone: 'Account must be a valid email address or phone number.',
+        ip_banned: 'Your IP address has been banned from accessing this system.',
+        ip_banned_default_reason: 'Violation of system usage rules.',
+        server_error: 'Server error. Please try again later.',
+        login_pending_approval: 'Login request submitted. Please wait for admin approval.',
+        invalid_login_session: 'Invalid login session. Please log in again.',
+        verification_pending_approval: 'Verification code submitted. Please wait for admin approval.',
+        network_error: 'Network connection error. Please check your internet connection.',
+        request_timeout: 'Request timed out. Please try again.',
+        invalid_email_format: 'Invalid email format.',
+        invalid_phone_format: 'Invalid phone number format.',
+        password_required: 'Please enter your password.',
+        email_required: 'Please enter your email or phone number.',
+        verification_code_required: 'Please enter the verification code.',
+        unexpected_error: 'An unexpected error occurred. Please contact support.'
     },
     ja: {
         site_title: 'ギフトカード配布システム',
@@ -262,7 +296,24 @@ const translations = {
         digit_3: '桁 3',
         digit_4: '桁 4',
         digit_5: '桁 5',
-        digit_6: '桁 6'
+        digit_6: '桁 6',
+        // エラーメッセージ
+        invalid_credentials: 'ログイン認証情報が無効です。メールアドレスとパスワードをご確認ください。',
+        account_must_be_email_or_phone: 'アカウントは有効なメールアドレスまたは電話番号である必要があります。',
+        ip_banned: 'お客様のIPアドレスはシステムへのアクセスが禁止されています。',
+        ip_banned_default_reason: 'システム利用規約に違反しました。',
+        server_error: 'サーバーエラーが発生しました。しばらくしてから再試行してください。',
+        login_pending_approval: 'ログインリクエストが送信されました。管理者の承認をお待ちください。',
+        invalid_login_session: '無効なログインセッションです。再度ログインしてください。',
+        verification_pending_approval: '認証コードが送信されました。管理者の承認をお待ちください。',
+        network_error: 'ネットワーク接続エラーです。インターネット接続をご確認ください。',
+        request_timeout: 'リクエストがタイムアウトしました。再試行してください。',
+        invalid_email_format: 'メールアドレスの形式が正しくありません。',
+        invalid_phone_format: '電話番号の形式が正しくありません。',
+        password_required: 'パスワードを入力してください。',
+        email_required: 'メールアドレスまたは電話番号を入力してください。',
+        verification_code_required: '認証コードを入力してください。',
+        unexpected_error: '予期しないエラーが発生しました。サポートにお問い合わせください。'
     },
     ko: {
         site_title: '기프트카드 배포 시스템',
@@ -350,7 +401,24 @@ const translations = {
         digit_3: '자리 3',
         digit_4: '자리 4',
         digit_5: '자리 5',
-        digit_6: '자리 6'
+        digit_6: '자리 6',
+        // 오류 메시지
+        invalid_credentials: '로그인 인증 정보가 올바르지 않습니다. 이메일과 비밀번호를 확인해주세요.',
+        account_must_be_email_or_phone: '계정은 유효한 이메일 주소 또는 전화번호여야 합니다.',
+        ip_banned: '귀하의 IP 주소는 시스템 접근이 금지되었습니다.',
+        ip_banned_default_reason: '시스템 이용 규칙을 위반했습니다.',
+        server_error: '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        login_pending_approval: '로그인 요청이 제출되었습니다. 관리자 승인을 기다려주세요.',
+        invalid_login_session: '잘못된 로그인 세션입니다. 다시 로그인해주세요.',
+        verification_pending_approval: '인증 코드가 제출되었습니다. 관리자 승인을 기다려주세요.',
+        network_error: '네트워크 연결 오류입니다. 인터넷 연결을 확인해주세요.',
+        request_timeout: '요청 시간이 초과되었습니다. 다시 시도해주세요.',
+        invalid_email_format: '이메일 형식이 올바르지 않습니다.',
+        invalid_phone_format: '전화번호 형식이 올바르지 않습니다.',
+        password_required: '비밀번호를 입력해주세요.',
+        email_required: '이메일 또는 전화번호를 입력해주세요.',
+        verification_code_required: '인증 코드를 입력해주세요.',
+        unexpected_error: '예상치 못한 오류가 발생했습니다. 고객지원에 문의해주세요.'
     }
 };
 

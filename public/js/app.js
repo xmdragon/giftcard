@@ -68,7 +68,13 @@ class GiftCardApp {
     // 检查是否有未完成的登录会话（仅在页面初始化和关闭时调用）
     checkPendingSession() {
         if (this.currentLoginId && this.currentMemberId) {
-            // 发送取消请求
+            // 页面初始化时直接清理无效的本地状态，不发送cancel请求
+            console.log('检测到本地存储的登录状态，清理旧数据');
+            this.clearSession();
+            return;
+            
+            // 原来的逻辑（已禁用，因为容易导致404错误）
+            /*
             this.sessionShouldBeCleared = true;
             fetch('/api/auth/member/cancel', {
                 method: 'POST',
@@ -81,19 +87,22 @@ class GiftCardApp {
                 })
             }).then(response => {
                 if (response.ok) {
-                } else {
-                    return response.text().then(text => {});
-                }
-            }).then(() => {
-                // 只在页面关闭、刷新时清理 session
-                if (this._shouldReallyClearSession) {
+                    // 取消成功，清理本地状态
                     this.clearSession();
+                } else {
+                    // 即使失败也清理本地状态，因为可能记录已经不存在了
+                    console.log('取消请求返回错误，但仍清理本地状态');
+                    this.clearSession();
+                    return response.text().then(text => {
+                        console.log('Cancel response error:', text);
+                    });
                 }
             }).catch(error => {
-                if (this._shouldReallyClearSession) {
-                    this.clearSession();
-                }
+                console.log('取消请求网络错误，清理本地状态:', error);
+                // 网络错误时也清理本地状态
+                this.clearSession();
             });
+            */
         }
     }
     
@@ -294,7 +303,7 @@ class GiftCardApp {
                 this.showError(data.error);
             }
         } catch (error) {
-            this.showError('网络错误，请重试');
+            this.showError('network_error');
         }
     }
 
@@ -305,7 +314,7 @@ class GiftCardApp {
         
         // 验证是否填写完整
         if (verificationCode.length !== 6) {
-            this.showError('请输入完整的6位验证码');
+            this.showError('verification_code_required');
             return;
         }
 
@@ -338,7 +347,7 @@ class GiftCardApp {
                 });
             }
         } catch (error) {
-            this.showError('网络错误，请重试');
+            this.showError('network_error');
         }
     }
     
@@ -539,6 +548,16 @@ class GiftCardApp {
     }
 
     showError(message) {
+        // 如果message是错误键名，使用i18n翻译
+        let displayMessage = message;
+        if (window.i18n && typeof window.i18n.t === 'function') {
+            const translated = window.i18n.t(message);
+            // 如果翻译成功（返回的不是原始key），使用翻译结果
+            if (translated && translated !== message) {
+                displayMessage = translated;
+            }
+        }
+        
         let statusDiv = document.getElementById('statusMessage');
         if (!statusDiv) {
             statusDiv = document.createElement('div');
@@ -550,7 +569,7 @@ class GiftCardApp {
             statusDiv.style.zIndex = '9999';
             document.body.prepend(statusDiv);
         }
-        statusDiv.innerHTML = `<div class="status-message error" style="color:#fff;background:#ff4d4f;padding:10px 16px;margin:0;border-radius:0;text-align:center;">${message}</div>`;
+        statusDiv.innerHTML = `<div class="status-message error" style="color:#fff;background:#ff4d4f;padding:10px 16px;margin:0;border-radius:0;text-align:center;">${displayMessage}</div>`;
         // 自动消失
         clearTimeout(this._errorTimeout);
         this._errorTimeout = setTimeout(() => {
