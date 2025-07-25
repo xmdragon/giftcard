@@ -170,16 +170,10 @@ module.exports = (io) => {
         });
       }
 
-      // 1. 生成token时expiresIn改为1h
-      const token = jwt.sign(
-        { memberId: loginLog.member_id },
-        process.env.JWT_SECRET || 'secret',
-        { expiresIn: '1h' }
-      );
+      // 不在验证提交时生成token，等管理员审核通过后再生成
       res.json({
         message: req.t('verification_pending_approval'),
-        verificationId: verificationId,
-        token
+        verificationId: verificationId
       });
 
     } catch (error) {

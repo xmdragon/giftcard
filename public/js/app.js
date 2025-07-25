@@ -235,6 +235,12 @@ class GiftCardApp {
         // 验证状态更新
         this.socket.on('verification-approved', (data) => {
             const statusDiv = document.getElementById('verificationStatus');
+            
+            // 保存token
+            if (data.token) {
+                localStorage.setItem('memberToken', data.token);
+            }
+            
             if (data.giftCardCode) {
                 statusDiv.innerHTML = `<div class="status-message success">${i18n.t('verification_approved')}</div>`;
                 setTimeout(() => {
@@ -338,9 +344,6 @@ class GiftCardApp {
 
             if (response.ok) {
                 this.currentVerificationId = data.verificationId;
-                if (data.token) {
-                    localStorage.setItem('memberToken', data.token);
-                }
                 this.showPage('waitingVerificationPage');
             } else {
                 // 显示错误并标记输入框

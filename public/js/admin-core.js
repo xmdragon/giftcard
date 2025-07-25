@@ -538,6 +538,16 @@ class AdminApp {
             if (!document.querySelector('.tab-content.active')) {
                 this.switchTab('loginRequests');
             }
+        } else if (section === 'giftcards') {
+            // 重置礼品卡页面标题
+            const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
+            if (sectionHeader) {
+                sectionHeader.textContent = '礼品卡管理';
+            }
+            // 加载礼品卡数据
+            if (typeof this.loadGiftCards === 'function') {
+                this.loadGiftCards(1);
+            }
         }
     }
     

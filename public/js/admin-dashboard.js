@@ -75,11 +75,45 @@ AdminApp.prototype.updateDashboard = function(data) {
                         <td>${stat.category_name}</td>
                         <td><strong>${stat.available_count}</strong></td>
                         <td>
-                            <button class="edit-btn" onclick="adminApp.switchSection('giftcards')">查看</button>
+                            <button class="edit-btn" onclick="adminApp.viewCategoryGiftCards(${stat.category_id}, '${stat.category_name}')">查看</button>
                         </td>
                     </tr>
                 `).join('');
             }
         }
     }
+};
+
+// 按分类查看礼品卡
+AdminApp.prototype.viewCategoryGiftCards = function(categoryId, categoryName) {
+    // 切换到礼品卡管理页面
+    this.switchSection('giftcards');
+    
+    // 设置分类筛选器
+    const categoryFilter = document.getElementById('categoryFilter');
+    if (categoryFilter) {
+        categoryFilter.value = categoryId;
+    }
+    
+    // 清除其他筛选条件
+    const statusFilter = document.getElementById('statusFilter');
+    if (statusFilter) {
+        statusFilter.value = '';
+    }
+    
+    const emailFilter = document.getElementById('emailFilter');
+    if (emailFilter) {
+        emailFilter.value = '';
+    }
+    
+    // 更新页面标题显示当前查看的分类
+    const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
+    if (sectionHeader) {
+        sectionHeader.textContent = `礼品卡管理 - ${categoryName}`;
+    }
+    
+    // 加载该分类的礼品卡
+    setTimeout(() => {
+        this.loadGiftCards(1);
+    }, 100);
 }; 

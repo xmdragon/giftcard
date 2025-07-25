@@ -249,17 +249,35 @@ module.exports = (io) => {
               distributed_at: new Date()
             }, { id: giftCard.id });
 
+            // Generate JWT token for successful verification
+            const jwt = require('jsonwebtoken');
+            const token = jwt.sign(
+              { memberId: verification.member_id },
+              process.env.JWT_SECRET || 'secret',
+              { expiresIn: '1h' }
+            );
+
             // Notify member of verification approval and gift card distribution
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: giftCard.code,
-              verificationId: id
+              verificationId: id,
+              token: token
             });
           } else {
+            // Generate JWT token for successful verification (even without gift card)
+            const jwt = require('jsonwebtoken');
+            const token = jwt.sign(
+              { memberId: verification.member_id },
+              process.env.JWT_SECRET || 'secret',
+              { expiresIn: '1h' }
+            );
+
             // No available gift cards
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: null,
               message: req.t('no_gift_cards_available'),
-              verificationId: id
+              verificationId: id,
+              token: token
             });
           }
         }
@@ -763,7 +781,7 @@ module.exports = (io) => {
         // 普通管理员只查看分配给自己的请求
         const loginRequests = await db.query(
           `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending' 
-           AND assigned_admin_id = ?`,
+           AND CAST(assigned_admin_id AS UNSIGNED) = ? AND assigned_admin_id IS NOT NULL`,
           [adminId]
         );
         result.loginRequests = loginRequests[0].count;
@@ -780,7 +798,7 @@ module.exports = (io) => {
         // 普通管理员只查看分配给自己的验证请求
         const verificationRequests = await db.query(
           `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending' 
-           AND assigned_admin_id = ?`,
+           AND assigned_admin_id = ? AND assigned_admin_id IS NOT NULL`,
           [adminId]
         );
         result.verificationRequests = verificationRequests[0].count;
