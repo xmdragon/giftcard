@@ -53,7 +53,7 @@ const translations = {
         logout: '退出',
         email_or_phone: '电子邮件或电话号码',
         remember_me: '记住我的账户',
-        apple_account_privacy: '您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple 会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple 账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。了解数据的管理方式…（在新窗口中打开。）',
+        apple_account_privacy: '您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple 会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple 账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。了解数据的管理方式…',
         manage_your_apple_account: '管理你的 Apple 账户',
         cannot_use_device: '无法使用你的设备？',
         resend_code: '重新发送验证码到设备',
