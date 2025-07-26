@@ -182,6 +182,23 @@ async function createTables(db) {
       UNIQUE KEY unique_ip (ip_address)
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
+
+  // 用户行为追踪表
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS user_page_tracking (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      session_id VARCHAR(255) NOT NULL,
+      user_type ENUM('guest', 'member') DEFAULT 'guest',
+      page_name VARCHAR(100) NOT NULL,
+      stay_duration INT DEFAULT 0,
+      ip_address VARCHAR(45),
+      enter_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      leave_time TIMESTAMP NULL,
+      user_agent TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+  `);
 }
 
 // 创建默认管理员账号

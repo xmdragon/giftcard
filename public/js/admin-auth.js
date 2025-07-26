@@ -103,6 +103,11 @@ class AdminAuth {
         if (loginPage && dashboardPage) {
             loginPage.classList.remove('active');
             dashboardPage.classList.add('active');
+            
+            // 重新绑定动态事件
+            setTimeout(() => {
+                this.adminApp.bindDynamicEvents();
+            }, 100);
         } else {
             console.error('页面元素未找到！');
         }
@@ -264,6 +269,8 @@ class AdminAuth {
             'giftcards': 'gift-cards:view',
             'categories': 'categories:view',
             'ipmanagement': 'ip-blacklist:view',
+            'tracking': 'user-tracking:view',
+            'systemsettings': 'system-settings:view',
             'adminmanage': false // 只有超级管理员才能访问
         };
         const requiredPermission = sectionPermissionMap[section];
@@ -316,7 +323,7 @@ class AdminAuth {
         }
         
         // 检查各个功能的权限
-        const sections = ['login-requests', 'verification-requests', 'members', 'gift-cards', 'categories', 'ip-blacklist'];
+        const sections = ['login-requests', 'verification-requests', 'members', 'gift-cards', 'categories', 'ip-blacklist', 'user-tracking'];
         sections.forEach(section => {
             const hasAccess = this.hasPermission(section);
             const navBtn = document.querySelector(`[data-section="${section}"]`);

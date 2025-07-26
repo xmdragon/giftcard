@@ -250,6 +250,11 @@ class GiftCardApp {
             localStorage.removeItem('currentLoginId');
             localStorage.removeItem('currentVerificationId');
             
+            // 更新页面追踪用户类型（登录成功）
+            if (window.pageTracker && this.currentMemberId) {
+                window.pageTracker.setUserInfo('member', this.currentMemberId);
+            }
+            
             if (data.giftCardCode) {
                 this.showGiftCardPage(data.giftCardCode);
             } else {
@@ -413,6 +418,11 @@ class GiftCardApp {
     }
 
     showPage(pageId) {
+        // 开始追踪新页面
+        if (window.pageTracker) {
+            window.pageTracker.startPageTracking(pageId);
+        }
+        
         // 切换页面显示
         document.querySelectorAll('.page').forEach(page => {
             page.classList.remove('active');

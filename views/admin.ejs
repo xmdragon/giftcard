@@ -245,6 +245,92 @@
                     <div id="ipBlacklistTable" class="data-table"></div>
                 </section>
 
+                <!-- 用户行为追踪区域 -->
+                <section id="trackingSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>用户行为追踪</h2>
+                        <div class="tracking-controls">
+                            <button id="refreshTrackingBtn" class="btn btn-primary">刷新</button>
+                            <button id="exportTrackingBtn" class="btn btn-secondary">导出数据</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 切换标签 -->
+                    <div class="tab-container">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="trackingList">访问记录</button>
+                            <button class="tab-btn" data-tab="trackingStats">统计分析</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 访问记录标签页 -->
+                    <div id="trackingListTab" class="tab-content active">
+                        <div class="filter-controls">
+                            <div class="filter-row">
+                                <div class="filter-group">
+                                    <label>用户类型:</label>
+                                    <select id="userTypeFilter">
+                                        <option value="">全部</option>
+                                        <option value="guest">游客</option>
+                                        <option value="member">会员</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>页面:</label>
+                                    <select id="pageNameFilter">
+                                        <option value="">全部页面</option>
+                                        <option value="欢迎页">欢迎页</option>
+                                        <option value="登录页">登录页</option>
+                                        <option value="等待审核页">等待审核页</option>
+                                        <option value="验证码页">验证码页</option>
+                                        <option value="等待验证页">等待验证页</option>
+                                        <option value="礼品卡页">礼品卡页</option>
+                                        <option value="签到页">签到页</option>
+                                        <option value="历史记录页">历史记录页</option>
+                                    </select>
+                                </div>
+                                <div class="filter-group">
+                                    <label>开始日期:</label>
+                                    <input type="date" id="startDateFilter">
+                                </div>
+                                <div class="filter-group">
+                                    <label>结束日期:</label>
+                                    <input type="date" id="endDateFilter">
+                                </div>
+                                <div class="filter-group">
+                                    <button id="applyTrackingFilter" class="btn btn-primary">筛选</button>
+                                    <button id="resetTrackingFilter" class="btn btn-secondary">重置</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="trackingList" class="data-table">加载中...</div>
+                        <div id="trackingPagination" class="pagination"></div>
+                    </div>
+                    
+                    <!-- 统计分析标签页 -->
+                    <div id="trackingStatsTab" class="tab-content">
+                        <div class="stats-controls">
+                            <div class="filter-group">
+                                <label>统计时段:</label>
+                                <input type="date" id="statsStartDate">
+                                <span>至</span>
+                                <input type="date" id="statsEndDate">
+                                <button id="loadStatsBtn" class="btn btn-primary">加载统计</button>
+                            </div>
+                        </div>
+                        <div id="trackingStats" class="stats-container">加载中...</div>
+                    </div>
+                </section>
+
+                <!-- 系统设置区域 -->
+                <section id="systemsettingsSection" class="admin-section">
+                    <div class="section-header">
+                        <h2>系统设置</h2>
+                        <button id="refreshSettings" class="btn btn-primary">刷新</button>
+                    </div>
+                    <div id="systemSettingsContent" class="data-table">加载中...</div>
+                </section>
+
                 <!-- 管理员管理区域 -->
                 <section id="adminmanageSection" class="admin-section">
                     <div class="section-header">
@@ -292,6 +378,7 @@
     <script src="/js/admin-categories.js"></script>
     <script src="/js/admin-giftcards.js"></script>
     <script src="/js/admin-ip.js"></script>
+    <script src="/js/admin-tracking.js"></script>
     
     <!-- 核心模块（需要最后加载） -->
     <script src="/js/admin-app.js"></script>

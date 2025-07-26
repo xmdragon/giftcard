@@ -137,3 +137,18 @@ INSERT INTO gift_cards (category_id, code) VALUES
 (2, 'CHECKIN008'),
 (2, 'CHECKIN009'),
 (2, 'CHECKIN010');
+
+-- 创建用户行为追踪表
+CREATE TABLE IF NOT EXISTS user_page_tracking (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  session_id VARCHAR(255) NOT NULL,            -- 游客会话ID或会员账号
+  user_type ENUM('guest', 'member') DEFAULT 'guest',  -- 用户类型
+  page_name VARCHAR(100) NOT NULL,             -- 页面/标签页名称
+  stay_duration INT DEFAULT 0,                -- 停留时长(秒)
+  ip_address VARCHAR(45),                      -- IP地址
+  enter_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- 进入时间
+  leave_time TIMESTAMP NULL,                   -- 离开时间
+  user_agent TEXT,                            -- 浏览器信息
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

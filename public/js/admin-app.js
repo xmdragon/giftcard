@@ -51,19 +51,21 @@ Object.assign(AdminApp.prototype, {
 
         // 渲染导航栏
         this.renderNavMenu();
+        
+        // 初始化所有模块
+        this.initAllModules();
 
-        // 添加系统设置菜单项（如果是超级管理员）
-        if (this.currentAdmin && this.currentAdmin.role === 'super') {
-            this.addSystemSettingsMenuItem();
-        }
     },
 
     bindEvents() {
+        console.log('bindEvents called');
+        
         // Admin login - with security check
         const loginForm = document.getElementById('adminLoginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
+                console.log('Login form submitted');
                 this.auth.handleAdminLogin();
             });
         } else {
@@ -74,46 +76,33 @@ Object.assign(AdminApp.prototype, {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
+                console.log('Logout button clicked');
                 this.auth.logout();
             });
+        } else {
+            console.log('Logout button not found');
         }
-
-        // Navigation buttons
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchSection(e.target.dataset.section);
-            });
-        });
-        
-        // 仪表盘刷新按钮
-        const refreshDashboardBtn = document.getElementById('refreshDashboard');
-        if (refreshDashboardBtn) {
-            refreshDashboardBtn.addEventListener('click', () => {
-                this.loadDashboardData();
-            });
-        }
-
-        // Tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchTab(e.target.dataset.tab);
-            });
-        });
 
         // Change password button
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         if (changePasswordBtn) {
             changePasswordBtn.addEventListener('click', () => {
+                console.log('Change password button clicked');
                 this.auth.showChangePasswordModal();
             });
+        } else {
+            console.log('Change password button not found');
         }
 
         // Modal close
         const closeBtn = document.querySelector('.close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
+                console.log('Modal close button clicked');
                 this.closeModal();
             });
+        } else {
+            console.log('Modal close button not found');
         }
 
         window.addEventListener('click', (e) => {
@@ -122,6 +111,164 @@ Object.assign(AdminApp.prototype, {
                 this.closeModal();
             }
         });
+        
+        // 延迟绑定动态生成的元素
+        this.bindDynamicEvents();
+    },
+    
+    // 初始化所有模块
+    initAllModules() {
+        console.log('initAllModules called');
+        
+        // 初始化各个功能模块的事件绑定
+        this.initModuleEvents();
+        
+        // 根据当前页面初始化相应模块
+        const currentSection = this.getCurrentActiveSection();
+        if (currentSection) {
+            this.initSectionModule(currentSection);
+        }
+    },
+    
+    initModuleEvents() {
+        console.log('initModuleEvents called');
+        
+        // 初始化会员管理模块事件
+        if (typeof this.initMembersEvents === 'function') {
+            this.initMembersEvents();
+        }
+        
+        // 初始化待审核模块事件
+        if (typeof this.initApprovalsEvents === 'function') {
+            this.initApprovalsEvents();
+        }
+        
+        // 初始化礼品卡管理事件
+        this.initGiftCardsEvents();
+        
+        // 初始化分类管理事件
+        if (typeof this.initCategoriesEvents === 'function') {
+            this.initCategoriesEvents();
+        }
+        
+        // 初始化IP管理事件
+        if (typeof this.initIPEvents === 'function') {
+            this.initIPEvents();
+        }
+    },
+    
+    // 初始化礼品卡管理事件
+    initGiftCardsEvents() {
+        console.log('initGiftCardsEvents called');
+        
+        // 批量添加按钮
+        const addGiftCardsBtn = document.getElementById('addGiftCardsBtn');
+        if (addGiftCardsBtn) {
+            addGiftCardsBtn.addEventListener('click', () => {
+                console.log('Add gift cards button clicked');
+                this.showAddGiftCardsModal();
+            });
+        }
+        
+        // 筛选按钮
+        const filterGiftCardsBtn = document.getElementById('filterGiftCards');
+        if (filterGiftCardsBtn) {
+            filterGiftCardsBtn.addEventListener('click', () => {
+                console.log('Filter gift cards button clicked');
+                this.loadGiftCards(1);
+            });
+        }
+    },
+    
+    getCurrentActiveSection() {
+        const activeSection = document.querySelector('.admin-section.active');
+        if (activeSection) {
+            const id = activeSection.id;
+            return id.replace('Section', '');
+        }
+        return null;
+    },
+    
+    initSectionModule(sectionName) {
+        console.log('initSectionModule called for:', sectionName);
+        
+        switch(sectionName) {
+            case 'members':
+                if (typeof this.loadMembers === 'function') {
+                    this.loadMembers();
+                }
+                break;
+            case 'pending':
+                if (typeof this.loadPendingRequests === 'function') {
+                    this.loadPendingRequests();
+                }
+                break;
+            case 'giftcards':
+                if (typeof this.loadGiftCards === 'function') {
+                    this.loadGiftCards();
+                    // 加载分类下拉框
+                    this.populateCategorySelect('categoryFilter');
+                }
+                break;
+            case 'categories':
+                if (typeof this.loadCategories === 'function') {
+                    this.loadCategories();
+                }
+                break;
+            case 'ipmanagement':
+                if (typeof this.loadIPBlacklist === 'function') {
+                    this.loadIPBlacklist();
+                }
+                break;
+            case 'tracking':
+                if (typeof this.initTrackingSection === 'function') {
+                    this.initTrackingSection();
+                }
+                break;
+            case 'systemsettings':
+                if (typeof this.initSystemSettingsSection === 'function') {
+                    this.initSystemSettingsSection();
+                }
+                break;
+        }
+    },
+    
+    bindDynamicEvents() {
+        console.log('bindDynamicEvents called');
+        
+        // 仪表盘刷新按钮
+        const refreshDashboardBtn = document.getElementById('refreshDashboard');
+        if (refreshDashboardBtn) {
+            refreshDashboardBtn.addEventListener('click', () => {
+                console.log('Dashboard refresh button clicked');
+                this.loadDashboardData();
+            });
+            console.log('Dashboard refresh button bound');
+        } else {
+            console.log('Dashboard refresh button not found');
+        }
+
+        // Tab buttons
+        const tabButtons = document.querySelectorAll('.tab-btn');
+        console.log('Found tab buttons:', tabButtons.length);
+        tabButtons.forEach((btn, index) => {
+            btn.addEventListener('click', (e) => {
+                console.log('Tab button clicked:', e.target.dataset.tab);
+                this.switchTab(e.target.dataset.tab);
+            });
+        });
+        
+        // 检查当前激活的区域，确保相关模块被初始化
+        const activeSection = document.querySelector('.admin-section.active');
+        if (activeSection) {
+            const sectionId = activeSection.id;
+            console.log('Active section:', sectionId);
+            
+            if (sectionId === 'membersSection' && typeof this.initMembersSection === 'function') {
+                console.log('Force initializing members section');
+                this.initMembersSection();
+            }
+        }
     },
 
     // 验证token有效性并初始化
@@ -303,6 +450,12 @@ Object.assign(AdminApp.prototype, {
                 this.switchTab('loginRequests');
             }
         }
+        
+        // 重新绑定动态事件和初始化模块
+        setTimeout(() => {
+            this.bindDynamicEvents();
+            this.initSectionModule(section);
+        }, 100);
     },
 
     switchTab(tab) {
@@ -408,69 +561,7 @@ Object.assign(AdminApp.prototype, {
         }
     },
 
-    // 添加系统设置菜单项
-    addSystemSettingsMenuItem() {
-        const nav = document.querySelector('nav ul');
-        if (!nav) {
-            console.error('导航菜单未找到');
-            return;
-        }
-        // 防止重复添加
-        if (nav.querySelector('#systemSettingsBtn')) return;
-        // 创建菜单项
-        const settingsItem = document.createElement('li');
-        settingsItem.innerHTML = '<button id="systemSettingsBtn" class="nav-button"><i class="fas fa-cog"></i> 系统设置</button>';
-        nav.appendChild(settingsItem);
-        
-        // 添加点击事件
-        const systemSettingsBtn = document.getElementById('systemSettingsBtn');
-        if (systemSettingsBtn) {
-            systemSettingsBtn.addEventListener('click', () => {
-                this.showSystemSettings();
-            });
-        }
-    },
 
-    // 显示系统设置页面（将使用现有的admin-system-settings.js模块）
-    showSystemSettings() {
-        let settingsSection = document.getElementById('systemSettingsSection');
-        if (!settingsSection) {
-            const main = document.querySelector('main');
-            settingsSection = document.createElement('section');
-            settingsSection.id = 'systemSettingsSection';
-            settingsSection.className = 'admin-section';
-            main.appendChild(settingsSection);
-        }
-        this.switchSection('systemSettings');
-    },
-
-    renderNavMenu() {
-        const navList = document.getElementById('adminNavList');
-        if (!navList) return;
-        navList.innerHTML = '';
-        const navItems = [
-            { key: 'dashboard', label: '仪表盘', icon: 'fa-tachometer-alt', permission: null },
-            { key: 'pending', label: '待审核', icon: 'fa-tasks', permission: 'login-requests' },
-            { key: 'members', label: '会员管理', icon: 'fa-users', permission: 'members' },
-            { key: 'giftcards', label: '礼品卡管理', icon: 'fa-gift', permission: 'gift-cards' },
-            { key: 'categories', label: '分类管理', icon: 'fa-list', permission: 'categories' },
-            { key: 'ipmanagement', label: 'IP管理', icon: 'fa-ban', permission: 'ip-blacklist' },
-            { key: 'adminmanage', label: '管理员管理', icon: 'fa-user-shield', permission: null, superOnly: true }
-        ];
-        navItems.forEach(item => {
-            if (item.superOnly && (!this.currentAdmin || this.currentAdmin.role !== 'super')) return;
-            if (item.permission && !this.auth.hasPermission(item.permission)) return;
-            const li = document.createElement('li');
-            li.innerHTML = `<button class="nav-btn" data-section="${item.key}" id="${item.key}NavBtn"><i class="fas ${item.icon}"></i> ${item.label}</button>`;
-            navList.appendChild(li);
-        });
-        // 绑定点击事件
-        navList.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchSection(e.target.dataset.section);
-            });
-        });
-    },
 
     // 格式化日期时间
     formatDateTime(timestamp) {

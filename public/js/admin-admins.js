@@ -162,6 +162,9 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
         { key: 'ip-blacklist:ban', label: '禁止IP', group: 'IP管理' },
         { key: 'ip-blacklist:unban', label: '解禁IP', group: 'IP管理' },
         { key: 'ip-history:view', label: '查看IP登录历史', group: 'IP管理' },
+        { key: 'user-tracking:view', label: '查看用户行为', group: '用户追踪' },
+        { key: 'user-tracking:export', label: '导出追踪数据', group: '用户追踪' },
+        { key: 'user-tracking:stats', label: '查看追踪统计', group: '用户追踪' },
         { key: 'system-settings:view', label: '查看系统设置', group: '系统设置' },
         { key: 'system-settings:edit', label: '编辑系统设置', group: '系统设置' }
     ];

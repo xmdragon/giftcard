@@ -14,8 +14,29 @@
         total: 0
     };
 
+    // 初始化会员管理区域
+    AdminApp.prototype.initMembersSection = function () {
+        console.log('initMembersSection called');
+        
+        // 权限检查 - 修复权限检查逻辑
+        if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermission('members')) {
+            const container = document.getElementById('membersList');
+            if (container) {
+                container.innerHTML = '<div class="error">您没有权限查看会员数据</div>';
+            }
+            return;
+        }
+        
+        // 初始化事件绑定
+        this.initMembersEvents();
+        
+        // 加载会员数据
+        this.loadMembers();
+    };
+
     // 初始化会员管理事件
     AdminApp.prototype.initMembersEvents = function () {
+        console.log('initMembersEvents called');
         // 刷新会员列表按钮
         const refreshMembersBtn = document.getElementById('refreshMembers');
         if (refreshMembersBtn) {
@@ -84,6 +105,15 @@
 
     // 加载会员列表
     AdminApp.prototype.loadMembers = async function () {
+        console.log('loadMembers called');
+        const membersList = document.getElementById('membersList');
+        if (!membersList) {
+            console.error('membersList container not found');
+            return;
+        }
+        
+        membersList.innerHTML = '加载中...';
+        
         try {
             const params = new URLSearchParams({
                 page: this.membersState.currentPage,
