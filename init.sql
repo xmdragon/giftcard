@@ -1,3 +1,5 @@
+-- 设置字符集
+SET NAMES utf8mb4;
 -- 初始化数据库脚本
 USE gift_card_system;
 
