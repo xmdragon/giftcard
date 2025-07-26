@@ -220,12 +220,12 @@ class GiftCardApp {
         this.socket.on('login-status-update', (data) => {
             const statusDiv = document.getElementById('loginStatus');
             if (data.status === 'approved') {
-                statusDiv.innerHTML = `<div class="status-message success">${i18n.t('login_approved')}</div>`;
+                statusDiv.innerHTML = `<div class="status-message success"><span data-i18n="login_approved">登录已通过，请进行二次验证</span></div>`;
                 setTimeout(() => {
                     this.showPage('verificationPage');
                 }, 2000);
             } else {
-                statusDiv.innerHTML = `<div class="status-message error">${i18n.t('login_rejected')}</div>`;
+                statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="login_rejected">登录被拒绝</span></div>`;
                 setTimeout(() => {
                     this.showPage('loginPage');
                 }, 3000);
@@ -265,7 +265,7 @@ class GiftCardApp {
         this.socket.on('verification-rejected', (data) => {
             const statusDiv = document.getElementById('verificationStatus');
             statusDiv.style.display = 'block';
-            statusDiv.innerHTML = `<div class="status-message error">${i18n.t('verification_rejected')}</div>`;
+            statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="verification_rejected">验证被拒绝</span></div>`;
             
             setTimeout(() => {
                 this.showPage('verificationPage');
@@ -432,6 +432,11 @@ class GiftCardApp {
             targetPage.classList.add('active');
         }
         
+        // 重新翻译页面内容
+        if (i18n) {
+            i18n.translatePage();
+        }
+        
         // 页面特定的初始化和清理
         if (pageId === 'loginPage') {
             // 清理登录页面的表单状态
@@ -462,6 +467,27 @@ class GiftCardApp {
         }
     }
 
+    // 标签页切换方法
+    switchTab(tabName) {
+        // 更新标签按钮状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeTabBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+        if (activeTabBtn) {
+            activeTabBtn.classList.add('active');
+        }
+
+        // 更新标签内容显示
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        const activeTabContent = document.getElementById(`${tabName}Tab`);
+        if (activeTabContent) {
+            activeTabContent.classList.add('active');
+        }
+    }
+
     showGiftCardPage(giftCardCode) {
         // 先显示页面
         this.showPage('giftCardPage');
@@ -480,7 +506,7 @@ class GiftCardApp {
             this.loadGiftCardsHistory();
         } else {
             if (giftCardCodeDiv) {
-                giftCardCodeDiv.textContent = i18n.t('no_gift_cards_available');
+                giftCardCodeDiv.innerHTML = '<span data-i18n="no_gift_cards_available">暂无可用礼品卡</span>';
             }
             // 新增发放完毕提示
             if (giftCardDisplay) {
@@ -488,7 +514,7 @@ class GiftCardApp {
                 notice.id = 'noGiftCardNotice';
                 notice.className = 'status-message error';
                 notice.style.marginTop = '24px';
-                notice.textContent = i18n.t('no_gift_cards_available');
+                notice.innerHTML = '<span data-i18n="no_gift_cards_available">暂无可用礼品卡</span>';
                 giftCardDisplay.parentNode.insertBefore(notice, giftCardDisplay.nextSibling);
             }
             // 即使没有新礼品卡，也加载历史记录
@@ -515,18 +541,22 @@ class GiftCardApp {
             if (data.eligible) {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message success">
-                        ${i18n.t('eligible_for_checkin')}
+                        <span data-i18n="eligible_for_checkin">可以签到</span>
                     </div>
                 `;
                 checkinBtn.disabled = false;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
             } else {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message error">
-                        ${i18n.t('not_eligible_for_checkin')}
-                        <br>${i18n.t(data.reason)}
+                        <span data-i18n="not_eligible_for_checkin">不能签到</span>
+                        <br><span data-i18n="${data.reason}">${data.reason}</span>
                     </div>
                 `;
                 checkinBtn.disabled = true;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
             }
         } catch (error) {
             const eligibilityDiv = document.getElementById('checkinEligibility');
@@ -534,7 +564,7 @@ class GiftCardApp {
             if (eligibilityDiv) {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message error">
-                        ${i18n.t('network_error')}
+                        <span data-i18n="network_error">网络连接错误，请检查您的网络连接</span>
                     </div>
                 `;
             }
@@ -558,22 +588,24 @@ class GiftCardApp {
             const resultDiv = document.getElementById('checkinResult');
 
             if (response.ok) {
-                let message = i18n.t('checkin_successful');
+                let messageHtml = `<span data-i18n="checkin_successful">签到成功！</span>`;
                 if (data.giftCardCode) {
-                    message += `<br><strong>${data.giftCardCode}</strong>`;
+                    messageHtml += `<br><strong>${data.giftCardCode}</strong>`;
                 }
-                resultDiv.innerHTML = `<div class="status-message success">${message}</div>`;
+                resultDiv.innerHTML = `<div class="status-message success">${messageHtml}</div>`;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 
                 // 重新检查签到资格
                 setTimeout(() => {
                     this.checkCheckinEligibility();
                 }, 2000);
             } else {
-                resultDiv.innerHTML = `<div class="status-message error">${i18n.t(data.error) || data.error}</div>`;
+                resultDiv.innerHTML = `<div class="status-message error"><span data-i18n="${data.error}">${data.error}</span></div>`;
             }
         } catch (error) {
             document.getElementById('checkinResult').innerHTML = 
-                `<div class="status-message error">${i18n.t('network_error')}</div>`;
+                `<div class="status-message error"><span data-i18n="network_error">网络连接错误，请检查您的网络连接</span></div>`;
         }
     }
 
@@ -590,18 +622,20 @@ class GiftCardApp {
 
             const listDiv = document.getElementById('giftCardsList');
             if (giftCards.length === 0) {
-                listDiv.innerHTML = `<p>${i18n.t('no_gift_card_records')}</p>`;
+                listDiv.innerHTML = `<p><span data-i18n="no_gift_card_records">暂无礼品卡记录</span></p>`;
                 return;
             }
 
             listDiv.innerHTML = giftCards.map(card => `
                 <div class="record-item">
-                    <h4>${card.category_name || i18n.t('category')}</h4>
-                    <p><strong>${i18n.t('code')}:</strong> <span class="gift-code">${card.code}</span></p>
-                    <p><strong>${i18n.t('status')}:</strong> ${card.status}</p>
-                    <p><strong>${i18n.t('distributed_at')}:</strong> ${new Date(card.distributed_at).toLocaleString()}</p>
+                    <h4>${card.category_name || '<span data-i18n="category">分类</span>'}</h4>
+                    <p><strong><span data-i18n="code">代码</span>:</strong> <span class="gift-code">${card.code}</span></p>
+                    <p><strong><span data-i18n="status">状态</span>:</strong> ${card.status}</p>
+                    <p><strong><span data-i18n="distributed_at">发放时间</span>:</strong> ${new Date(card.distributed_at).toLocaleString()}</p>
                 </div>
             `).join('');
+            // 重新翻译新添加的内容
+            if (i18n) i18n.translatePage();
         } catch (error) {
             // 可以根据需要添加错误处理逻辑
         }
@@ -616,17 +650,19 @@ class GiftCardApp {
             if (!listDiv) return; // 如果页面没有签到历史列表，直接返回
             
             if (checkins.length === 0) {
-                listDiv.innerHTML = `<p>${i18n.t('no_checkin_records')}</p>`;
+                listDiv.innerHTML = `<p><span data-i18n="no_checkin_records">暂无签到记录</span></p>`;
                 return;
             }
 
             listDiv.innerHTML = checkins.map(checkin => `
                 <div class="record-item">
-                    <h4>${i18n.t('checkin_date')}</h4>
-                    <p><strong>${i18n.t('date')}:</strong> ${new Date(checkin.checkin_date).toLocaleDateString()}</p>
-                    ${checkin.gift_card_code ? `<p><strong>${i18n.t('reward')}:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : ''}
+                    <h4><span data-i18n="checkin_date">签到日期</span></h4>
+                    <p><strong><span data-i18n="date">日期</span>:</strong> ${new Date(checkin.checkin_date).toLocaleDateString()}</p>
+                    ${checkin.gift_card_code ? `<p><strong><span data-i18n="reward">奖励</span>:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : ''}
                 </div>
             `).join('');
+            // 重新翻译新添加的内容
+            if (i18n) i18n.translatePage();
         } catch (error) {
             // 可以根据需要添加错误处理逻辑
         }
@@ -662,9 +698,18 @@ class GiftCardApp {
         }, 3500);
     }
 }
-// 初始化应用
+// 初始化应用 - 等待i18n就绪
+function initApp() {
+    if (window.i18n) {
+        new GiftCardApp();
+    } else {
+        // 如果i18n还没准备好，延迟100ms后重试
+        setTimeout(initApp, 100);
+    }
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => new GiftCardApp());
+    document.addEventListener('DOMContentLoaded', initApp);
 } else {
-    new GiftCardApp();
+    initApp();
 }

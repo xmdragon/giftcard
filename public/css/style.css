@@ -450,7 +450,6 @@ button[type="submit"]:hover {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     margin: 0 auto;
     text-align: center;
-    max-width: 840px;
 }
 
 #giftCardPage .gift-card-display {
@@ -512,6 +511,44 @@ button[type="submit"]:hover {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+/* 苹果风格按钮覆盖.actions的通用样式 */
+.actions .apple-btn {
+    background: #007aff !important;
+    color: white !important;
+    border: none !important;
+}
+
+.actions .apple-btn-secondary {
+    background: rgba(0, 122, 255, 0.1) !important;
+    color: #007aff !important;
+    border: none !important;
+}
+
+.actions .apple-btn:hover {
+    background: #005bb5 !important;
+    color: white !important;
+}
+
+.actions .apple-btn-secondary:hover {
+    background: rgba(0, 122, 255, 0.15) !important;
+    color: #005bb5 !important;
+}
+
+/* 签到页面和历史页面按钮样式 */
+.checkin-actions, .history-actions {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+    gap: 16px;
+}
+
+.checkin-actions .apple-btn, 
+.history-actions .apple-btn {
+    min-width: 200px;
+    max-width: 300px;
+    flex: 0 0 auto;
+}
+
 .checkin-container, .history-container {
     background: rgba(255, 255, 255, 0.8);
     padding: 48px;
@@ -519,7 +556,6 @@ button[type="submit"]:hover {
     backdrop-filter: saturate(180%) blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    max-width: 840px;
     margin: 0 auto;
 }
 
