@@ -41,7 +41,12 @@ docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/drop_all_tabl
 # 确保init.sql首行有: CREATE DATABASE IF NOT EXISTS ... DEFAULT CHARACTER SET utf8mb4;
 
 echo "🚀 正在执行init.sql初始化数据库..."
-docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < init.sql
+# 使用与fix-db-encoding-simple.sh相同的方式处理编码
+cat > /tmp/init_temp.sql << 'EOF'
+SET NAMES utf8mb4;
+EOF
+cat init.sql >> /tmp/init_temp.sql
+docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/init_temp.sql
 
 # 验证表结构和编码
 cat > /tmp/check_encoding.sql << EOF
@@ -53,6 +58,6 @@ EOF
 docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/check_encoding.sql
 
 # 清理临时文件
-rm -f /tmp/drop_all_tables.sql /tmp/check_encoding.sql
+rm -f /tmp/drop_all_tables.sql /tmp/check_encoding.sql /tmp/init_temp.sql
 
 echo "✅ 数据库重建完成！请刷新页面查看效果。" 
