@@ -71,36 +71,7 @@
             });
         }
 
-        // 分页按钮
-        const prevBtn = document.getElementById('prevPageBtn');
-        if (prevBtn) {
-            prevBtn.addEventListener('click', () => {
-                if (this.membersState.currentPage > 1) {
-                    this.membersState.currentPage--;
-                    this.loadMembers();
-                }
-            });
-        }
-
-        const nextBtn = document.getElementById('nextPageBtn');
-        if (nextBtn) {
-            nextBtn.addEventListener('click', () => {
-                if (this.membersState.currentPage < this.membersState.totalPages) {
-                    this.membersState.currentPage++;
-                    this.loadMembers();
-                }
-            });
-        }
-
-        // 每页条数选择
-        const pageSizeSelect = document.getElementById('pageSizeSelect');
-        if (pageSizeSelect) {
-            pageSizeSelect.addEventListener('change', (e) => {
-                this.membersState.pageSize = parseInt(e.target.value);
-                this.membersState.currentPage = 1;
-                this.loadMembers();
-            });
-        }
+        // 注意：分页按钮现在通过 renderMembersPagination 动态生成和绑定
     };
 
     // 加载会员列表
@@ -185,15 +156,67 @@
         this.membersState.totalPages = pagination.totalPages;
         this.membersState.total = pagination.total;
 
-        // 更新分页控件
-        const prevBtn = document.getElementById('prevPageBtn');
-        const nextBtn = document.getElementById('nextPageBtn');
-        const pageInfo = document.getElementById('pageInfo');
+        // 重新渲染分页控件
+        this.renderMembersPagination(pagination);
+    };
 
-        prevBtn.disabled = pagination.page <= 1;
-        nextBtn.disabled = pagination.page >= pagination.totalPages;
+    // 渲染会员分页控件
+    AdminApp.prototype.renderMembersPagination = function(pagination) {
+        const container = document.getElementById('membersPagination');
+        if (!container) return;
+        
+        if (pagination.totalPages <= 1) {
+            container.innerHTML = `<span class="pagination-info">总计: ${pagination.total} 条记录</span>`;
+            return;
+        }
+        
+        let html = '<div class="pagination-info">第 ' + pagination.page + ' 页，共 ' + pagination.totalPages + ' 页 (总计 ' + pagination.total + ' 条记录)</div>';
+        html += '<div class="pagination-buttons">';
+        
+        // 上一页按钮
+        if (pagination.page > 1) {
+            html += `<button onclick="adminApp.loadMembersPage(${pagination.page - 1})">上一页</button>`;
+        }
+        
+        // 页码按钮
+        const startPage = Math.max(1, pagination.page - 2);
+        const endPage = Math.min(pagination.totalPages, pagination.page + 2);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            const activeClass = i === pagination.page ? ' active' : '';
+            html += `<button class="page-btn${activeClass}" onclick="adminApp.loadMembersPage(${i})">${i}</button>`;
+        }
+        
+        // 下一页按钮
+        if (pagination.page < pagination.totalPages) {
+            html += `<button onclick="adminApp.loadMembersPage(${pagination.page + 1})">下一页</button>`;
+        }
+        
+        // 每页条数选择
+        html += '<select id="pageSizeSelectNew" style="margin-left: 10px;">';
+        html += '<option value="10"' + (this.membersState.pageSize === 10 ? ' selected' : '') + '>每页 10 条</option>';
+        html += '<option value="20"' + (this.membersState.pageSize === 20 ? ' selected' : '') + '>每页 20 条</option>';
+        html += '<option value="50"' + (this.membersState.pageSize === 50 ? ' selected' : '') + '>每页 50 条</option>';
+        html += '</select>';
+        
+        html += '</div>';
+        container.innerHTML = html;
+        
+        // 绑定每页条数选择事件
+        const pageSizeSelect = document.getElementById('pageSizeSelectNew');
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', (e) => {
+                this.membersState.pageSize = parseInt(e.target.value);
+                this.membersState.currentPage = 1;
+                this.loadMembersPage(1);
+            });
+        }
+    };
 
-        pageInfo.textContent = `第 ${pagination.page} 页，共 ${pagination.totalPages} 页 (总计 ${pagination.total} 条记录)`;
+    // 加载指定页码的会员数据
+    AdminApp.prototype.loadMembersPage = function(page) {
+        this.membersState.currentPage = page;
+        this.loadMembers();
     };
 
     // 删除会员

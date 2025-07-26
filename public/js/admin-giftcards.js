@@ -123,6 +123,16 @@
             </table>
             ${this.renderGiftCardPagination()}
         `;
+        
+        // 绑定每页条数选择事件
+        const pageSizeSelect = document.getElementById('giftCardPageSize');
+        if (pageSizeSelect) {
+            pageSizeSelect.addEventListener('change', (e) => {
+                this.giftCardState.limit = parseInt(e.target.value);
+                this.giftCardState.currentPage = 1;
+                this.loadGiftCards(1);
+            });
+        }
     };
 
     // Render gift card pagination
@@ -155,7 +165,14 @@
             paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage + 1})">下一页</button>`;
         }
         
-        paginationHtml += `<span class="total-info">总计: ${total} 条记录</span>`;
+        // 每页条数选择
+        paginationHtml += '<select id="giftCardPageSize" style="margin-left: 10px;">';
+        paginationHtml += '<option value="20"' + (this.giftCardState.limit === 20 ? ' selected' : '') + '>每页 20 条</option>';
+        paginationHtml += '<option value="50"' + (this.giftCardState.limit === 50 ? ' selected' : '') + '>每页 50 条</option>';
+        paginationHtml += '<option value="100"' + (this.giftCardState.limit === 100 ? ' selected' : '') + '>每页 100 条</option>';
+        paginationHtml += '</select>';
+        
+        paginationHtml += `<span class="total-info" style="margin-left: 10px;">总计: ${total} 条记录</span>`;
         paginationHtml += '</div>';
         
         return paginationHtml;

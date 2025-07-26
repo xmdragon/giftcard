@@ -89,31 +89,42 @@ AdminApp.prototype.viewCategoryGiftCards = function(categoryId, categoryName) {
     // 切换到礼品卡管理页面
     this.switchSection('giftcards');
     
-    // 设置分类筛选器
-    const categoryFilter = document.getElementById('categoryFilter');
-    if (categoryFilter) {
-        categoryFilter.value = categoryId;
-    }
-    
-    // 清除其他筛选条件
-    const statusFilter = document.getElementById('statusFilter');
-    if (statusFilter) {
-        statusFilter.value = '';
-    }
-    
-    const emailFilter = document.getElementById('emailFilter');
-    if (emailFilter) {
-        emailFilter.value = '';
-    }
-    
-    // 更新页面标题显示当前查看的分类
-    const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
-    if (sectionHeader) {
-        sectionHeader.textContent = `礼品卡管理 - ${categoryName}`;
-    }
-    
-    // 加载该分类的礼品卡
+    // 延迟执行以确保页面元素已加载
     setTimeout(() => {
-        this.loadGiftCards(1);
-    }, 100);
+        // 设置分类筛选器
+        const categoryFilter = document.getElementById('categoryFilter');
+        if (categoryFilter) {
+            categoryFilter.value = categoryId;
+        }
+        
+        // 设置状态筛选为"未发放"
+        const statusFilter = document.getElementById('statusFilter');
+        if (statusFilter) {
+            statusFilter.value = 'available';
+        }
+        
+        const emailFilter = document.getElementById('emailFilter');
+        if (emailFilter) {
+            emailFilter.value = '';
+        }
+        
+        // 更新页面标题显示当前查看的分类
+        const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
+        if (sectionHeader) {
+            sectionHeader.textContent = `礼品卡管理 - ${categoryName} (未发放)`;
+        }
+        
+        // 加载该分类的礼品卡
+        if (typeof this.loadGiftCards === 'function') {
+            this.loadGiftCards(1);
+        }
+    }, 300);
+};
+
+// 重置礼品卡页面标题为默认
+AdminApp.prototype.resetGiftCardsTitle = function() {
+    const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
+    if (sectionHeader && sectionHeader.textContent !== '礼品卡管理') {
+        sectionHeader.textContent = '礼品卡管理';
+    }
 }; 

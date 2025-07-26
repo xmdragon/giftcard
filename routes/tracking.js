@@ -190,7 +190,37 @@ function createTrackingRoutes(io) {
     // 获取统计数据（管理员使用）
     router.get('/statistics', authenticateAdmin, checkPermission('user-tracking:stats'), async (req, res) => {
         try {
-            const { startDate, endDate, groupBy = 'page' } = req.query;
+            console.log('开始获取用户行为统计数据');
+            const { startDate, endDate } = req.query;
+            
+            // 首先检查表是否存在
+            const tableExistsResult = await db.query(`
+                SELECT COUNT(*) as count FROM information_schema.tables 
+                WHERE table_schema = 'gift_card_system' AND table_name = 'user_page_tracking'
+            `);
+            
+            console.log('表存在检查结果:', tableExistsResult);
+            
+            if (!tableExistsResult || tableExistsResult.length === 0 || tableExistsResult[0].count === 0) {
+                console.log('user_page_tracking表不存在，返回空数据');
+                return res.json({
+                    success: true,
+                    data: {
+                        basic: {
+                            total_visits: 0,
+                            unique_visitors: 0,
+                            guest_visitors: 0,
+                            member_visitors: 0,
+                            avg_duration: 0,
+                            total_duration: 0
+                        },
+                        pages: [],
+                        userTypes: [],
+                        timeStats: [],
+                        flowStats: []
+                    }
+                });
+            }
             
             let dateFilter = '';
             let params = [];
@@ -205,8 +235,10 @@ function createTrackingRoutes(io) {
                 params.push(endDate + ' 23:59:59');
             }
             
+            console.log('日期筛选条件:', dateFilter, params);
+            
             // 基础统计数据
-            const [basicStats] = await db.execute(`
+            const basicStatsResult = await db.query(`
                 SELECT 
                     COUNT(*) as total_visits,
                     COUNT(DISTINCT session_id) as unique_visitors,
@@ -218,8 +250,19 @@ function createTrackingRoutes(io) {
                 WHERE 1=1 ${dateFilter}
             `, params);
             
+            console.log('基础统计查询结果:', basicStatsResult);
+            
+            const basicStats = basicStatsResult && basicStatsResult.length > 0 ? basicStatsResult[0] : {
+                total_visits: 0,
+                unique_visitors: 0, 
+                guest_visitors: 0,
+                member_visitors: 0,
+                avg_duration: 0,
+                total_duration: 0
+            };
+            
             // 按页面统计
-            const [pageStats] = await db.execute(`
+            const pageStats = await db.query(`
                 SELECT 
                     page_name,
                     COUNT(*) as visits,
@@ -233,7 +276,7 @@ function createTrackingRoutes(io) {
             `, params);
             
             // 按用户类型统计
-            const [userTypeStats] = await db.execute(`
+            const userTypeStats = await db.query(`
                 SELECT 
                     user_type,
                     COUNT(*) as visits,
@@ -247,7 +290,7 @@ function createTrackingRoutes(io) {
             `, params);
             
             // 按时间统计（按天）
-            const [timeStats] = await db.execute(`
+            const timeStats = await db.query(`
                 SELECT 
                     DATE(enter_time) as date,
                     COUNT(*) as visits,
@@ -260,37 +303,24 @@ function createTrackingRoutes(io) {
                 LIMIT 30
             `, params);
             
-            // 页面流转统计（简化版本）
-            const [flowStats] = await db.execute(`
-                SELECT 
-                    t1.page_name as from_page,
-                    t2.page_name as to_page,
-                    COUNT(*) as count
-                FROM user_page_tracking t1
-                JOIN user_page_tracking t2 ON t1.session_id = t2.session_id 
-                    AND t2.enter_time > t1.enter_time
-                WHERE t1.enter_time >= IFNULL(?, '1970-01-01') ${dateFilter.replace('enter_time', 't1.enter_time')}
-                GROUP BY t1.page_name, t2.page_name
-                HAVING count > 1
-                ORDER BY count DESC
-                LIMIT 20
-            `, [startDate || '1970-01-01', ...params]);
+            console.log('统计数据准备完成，返回结果');
             
             res.json({
                 success: true,
                 data: {
-                    basic: basicStats[0],
-                    pages: pageStats,
-                    userTypes: userTypeStats,
-                    timeStats: timeStats,
-                    flowStats: flowStats
+                    basic: basicStats,
+                    pages: pageStats || [],
+                    userTypes: userTypeStats || [],
+                    timeStats: timeStats || [],
+                    flowStats: [] // 暂时简化，不包含页面流转统计
                 }
             });
             
         } catch (error) {
             console.error('获取统计数据失败:', error);
             res.status(500).json({
-                error: '服务器内部错误'
+                success: false,
+                error: '服务器内部错误: ' + error.message
             });
         }
     });

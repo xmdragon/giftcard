@@ -49,12 +49,9 @@
                             <td>${new Date(item.banned_at).toLocaleString()}</td>
                             <td>${item.banned_by_username || '未知'}</td>
                             <td>${item.affected_members}</td>
-                            <td><span class="status-badge status-${item.status}">${item.status === 'active' ? '已禁止' : '已解禁'}</span></td>
+                            <td><span class="status-badge status-active">已禁止</span></td>
                             <td>
-                                ${item.status === 'active' ?
-                `<button class="unban-btn" onclick="adminApp.unbanIp(${item.id})">解禁</button>` :
-                '<span class="text-muted">已解禁</span>'
-            }
+                                <button class="unban-btn" onclick="adminApp.unbanIp(${item.id})">解禁</button>
                                 <button class="view-history-btn" onclick="adminApp.viewIpHistory('${item.ip_address}')">查看历史</button>
                             </td>
                         </tr>
@@ -183,18 +180,57 @@
                         </tr>
                     </thead>
                     <tbody>
-                        ${history.map(item => `
+                        ${history.map(item => {
+                            const statusText = {
+                                'pending': '待审核',
+                                'approved': '已通过',
+                                'rejected': '已拒绝'
+                            }[item.status] || item.status;
+                            
+                            return `
                             <tr>
                                 <td>${item.email}</td>
                                 <td>${new Date(item.login_time).toLocaleString()}</td>
-                                <td><span class="status-badge status-${item.status}">${item.status}</span></td>
+                                <td><span class="status-badge status-${item.status}">${statusText}</span></td>
                             </tr>
-                        `).join('')}
+                            `;
+                        }).join('')}
                     </tbody>
                 </table>
             `;
         }
 
         this.showModal(`IP历史 - ${ip}`, content);
+    };
+
+    // 初始化IP管理事件绑定
+    AdminApp.prototype.initIpManagementEvents = function() {
+        console.log('初始化IP管理事件绑定');
+        
+        // 禁止IP按钮
+        const banIpBtn = document.getElementById('banIpBtn');
+        if (banIpBtn) {
+            // 移除旧的事件监听器，防止重复绑定
+            banIpBtn.replaceWith(banIpBtn.cloneNode(true));
+            const newBanIpBtn = document.getElementById('banIpBtn');
+            
+            newBanIpBtn.addEventListener('click', () => {
+                console.log('禁止IP按钮被点击');
+                this.showBanIpModal();
+            });
+        }
+        
+        // 刷新按钮
+        const refreshIpBtn = document.getElementById('refreshIpList');
+        if (refreshIpBtn) {
+            // 移除旧的事件监听器，防止重复绑定
+            refreshIpBtn.replaceWith(refreshIpBtn.cloneNode(true));
+            const newRefreshIpBtn = document.getElementById('refreshIpList');
+            
+            newRefreshIpBtn.addEventListener('click', () => {
+                console.log('刷新IP列表按钮被点击');
+                this.loadIpBlacklist();
+            });
+        }
     };
 })();

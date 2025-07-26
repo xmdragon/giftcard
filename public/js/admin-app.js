@@ -216,8 +216,11 @@ Object.assign(AdminApp.prototype, {
                 }
                 break;
             case 'ipmanagement':
-                if (typeof this.loadIPBlacklist === 'function') {
-                    this.loadIPBlacklist();
+                if (typeof this.loadIpBlacklist === 'function') {
+                    this.loadIpBlacklist();
+                }
+                if (typeof this.initIpManagementEvents === 'function') {
+                    this.initIpManagementEvents();
                 }
                 break;
             case 'tracking':
@@ -228,6 +231,14 @@ Object.assign(AdminApp.prototype, {
             case 'systemsettings':
                 if (typeof this.initSystemSettingsSection === 'function') {
                     this.initSystemSettingsSection();
+                }
+                break;
+            case 'adminmanage':
+                if (typeof this.loadAdmins === 'function') {
+                    this.loadAdmins();
+                }
+                if (typeof this.initAdminManagementEvents === 'function') {
+                    this.initAdminManagementEvents();
                 }
                 break;
         }
@@ -552,7 +563,7 @@ Object.assign(AdminApp.prototype, {
                             <td>${stat.category_name}</td>
                             <td><strong>${stat.available_count}</strong></td>
                             <td>
-                                <button class="edit-btn" onclick="adminApp.switchSection('giftcards')">查看</button>
+                                <button class="edit-btn" onclick="adminApp.viewCategoryGiftCards(${stat.category_id}, '${stat.category_name}')">查看</button>
                             </td>
                         </tr>
                     `).join('');

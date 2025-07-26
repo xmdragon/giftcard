@@ -131,14 +131,34 @@ body {
 }
 
 .stats-controls .filter-group {
-    display: inline-flex;
+    display: flex;
+    flex-direction: row !important;
     align-items: center;
     gap: 10px;
     margin-right: 20px;
+    flex-wrap: nowrap;
+    min-width: auto;
 }
 
 .stats-controls .filter-group label {
     margin: 0;
+    margin-bottom: 0 !important;
+    white-space: nowrap;
+    min-width: auto;
+}
+
+.stats-controls .filter-group input[type="date"] {
+    min-width: 150px;
+    margin-top: 0 !important;
+}
+
+.stats-controls .filter-group span {
+    margin: 0 5px;
+    white-space: nowrap;
+}
+
+.stats-controls .filter-group button {
+    margin-top: 0 !important;
     white-space: nowrap;
 }
 

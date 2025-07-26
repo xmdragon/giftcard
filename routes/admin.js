@@ -603,6 +603,7 @@ module.exports = (io) => {
         FROM ip_blacklist ib
         LEFT JOIN admins a ON ib.banned_by = a.id
         LEFT JOIN login_logs ll ON ib.ip_address = ll.ip_address
+        WHERE ib.status = 'active'
         GROUP BY ib.id
         ORDER BY ib.banned_at DESC
       `);
@@ -650,7 +651,8 @@ module.exports = (io) => {
     try {
       const { id } = req.params;
 
-      await db.update('ip_blacklist', { status: 'inactive' }, { id: id });
+      // 直接删除IP黑名单记录，而不是修改状态
+      await db.execute('DELETE FROM ip_blacklist WHERE id = ?', [id]);
 
       res.json({ message: req.t('ip_unbanned_successfully') });
     } catch (error) {
