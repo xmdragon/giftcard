@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# 数据库重建脚本
-# 删除所有数据表后，按init.sql内容重建数据库，确保utf8mb4编码
+# 数据库重建脚本（推荐：直接删除数据库再重建，彻底解决外键和编码问题）
 # 适用于docker compose环境
 
 DB_NAME="gift_card_system"
@@ -26,27 +25,18 @@ for i in {1..20}; do
     sleep 2
 done
 
-# 生成删除所有表的SQL
-cat > /tmp/drop_all_tables.sql << EOF
-USE $DB_NAME;
-SET FOREIGN_KEY_CHECKS = 0;
+# 删除并重建数据库，确保utf8mb4编码
+cat > /tmp/recreate_db.sql << EOF
+DROP DATABASE IF EXISTS $DB_NAME;
+CREATE DATABASE $DB_NAME DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 EOF
-docker compose exec mysql mysql -u $DB_USER -p"$DB_PASS" -N -e "SELECT CONCAT('DROP TABLE IF EXISTS `', table_name, '`;') FROM information_schema.tables WHERE table_schema = '$DB_NAME';" >> /tmp/drop_all_tables.sql
-echo "SET FOREIGN_KEY_CHECKS = 1;" >> /tmp/drop_all_tables.sql
 
-echo "⚠️  正在删除所有数据表..."
-docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/drop_all_tables.sql
+echo "⚠️  正在删除并重建数据库..."
+docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/recreate_db.sql
 
-# 执行init.sql重建数据库结构和初始数据
-# 确保init.sql首行有: CREATE DATABASE IF NOT EXISTS ... DEFAULT CHARACTER SET utf8mb4;
-
+# 导入init.sql（init.sql已包含SET NAMES和USE语句）
 echo "🚀 正在执行init.sql初始化数据库..."
-# 使用与fix-db-encoding-simple.sh相同的方式处理编码
-cat > /tmp/init_temp.sql << 'EOF'
-SET NAMES utf8mb4;
-EOF
-cat init.sql >> /tmp/init_temp.sql
-docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/init_temp.sql
+docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < init.sql
 
 # 验证表结构和编码
 cat > /tmp/check_encoding.sql << EOF
@@ -58,6 +48,6 @@ EOF
 docker compose exec -T mysql mysql -u $DB_USER -p"$DB_PASS" < /tmp/check_encoding.sql
 
 # 清理临时文件
-rm -f /tmp/drop_all_tables.sql /tmp/check_encoding.sql /tmp/init_temp.sql
+rm -f /tmp/recreate_db.sql /tmp/check_encoding.sql
 
 echo "✅ 数据库重建完成！请刷新页面查看效果。" 
