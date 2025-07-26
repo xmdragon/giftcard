@@ -234,6 +234,20 @@
                     return;
                 }
 
+                // 保留第一个默认选项（如"请选择"），清空其他选项
+                const firstOption = select.querySelector('option[value=""]');
+                select.innerHTML = '';
+                if (firstOption) {
+                    select.appendChild(firstOption);
+                } else {
+                    // 如果没有默认选项，添加一个
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '请选择分类';
+                    select.appendChild(defaultOption);
+                }
+
+                // 添加分类选项
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.id;
