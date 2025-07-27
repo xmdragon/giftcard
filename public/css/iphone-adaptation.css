@@ -162,6 +162,40 @@
         margin: 0 auto;
     }
 
+    /* 确保文本可见 */
+    .dd-section h1,
+    .dd-section .t-headline-elevated,
+    .t-intro,
+    .t-caption {
+        color: #1d1d1f !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: block !important;
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .dd-icon-grid .t-caption {
+        color: #1d1d1f !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        text-align: center !important;
+        padding-top: 8px !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 确保欢迎页面容器不隐藏内容 */
+    .dd-gift-cards-intro,
+    .dd-section {
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+
     .form-container h2 {
         font-size: 24px;
         margin-bottom: 24px;
@@ -560,6 +594,16 @@
         padding-top: 16px;
         padding-bottom: 16px;
     }
+
+    /* 确保文本可见 - iPhone 16 */
+    .dd-section h1,
+    .dd-section .t-headline-elevated,
+    .t-intro,
+    .t-caption {
+        color: #1d1d1f !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
 }
 
 /* iPhone 14 Plus/15 Plus/16 Plus (428-430px宽度) */
@@ -661,6 +705,16 @@
         padding-top: 24px;
         padding-bottom: 24px;
     }
+
+    /* 确保文本可见 - iPhone 14 Plus/15 Plus/16 Plus */
+    .dd-section h1,
+    .dd-section .t-headline-elevated,
+    .t-intro,
+    .t-caption {
+        color: #1d1d1f !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+    }
 }
 
 /* iPhone 16 Pro (402px宽度) */
@@ -730,6 +784,16 @@
     .dd-gift-cards-intro .dd-image {
         padding-top: 20px;
         padding-bottom: 20px;
+    }
+
+    /* 确保文本可见 - iPhone 16 Pro */
+    .dd-section h1,
+    .dd-section .t-headline-elevated,
+    .t-intro,
+    .t-caption {
+        color: #1d1d1f !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 }
 
@@ -809,6 +873,16 @@
     .dd-gift-cards-intro .dd-image {
         padding-top: 28px;
         padding-bottom: 28px;
+    }
+
+    /* 确保文本可见 - iPhone 16 Pro Max */
+    .dd-section h1,
+    .dd-section .t-headline-elevated,
+    .t-intro,
+    .t-caption {
+        color: #1d1d1f !important;
+        opacity: 1 !important;
+        visibility: visible !important;
     }
 }
 
