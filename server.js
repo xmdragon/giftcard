@@ -159,6 +159,7 @@ io.on('connection', (socket) => {
 const createMemberAuthRoutes = require('./routes/member-auth');
 const createAdminAuthRoutes = require('./routes/admin-auth');
 const createAdminRoutes = require('./routes/admin');
+const createAdminSecurityRoutes = require('./routes/admin-security');
 const createMemberRoutes = require('./routes/member');
 const createTrackingRoutes = require('./routes/tracking');
 
@@ -172,6 +173,7 @@ async function startServer() {
     const memberAuthRoutes = createMemberAuthRoutes(io);
     const adminAuthRoutes = createAdminAuthRoutes(io);
     const adminRoutes = createAdminRoutes(io);
+    const adminSecurityRoutes = createAdminSecurityRoutes();
     const memberRoutes = createMemberRoutes(io);
     const trackingRoutes = createTrackingRoutes(io);
     
@@ -179,6 +181,7 @@ async function startServer() {
     app.use('/api/auth/member', memberAuthRoutes);
     app.use('/api/auth/admin', adminAuthRoutes);
     app.use('/api/admin', adminRoutes);
+    app.use('/api/admin/security', adminSecurityRoutes);
     app.use('/api/member', memberRoutes);
     app.use('/api/tracking', trackingRoutes);
     

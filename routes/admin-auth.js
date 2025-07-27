@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const svgCaptcha = require('svg-captcha');
 const db = require('../utils/db');
+const adminSecurity = require('../utils/admin-security');
 const router = express.Router();
 
 // 存储验证码的临时会话存储
@@ -11,53 +12,104 @@ const captchaSessions = new Map();
 module.exports = (io) => {
     // 管理员登录
     router.post('/login', async (req, res) => {
+        const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
+                        (req.connection.socket ? req.connection.socket.remoteAddress : null);
+        const userAgent = req.headers['user-agent'] || '';
+        
         try {
             const { username, password, captcha } = req.body;
+
+            // 1. 首先检查IP是否被限制
+            const ipRestriction = await adminSecurity.checkIPRestriction(clientIP);
+            if (ipRestriction.blocked) {
+                let errorMessage = '';
+                if (ipRestriction.type === 'permanent') {
+                    errorMessage = '该IP已被永久禁止访问';
+                } else if (ipRestriction.type === 'temporary') {
+                    errorMessage = `该IP已被临时禁用，剩余时间：${ipRestriction.remaining}分钟`;
+                }
+                
+                return res.status(403).json({ 
+                    error: errorMessage,
+                    type: ipRestriction.type,
+                    remaining: ipRestriction.remaining
+                });
+            }
             
-            // 验证验证码
+            // 2. 验证验证码
             if (!captcha) {
+                await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_captcha', userAgent);
                 return res.status(400).json({ error: '请输入验证码' });
             }
             
-            const sessionId = req.ip + '-' + req.headers['user-agent'];
+            const sessionId = clientIP + '-' + userAgent;
             const storedCaptcha = captchaSessions.get(sessionId);
             
             if (!storedCaptcha || storedCaptcha.toLowerCase() !== captcha.toLowerCase()) {
-                // 验证码错误，删除存储的验证码
+                // 验证码错误，删除存储的验证码并记录失败
                 captchaSessions.delete(sessionId);
+                await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_captcha', userAgent);
                 return res.status(400).json({ error: '验证码错误' });
             }
             
             // 验证码正确，删除已使用的验证码
             captchaSessions.delete(sessionId);
 
+            // 3. 验证用户名
             const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
 
             if (admins.length === 0) {
+                await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_username', userAgent);
                 return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
             }
 
             const admin = admins[0];
 
-            // 使用MD5验证密码
+            // 4. 验证密码
             const md5Password = crypto.createHash('md5').update(password).digest('hex');
-
             const validPassword = (md5Password === admin.password);
 
             if (!validPassword) {
-                return res.status(400).json({ error: req.t ? req.t('invalid_credentials') : '用户名或密码错误' });
+                // 密码错误，记录失败并检查是否需要限制
+                await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_password', userAgent);
+                
+                // 获取今天的失败次数给用户提示
+                const stats = await adminSecurity.getIPFailureStats(clientIP);
+                let errorMessage = req.t ? req.t('invalid_credentials') : '用户名或密码错误';
+                
+                if (stats.count >= 3) {
+                    errorMessage = '密码错误次数过多，该IP已被临时禁用1小时';
+                } else if (stats.count >= 1) {
+                    const remaining = 5 - stats.count;
+                    if (remaining <= 2) {
+                        errorMessage += `，当天还可尝试${remaining}次，超过5次将永久禁用`;
+                    }
+                }
+                
+                return res.status(400).json({ error: errorMessage });
             }
 
+            // 5. 登录成功，生成token
             const token = jwt.sign(
                 { id: admin.id, username: admin.username, role: admin.role, permissions: admin.permissions },
                 process.env.JWT_SECRET || 'secret',
                 { expiresIn: '1h' }
             );
+            
             res.json({
                 token,
                 admin: { id: admin.id, username: admin.username, role: admin.role, permissions: admin.permissions }
             });
+            
         } catch (error) {
+            console.error('管理员登录错误:', error);
+            // 即使出错也记录失败尝试
+            try {
+                await adminSecurity.recordLoginFailure(clientIP, req.body.username || '', 'wrong_password', userAgent);
+            } catch (recordError) {
+                console.error('记录登录失败错误:', recordError);
+            }
+            
             res.status(500).json({ error: req.t ? req.t('server_error') : '服务器错误，请稍后重试' });
         }
     });

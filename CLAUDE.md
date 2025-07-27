@@ -90,6 +90,8 @@ chmod +x get-ssl-cert.sh update-domain.sh dev-start.sh
 - `checkin_records` - 每日签到奖励跟踪
 - `admins` - 管理员用户账户
 - `ip_blacklist` - 基于 IP 的访问控制
+- `admin_login_failures` - 管理员登录失败记录
+- `admin_temp_restrictions` - 管理员IP临时禁用
 
 ### 认证流程
 1. 会员提交登录凭据
@@ -143,6 +145,32 @@ NODE_ENV=production        # 本地开发使用 'development'
 默认管理员凭据：
 - 用户名: `admin`
 - 密码: `admin123`
+
+## 管理员安全功能
+
+### 登录安全策略
+- **3次密码错误** → 该IP临时禁用1小时
+- **当天5次密码错误** → 该IP永久禁用
+
+### 安全管理API
+```bash
+# 查看登录失败记录
+GET /api/admin/security/login-failures
+
+# 查看IP限制列表
+GET /api/admin/security/ip-restrictions
+
+# 移除IP限制
+DELETE /api/admin/security/ip-restrictions/{ip}?type=permanent|temporary
+
+# 手动添加IP黑名单
+POST /api/admin/security/ip-blacklist
+
+# 查看IP统计
+GET /api/admin/security/ip-stats/{ip}
+```
+
+详细说明请参考 `ADMIN-SECURITY.md` 文件。
 
 ## 开发说明
 

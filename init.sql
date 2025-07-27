@@ -154,3 +154,32 @@ CREATE TABLE IF NOT EXISTS user_page_tracking (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 创建管理员登录失败记录表
+CREATE TABLE IF NOT EXISTS admin_login_failures (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip_address VARCHAR(45) NOT NULL,
+  username VARCHAR(50),
+  attempted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  failure_type ENUM('wrong_password', 'wrong_captcha', 'wrong_username') DEFAULT 'wrong_password',
+  user_agent TEXT,
+  INDEX idx_ip_date (ip_address, attempted_at),
+  INDEX idx_date (attempted_at)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 创建管理员IP限制表（支持临时和永久禁用）
+CREATE TABLE IF NOT EXISTS admin_ip_restrictions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  ip_address VARCHAR(45) NOT NULL,
+  restriction_type ENUM('temporary', 'permanent') NOT NULL,
+  start_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  end_time TIMESTAMP NULL,
+  failure_count INT DEFAULT 0,
+  reason VARCHAR(255) DEFAULT '',
+  status ENUM('active', 'expired', 'removed') DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_active_ip (ip_address, status),
+  INDEX idx_ip_status (ip_address, status),
+  INDEX idx_end_time (end_time),
+  INDEX idx_type (restriction_type)
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
