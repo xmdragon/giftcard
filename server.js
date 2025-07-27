@@ -74,7 +74,7 @@ app.use(async (req, res, next) => {
         const blockCnIP = settings[0].setting_value === 'true';
         res.locals.blockChineseIP = blockCnIP;
       } else {
-        res.locals.blockChineseIP = true; // 默认阻止
+        res.locals.blockChineseIP = false; // 默认不阻止，修复逻辑
       }
     } else {
       res.locals.blockChineseIP = false;
@@ -234,7 +234,7 @@ async function startServer() {
           const blockCnIP = settings[0].setting_value === 'true';
           res.locals.blockChineseIP = blockCnIP;
         } else {
-          res.locals.blockChineseIP = true; // 默认阻止
+          res.locals.blockChineseIP = false; // 默认不阻止，与主逻辑保持一致
         }
       } catch (error) {
         console.error('获取系统设置失败:', error);
