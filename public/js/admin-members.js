@@ -16,7 +16,6 @@
 
     // 初始化会员管理区域
     AdminApp.prototype.initMembersSection = function () {
-        console.log('initMembersSection called');
         
         // 权限检查 - 修复权限检查逻辑
         if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermission('members')) {
@@ -36,7 +35,6 @@
 
     // 初始化会员管理事件
     AdminApp.prototype.initMembersEvents = function () {
-        console.log('initMembersEvents called');
         // 刷新会员列表按钮
         const refreshMembersBtn = document.getElementById('refreshMembers');
         if (refreshMembersBtn) {
@@ -76,7 +74,6 @@
 
     // 加载会员列表
     AdminApp.prototype.loadMembers = async function () {
-        console.log('loadMembers called');
         const membersList = document.getElementById('membersList');
         if (!membersList) {
             console.error('membersList container not found');

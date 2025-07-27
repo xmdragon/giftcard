@@ -33,8 +33,6 @@ Object.assign(AdminApp.prototype, {
                 } catch (e) {
                     console.error('[init] 解析管理员信息错误:', e);
                 }
-            } else {
-                console.log('[init] localStorage adminInfo 为空');
             }
             
             // 验证token有效性
@@ -58,14 +56,12 @@ Object.assign(AdminApp.prototype, {
     },
 
     bindEvents() {
-        console.log('bindEvents called');
         
         // Admin login - with security check
         const loginForm = document.getElementById('adminLoginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => {
                 e.preventDefault();
-                console.log('Login form submitted');
                 this.auth.handleAdminLogin();
             });
         } else {
@@ -76,33 +72,24 @@ Object.assign(AdminApp.prototype, {
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
-                console.log('Logout button clicked');
                 this.auth.logout();
             });
-        } else {
-            console.log('Logout button not found');
         }
 
         // Change password button
         const changePasswordBtn = document.getElementById('changePasswordBtn');
         if (changePasswordBtn) {
             changePasswordBtn.addEventListener('click', () => {
-                console.log('Change password button clicked');
                 this.auth.showChangePasswordModal();
             });
-        } else {
-            console.log('Change password button not found');
         }
 
         // Modal close
         const closeBtn = document.querySelector('.close');
         if (closeBtn) {
             closeBtn.addEventListener('click', () => {
-                console.log('Modal close button clicked');
                 this.closeModal();
             });
-        } else {
-            console.log('Modal close button not found');
         }
 
         window.addEventListener('click', (e) => {
@@ -118,7 +105,6 @@ Object.assign(AdminApp.prototype, {
     
     // 初始化所有模块
     initAllModules() {
-        console.log('initAllModules called');
         
         // 初始化各个功能模块的事件绑定
         this.initModuleEvents();
@@ -131,7 +117,6 @@ Object.assign(AdminApp.prototype, {
     },
     
     initModuleEvents() {
-        console.log('initModuleEvents called');
         
         // 初始化会员管理模块事件
         if (typeof this.initMembersEvents === 'function') {
@@ -159,13 +144,11 @@ Object.assign(AdminApp.prototype, {
     
     // 初始化礼品卡管理事件
     initGiftCardsEvents() {
-        console.log('initGiftCardsEvents called');
         
         // 批量添加按钮
         const addGiftCardsBtn = document.getElementById('addGiftCardsBtn');
         if (addGiftCardsBtn) {
             addGiftCardsBtn.addEventListener('click', () => {
-                console.log('Add gift cards button clicked');
                 this.showAddGiftCardsModal();
             });
         }
@@ -174,7 +157,6 @@ Object.assign(AdminApp.prototype, {
         const filterGiftCardsBtn = document.getElementById('filterGiftCards');
         if (filterGiftCardsBtn) {
             filterGiftCardsBtn.addEventListener('click', () => {
-                console.log('Filter gift cards button clicked');
                 this.loadGiftCards(1);
             });
         }
@@ -190,7 +172,6 @@ Object.assign(AdminApp.prototype, {
     },
     
     initSectionModule(sectionName) {
-        console.log('initSectionModule called for:', sectionName);
         
         switch(sectionName) {
             case 'members':
@@ -245,26 +226,19 @@ Object.assign(AdminApp.prototype, {
     },
     
     bindDynamicEvents() {
-        console.log('bindDynamicEvents called');
         
         // 仪表盘刷新按钮
         const refreshDashboardBtn = document.getElementById('refreshDashboard');
         if (refreshDashboardBtn) {
             refreshDashboardBtn.addEventListener('click', () => {
-                console.log('Dashboard refresh button clicked');
                 this.loadDashboardData();
             });
-            console.log('Dashboard refresh button bound');
-        } else {
-            console.log('Dashboard refresh button not found');
         }
 
         // Tab buttons
         const tabButtons = document.querySelectorAll('.tab-btn');
-        console.log('Found tab buttons:', tabButtons.length);
         tabButtons.forEach((btn, index) => {
             btn.addEventListener('click', (e) => {
-                console.log('Tab button clicked:', e.target.dataset.tab);
                 this.switchTab(e.target.dataset.tab);
             });
         });
@@ -273,10 +247,8 @@ Object.assign(AdminApp.prototype, {
         const activeSection = document.querySelector('.admin-section.active');
         if (activeSection) {
             const sectionId = activeSection.id;
-            console.log('Active section:', sectionId);
             
             if (sectionId === 'membersSection' && typeof this.initMembersSection === 'function') {
-                console.log('Force initializing members section');
                 this.initMembersSection();
             }
         }
@@ -304,7 +276,6 @@ Object.assign(AdminApp.prototype, {
                 this.loadInitialData();
             } else if (response.status === 401) {
                 // Token无效或过期，清除并显示登录页面
-                console.log('Token已过期，清除本地存储');
                 this.auth.logout();
             } else {
                 // 其他错误，仍然尝试显示仪表盘
@@ -339,6 +310,10 @@ Object.assign(AdminApp.prototype, {
 
     async apiRequest(url, options = {}) {
         if (this.isLoggingOut) return null;
+        
+        // 记录API请求活动，用于TOKEN刷新
+        this.recordActivity();
+        
         // 默认加上 Content-Type: application/json
         const method = (options.method || 'GET').toUpperCase();
         const defaultHeaders = (method === 'POST' || method === 'PUT')
@@ -360,16 +335,58 @@ Object.assign(AdminApp.prototype, {
                     this.isLoggingOut = true;
                     alert('登录已过期，请重新登录');
                     this.auth.logout();
-                    console.log('[apiRequest] 401后 currentAdmin:', this.currentAdmin);
                 }
                 return null;
             }
+            
+            // 检查是否有新的TOKEN在响应头中
+            const newToken = response.headers.get('X-New-Token');
+            if (newToken) {
+                this.token = newToken;
+                localStorage.setItem('adminToken', newToken);
+            }
+            
             return response;
         } catch (error) {
             if (!this.isLoggingOut) {
                 console.error('API请求错误:', error);
             }
             return null;
+        }
+    },
+
+    // 记录用户活动，用于TOKEN自动刷新
+    recordActivity() {
+        const now = Date.now();
+        this.lastActivity = now;
+        
+        // 如果距离上次刷新TOKEN超过30分钟，发起刷新请求
+        if (!this.lastTokenRefresh || now - this.lastTokenRefresh > 30 * 60 * 1000) {
+            this.refreshToken();
+        }
+    },
+
+    // 刷新TOKEN
+    async refreshToken() {
+        if (this.isLoggingOut || !this.token) return;
+        
+        try {
+            const response = await fetch('/api/auth/admin/refresh-token', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + this.token,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.token = data.token;
+                localStorage.setItem('adminToken', data.token);
+                this.lastTokenRefresh = Date.now();
+            }
+        } catch (error) {
+            console.error('TOKEN刷新失败:', error);
         }
     },
 

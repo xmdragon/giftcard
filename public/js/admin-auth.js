@@ -12,14 +12,21 @@ class AdminAuth {
     async handleAdminLogin() {
         const usernameField = document.getElementById('username');
         const passwordField = document.getElementById('adminPassword');
+        const captchaField = document.getElementById('captcha');
         
-        if (!usernameField || !passwordField) {
+        if (!usernameField || !passwordField || !captchaField) {
             alert('登录表单元素未找到');
             return;
         }
         
         const username = usernameField.value;
         const password = passwordField.value;
+        const captcha = captchaField.value;
+
+        if (!captcha) {
+            alert('请输入验证码');
+            return;
+        }
 
         try {
             const response = await fetch('/api/auth/admin/login', {
@@ -27,7 +34,7 @@ class AdminAuth {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password, captcha })
             });
 
             const data = await response.json();
@@ -41,9 +48,25 @@ class AdminAuth {
                 return;
             } else {
                 alert(data.error || '登录失败');
+                // 登录失败后刷新验证码
+                this.refreshCaptcha();
             }
         } catch (error) {
             alert('网络错误，请重试');
+            // 网络错误后也刷新验证码
+            this.refreshCaptcha();
+        }
+    }
+
+    // 刷新验证码
+    refreshCaptcha() {
+        const captchaImage = document.getElementById('captchaImage');
+        const captchaField = document.getElementById('captcha');
+        if (captchaImage) {
+            captchaImage.src = '/api/auth/admin/captcha?' + Date.now();
+        }
+        if (captchaField) {
+            captchaField.value = '';
         }
     }
 
@@ -52,7 +75,6 @@ class AdminAuth {
         // Clear authentication data
         this.adminApp.token = null;
         this.adminApp.currentAdmin = null;
-        console.log('[logout] currentAdmin 被清空');
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminInfo');
         

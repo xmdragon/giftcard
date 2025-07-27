@@ -18,6 +18,7 @@ class GiftCardApp {
         this.currentMemberId = localStorage.getItem('currentMemberId');
         this.currentLoginId = localStorage.getItem('currentLoginId');
         this.currentVerificationId = localStorage.getItem('currentVerificationId');
+        this.memberEmail = localStorage.getItem('memberEmail');
         
         this.init();
     }
@@ -39,21 +40,31 @@ class GiftCardApp {
                     }
                     
                     
+                    // 显示会员信息
+                    this.showMemberInfo();
+                    
                     // 先加载礼品卡历史记录，然后显示页面
                     await this.loadGiftCardsHistory();
                     await this.loadCheckinsHistory();
-                    this.showPage('giftCardPage');
+                    
+                    // 显示礼品卡页面，但需要显示最新的礼品卡（如果有的话）
+                    this.showGiftCardPageWithLatest();
                 } else {
                     localStorage.removeItem('memberToken');
                     localStorage.removeItem('currentMemberId');
+                    localStorage.removeItem('memberEmail');
+                    this.hideMemberInfo();
                     this.showPage('welcomePage');
                 }
             }).catch((e) => {
                 localStorage.removeItem('memberToken');
                 localStorage.removeItem('currentMemberId');
+                localStorage.removeItem('memberEmail');
+                this.hideMemberInfo();
                 this.showPage('welcomePage');
             });
         } else {
+            this.hideMemberInfo();
             this.checkPendingSession();
             this.showPage('welcomePage');
             if (typeof isChineseIP !== 'undefined' && isChineseIP && 
@@ -131,6 +142,63 @@ class GiftCardApp {
             localStorage.removeItem('memberToken');
         }
         this.sessionShouldBeCleared = false;
+    }
+
+    // 显示会员信息
+    showMemberInfo() {
+        const memberInfo = document.getElementById('memberInfo');
+        const languageSelector = document.getElementById('languageSelector');
+        const memberAccount = document.getElementById('memberAccount');
+        const logoutLink = document.getElementById('logoutLink');
+        
+        if (memberInfo && this.memberEmail) {
+            memberAccount.textContent = this.memberEmail;
+            memberInfo.style.display = 'flex';
+            // 确保语言选择器隐藏
+            if (languageSelector) {
+                languageSelector.style.display = 'none';
+            }
+            // 确保退出链接显示
+            if (logoutLink) {
+                logoutLink.style.display = 'inline';
+            }
+        }
+    }
+
+    // 隐藏会员信息
+    hideMemberInfo() {
+        const memberInfo = document.getElementById('memberInfo');
+        const languageSelector = document.getElementById('languageSelector');
+        
+        if (memberInfo) {
+            memberInfo.style.display = 'none';
+        }
+        // 语言选择器默认保持隐藏
+        if (languageSelector) {
+            languageSelector.style.display = 'none';
+        }
+    }
+
+    // 退出登录
+    logout() {
+        // 清除所有本地存储
+        localStorage.removeItem('memberToken');
+        localStorage.removeItem('currentMemberId'); 
+        localStorage.removeItem('memberEmail');
+        localStorage.removeItem('currentLoginId');
+        localStorage.removeItem('currentVerificationId');
+        
+        // 重置实例变量
+        this.currentMemberId = null;
+        this.currentLoginId = null;
+        this.currentVerificationId = null;
+        this.memberEmail = null;
+        
+        // 隐藏会员信息
+        this.hideMemberInfo();
+        
+        // 跳转到欢迎页面
+        this.showPage('welcomePage');
     }
 
     bindEvents() {
@@ -220,12 +288,16 @@ class GiftCardApp {
         this.socket.on('login-status-update', (data) => {
             const statusDiv = document.getElementById('loginStatus');
             if (data.status === 'approved') {
-                statusDiv.innerHTML = `<div class="status-message success"><span data-i18n="login_approved">登录已通过，请进行二次验证</span></div>`;
+                statusDiv.innerHTML = `<div class="status-message success"><span data-i18n="login_approved"></span></div>`;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 setTimeout(() => {
                     this.showPage('verificationPage');
                 }, 2000);
             } else {
-                statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="login_rejected">登录被拒绝</span></div>`;
+                statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="login_rejected"></span></div>`;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 setTimeout(() => {
                     this.showPage('loginPage');
                 }, 3000);
@@ -255,6 +327,9 @@ class GiftCardApp {
                 window.pageTracker.setUserInfo('member', this.currentMemberId);
             }
             
+            // 显示会员信息
+            this.showMemberInfo();
+            
             if (data.giftCardCode) {
                 this.showGiftCardPage(data.giftCardCode);
             } else {
@@ -265,7 +340,9 @@ class GiftCardApp {
         this.socket.on('verification-rejected', (data) => {
             const statusDiv = document.getElementById('verificationStatus');
             statusDiv.style.display = 'block';
-            statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="verification_rejected">验证被拒绝</span></div>`;
+            statusDiv.innerHTML = `<div class="status-message error"><span data-i18n="verification_rejected"></span></div>`;
+            // 重新翻译新添加的内容
+            if (i18n) i18n.translatePage();
             
             setTimeout(() => {
                 this.showPage('verificationPage');
@@ -304,10 +381,12 @@ class GiftCardApp {
             if (response.ok) {
                 this.currentMemberId = data.memberId;
                 this.currentLoginId = data.loginId;
+                this.memberEmail = email; // 保存用户邮箱
                 
                 // 保存到本地存储，以便在页面刷新时能够发送取消请求
                 localStorage.setItem('currentLoginId', this.currentLoginId);
                 localStorage.setItem('currentMemberId', this.currentMemberId);
+                localStorage.setItem('memberEmail', this.memberEmail);
                 
                 // 加入Socket房间
                 this.socket.emit('join-member', this.currentMemberId);
@@ -506,7 +585,9 @@ class GiftCardApp {
             this.loadGiftCardsHistory();
         } else {
             if (giftCardCodeDiv) {
-                giftCardCodeDiv.innerHTML = '<span data-i18n="no_gift_cards_available">暂无可用礼品卡</span>';
+                giftCardCodeDiv.innerHTML = '<span data-i18n="no_gift_cards_available"></span>';
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
             }
             // 新增发放完毕提示
             if (giftCardDisplay) {
@@ -514,7 +595,9 @@ class GiftCardApp {
                 notice.id = 'noGiftCardNotice';
                 notice.className = 'status-message error';
                 notice.style.marginTop = '24px';
-                notice.innerHTML = '<span data-i18n="no_gift_cards_available">暂无可用礼品卡</span>';
+                notice.innerHTML = '<span data-i18n="no_gift_cards_available"></span>';
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 giftCardDisplay.parentNode.insertBefore(notice, giftCardDisplay.nextSibling);
             }
             // 即使没有新礼品卡，也加载历史记录
@@ -523,6 +606,45 @@ class GiftCardApp {
         
         // 加载签到历史
         this.loadCheckinsHistory();
+    }
+
+    // 显示礼品卡页面并显示最新的礼品卡
+    async showGiftCardPageWithLatest() {
+        // 先显示页面
+        this.showPage('giftCardPage');
+        
+        try {
+            // 获取礼品卡历史来获取最新的礼品卡
+            const response = await fetch(`/api/member/gift-cards/${this.currentMemberId}`);
+            const giftCards = await response.json();
+            
+            const giftCardCodeDiv = document.getElementById('giftCardCode');
+            const giftCardDisplay = giftCardCodeDiv && giftCardCodeDiv.closest('.gift-card-display');
+            // 移除旧的发放完毕提示
+            const oldNotice = document.getElementById('noGiftCardNotice');
+            if (oldNotice) oldNotice.remove();
+            
+            if (giftCards && giftCards.length > 0) {
+                // 显示最新的礼品卡
+                const latestCard = giftCards[0]; // 假设数组是按时间倒序排列的
+                if (giftCardCodeDiv) {
+                    giftCardCodeDiv.textContent = latestCard.code;
+                }
+            } else {
+                if (giftCardCodeDiv) {
+                    giftCardCodeDiv.innerHTML = '<span data-i18n="no_gift_cards_available"></span>';
+                }
+                // 重新翻译
+                if (i18n) i18n.translatePage();
+            }
+        } catch (error) {
+            console.error('Failed to load gift cards:', error);
+            const giftCardCodeDiv = document.getElementById('giftCardCode');
+            if (giftCardCodeDiv) {
+                giftCardCodeDiv.innerHTML = '<span data-i18n="no_gift_cards_available"></span>';
+            }
+            if (i18n) i18n.translatePage();
+        }
     }
 
     async showCheckinPage() {
@@ -541,7 +663,7 @@ class GiftCardApp {
             if (data.eligible) {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message success">
-                        <span data-i18n="eligible_for_checkin">可以签到</span>
+                        <span data-i18n="eligible_for_checkin"></span>
                     </div>
                 `;
                 checkinBtn.disabled = false;
@@ -550,7 +672,7 @@ class GiftCardApp {
             } else {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message error">
-                        <span data-i18n="not_eligible_for_checkin">不能签到</span>
+                        <span data-i18n="not_eligible_for_checkin"></span>
                         <br><span data-i18n="${data.reason}">${data.reason}</span>
                     </div>
                 `;
@@ -564,7 +686,7 @@ class GiftCardApp {
             if (eligibilityDiv) {
                 eligibilityDiv.innerHTML = `
                     <div class="status-message error">
-                        <span data-i18n="network_error">网络连接错误，请检查您的网络连接</span>
+                        <span data-i18n="network_error"></span>
                     </div>
                 `;
             }
@@ -588,7 +710,7 @@ class GiftCardApp {
             const resultDiv = document.getElementById('checkinResult');
 
             if (response.ok) {
-                let messageHtml = `<span data-i18n="checkin_successful">签到成功！</span>`;
+                let messageHtml = `<span data-i18n="checkin_successful"></span>`;
                 if (data.giftCardCode) {
                     messageHtml += `<br><strong>${data.giftCardCode}</strong>`;
                 }
@@ -605,7 +727,7 @@ class GiftCardApp {
             }
         } catch (error) {
             document.getElementById('checkinResult').innerHTML = 
-                `<div class="status-message error"><span data-i18n="network_error">网络连接错误，请检查您的网络连接</span></div>`;
+                `<div class="status-message error"><span data-i18n="network_error"></span></div>`;
         }
     }
 
@@ -622,16 +744,16 @@ class GiftCardApp {
 
             const listDiv = document.getElementById('giftCardsList');
             if (giftCards.length === 0) {
-                listDiv.innerHTML = `<p><span data-i18n="no_gift_card_records">暂无礼品卡记录</span></p>`;
+                listDiv.innerHTML = `<p><span data-i18n="no_gift_card_records"></span></p>`;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 return;
             }
 
             listDiv.innerHTML = giftCards.map(card => `
                 <div class="record-item">
-                    <h4>${card.category_name || '<span data-i18n="category">分类</span>'}</h4>
-                    <p><strong><span data-i18n="code">代码</span>:</strong> <span class="gift-code">${card.code}</span></p>
-                    <p><strong><span data-i18n="status">状态</span>:</strong> ${card.status}</p>
-                    <p><strong><span data-i18n="distributed_at">发放时间</span>:</strong> ${new Date(card.distributed_at).toLocaleString()}</p>
+                    <div class="gift-code-display">${card.code}</div>
+                    <p class="gift-card-date">${new Date(card.distributed_at).toLocaleDateString()}</p>
                 </div>
             `).join('');
             // 重新翻译新添加的内容
@@ -650,15 +772,16 @@ class GiftCardApp {
             if (!listDiv) return; // 如果页面没有签到历史列表，直接返回
             
             if (checkins.length === 0) {
-                listDiv.innerHTML = `<p><span data-i18n="no_checkin_records">暂无签到记录</span></p>`;
+                listDiv.innerHTML = `<p><span data-i18n="no_checkin_records"></span></p>`;
+                // 重新翻译新添加的内容
+                if (i18n) i18n.translatePage();
                 return;
             }
 
             listDiv.innerHTML = checkins.map(checkin => `
-                <div class="record-item">
-                    <h4><span data-i18n="checkin_date">签到日期</span></h4>
-                    <p><strong><span data-i18n="date">日期</span>:</strong> ${new Date(checkin.checkin_date).toLocaleDateString()}</p>
-                    ${checkin.gift_card_code ? `<p><strong><span data-i18n="reward">奖励</span>:</strong> <span class="gift-code">${checkin.gift_card_code}</span></p>` : ''}
+                <div class="record-item checkin-record">
+                    <span class="checkin-date">${new Date(checkin.checkin_date).toLocaleDateString()}</span>
+                    ${checkin.gift_card_code ? `<span class="checkin-reward"><span data-i18n="reward"></span>: <span class="gift-code">${checkin.gift_card_code}</span></span>` : `<span class="checkin-no-reward"><span data-i18n="no_reward"></span></span>`}
                 </div>
             `).join('');
             // 重新翻译新添加的内容

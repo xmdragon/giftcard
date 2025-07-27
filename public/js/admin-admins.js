@@ -247,65 +247,50 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
 
 // 初始化管理员管理事件绑定
 AdminApp.prototype.initAdminManagementEvents = function() {
-    console.log('=== 初始化管理员管理事件绑定 ===');
     
     // 添加管理员按钮
     const addAdminBtn = document.getElementById('addAdminBtn');
-    console.log('addAdminBtn 元素:', addAdminBtn);
     if (addAdminBtn) {
         // 移除旧的事件监听器，防止重复绑定
         addAdminBtn.replaceWith(addAdminBtn.cloneNode(true));
         const newAddAdminBtn = document.getElementById('addAdminBtn');
         
         newAddAdminBtn.addEventListener('click', () => {
-            console.log('=== 添加管理员按钮被点击 ===');
             this.showAddAdminModal();
         });
-        console.log('addAdminBtn 事件绑定完成');
     } else {
-        console.log('addAdminBtn 元素未找到');
     }
     
     // 权限分配按钮
     const permissionManageBtn = document.getElementById('permissionManageBtn');
-    console.log('permissionManageBtn 元素:', permissionManageBtn);
     if (permissionManageBtn) {
         // 移除旧的事件监听器，防止重复绑定
         permissionManageBtn.replaceWith(permissionManageBtn.cloneNode(true));
         const newPermissionManageBtn = document.getElementById('permissionManageBtn');
         
         newPermissionManageBtn.addEventListener('click', () => {
-            console.log('=== 权限分配按钮被点击 ===');
             this.showPermissionModal();
         });
-        console.log('permissionManageBtn 事件绑定完成');
     } else {
-        console.log('permissionManageBtn 元素未找到');
     }
     
     // 刷新按钮
     const refreshAdminsBtn = document.getElementById('refreshAdmins');
-    console.log('refreshAdmins 元素:', refreshAdminsBtn);
     if (refreshAdminsBtn) {
         // 移除旧的事件监听器，防止重复绑定
         refreshAdminsBtn.replaceWith(refreshAdminsBtn.cloneNode(true));
         const newRefreshAdminsBtn = document.getElementById('refreshAdmins');
         
         newRefreshAdminsBtn.addEventListener('click', () => {
-            console.log('=== 刷新管理员列表按钮被点击 ===');
             this.loadAdmins();
         });
-        console.log('refreshAdmins 事件绑定完成');
     } else {
-        console.log('refreshAdmins 元素未找到');
     }
     
-    console.log('=== 管理员管理事件绑定完成 ===');
 };
 
 // 测试函数 - 可以在浏览器控制台中调用
 AdminApp.prototype.testAdminManagement = function() {
-    console.log('=== 测试管理员管理页面 ===');
     
     // 强制切换到管理员管理页面
     this.switchSection('adminmanage');
@@ -316,14 +301,9 @@ AdminApp.prototype.testAdminManagement = function() {
         const permissionManageBtn = document.getElementById('permissionManageBtn');
         const refreshAdmins = document.getElementById('refreshAdmins');
         
-        console.log('页面按钮检查:');
-        console.log('addAdminBtn:', addAdminBtn);
-        console.log('permissionManageBtn:', permissionManageBtn);
-        console.log('refreshAdmins:', refreshAdmins);
         
         // 手动触发事件绑定
         if (typeof this.initAdminManagementEvents === 'function') {
-            console.log('手动调用 initAdminManagementEvents');
             this.initAdminManagementEvents();
         }
     }, 1000);

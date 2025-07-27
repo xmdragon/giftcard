@@ -205,7 +205,6 @@
 
     // 初始化IP管理事件绑定
     AdminApp.prototype.initIpManagementEvents = function() {
-        console.log('初始化IP管理事件绑定');
         
         // 禁止IP按钮
         const banIpBtn = document.getElementById('banIpBtn');
@@ -215,7 +214,6 @@
             const newBanIpBtn = document.getElementById('banIpBtn');
             
             newBanIpBtn.addEventListener('click', () => {
-                console.log('禁止IP按钮被点击');
                 this.showBanIpModal();
             });
         }
@@ -228,7 +226,6 @@
             const newRefreshIpBtn = document.getElementById('refreshIpList');
             
             newRefreshIpBtn.addEventListener('click', () => {
-                console.log('刷新IP列表按钮被点击');
                 this.loadIpBlacklist();
             });
         }

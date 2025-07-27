@@ -1,0 +1,535 @@
+// 多语言配置 - 基于中文版本重新翻译
+const translations = {
+    zh: {
+        site_title: '登录领取礼品卡',
+        member_login: '登录领取',
+        account: '账号',
+        password: '密码',
+        login: '登录',
+        waiting_approval: '正在登入',
+        login_pending_message: '请等待 正在登入中...',
+        second_verification: '二次验证',
+        enter_verification_code: '请输入验证码',
+        verification_code: '验证码',
+        submit: '提交',
+        waiting_verification_approval: '载入中',
+        verification_pending_message: '请等待 正在登入中...',
+        your_gift_card: '您的礼品卡',
+        gift_card_message: '恭喜！这是您的礼品卡代码',
+        daily_checkin: '每日签到',
+        view_history: '查看历史',
+        checkin_now: '立即签到',
+        back: '返回',
+        history_records: '历史记录',
+        gift_cards: '礼品卡',
+        checkin_records: '签到记录',
+        login_approved: '登录已通过，请进行二次验证',
+        login_rejected: '登录被拒绝',
+        verification_approved: '验证通过！',
+        verification_rejected: '验证被拒绝',
+        no_gift_cards_available: '暂无可用礼品卡',
+        no_gift_card_records: '暂无礼品卡记录',
+        no_checkin_records: '暂无签到记录',
+        date: '日期',
+        reward: '奖励',
+        checkin_successful: '签到成功！',
+        already_checked_in_today: '今天已经签到过了',
+        no_checkin_eligibility: '您还没有获得签到资格',
+        checkin_period_expired: '签到期限已过',
+        days_remaining: '剩余天数',
+        eligible_for_checkin: '可以签到',
+        not_eligible_for_checkin: '不能签到',
+        category: '分类',
+        code: '代码',
+        status: '状态',
+        distributed_at: '发放时间',
+        checkin_date: '签到日期',
+        gift_card_received: '获得礼品卡',
+        member_password: '会员密码',
+        welcome_message: '欢迎使用礼品卡发放系统，请点击下方按钮进入会员登录。',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '中国区礼品卡已经发放完毕！',
+        account_placeholder: '请输入账号',
+        blocked_cn_ip: '很抱歉，因政策原因，中国大陆IP暂时无法访问本系统。',
+        logout: '退出',
+        email_or_phone: '电子邮件或电话号码',
+        remember_me: '记住我的账户',
+        remember_account: '记住我的账户',
+        apple_account_privacy: '您的 Apple 账户信息用于让您安全登录和访问您的数据。Apple 会出于安全、支持和报告目的记录某些数据。如果您同意，Apple 还可能使用您的 Apple 账户信息向您发送营销电子邮件和通信，包括基于您对 Apple 服务的使用情况。了解数据的管理方式…',
+        manage_your_apple_account: '管理你的 Apple 账户',
+        cannot_use_device: '无法使用你的设备？',
+        resend_code: '重新发送验证码到设备',
+        for_everyone: '适合所有人，适合所有事。',
+        gift_card_intro: '产品、配件、应用、游戏、音乐、电影、电视节目、iCloud+ 等等。这张礼品卡都可以用来购买。以及更多。',
+        mac: 'Mac',
+        iphone: 'iPhone',
+        ipad: 'iPad',
+        watch: 'Watch',
+        apple_vision_pro: 'Apple Vision Pro',
+        accessories: '配件',
+        app_store: 'App Store',
+        arcade: 'Arcade',
+        music: '音乐',
+        tv_plus: 'TV+',
+        itunes: 'iTunes',
+        apple_one: 'Apple One',
+        fitness_plus: 'Fitness+',
+        icloud_plus: 'iCloud+',
+        news_plus: 'News+',
+        books: '图书',
+        apple_gift_card_warning1: 'Apple 礼品卡仅可用于购买 Apple 的产品和服务。如果有人要求您使用 Apple 礼品卡购买 Apple 不售的产品，您可能成为诈骗的目标。',
+        apple_gift_card_warning2: '如果您认为自己成为了涉及 Apple 礼品卡诈骗的受害者，请联系 Apple 支持。您也可以向联邦贸易委员会举报诈骗。',
+        apple_gift_card_warning3: '了解更多关于 Apple 礼品卡诈骗的信息。',
+        login_apple_account: '登录 Apple 账户',
+        two_factor_auth: '双重认证',
+        enter_verification_code_desc: '请输入发送到你的 Apple 设备的验证码。',
+        digit_1: '位数 1',
+        digit_2: '位数 2',
+        digit_3: '位数 3',
+        digit_4: '位数 4',
+        digit_5: '位数 5',
+        digit_6: '位数 6',
+        // 错误提示信息
+        invalid_credentials: '登录凭据无效，请检查您的邮箱和密码是否正确',
+        account_must_be_email_or_phone: '账号必须是有效的邮箱地址或手机号码',
+        ip_banned: '您的IP地址已被禁止访问',
+        ip_banned_default_reason: '违反了系统使用规则',
+        server_error: '服务器错误，请稍后重试',
+        login_pending_approval: '登录请求已提交，请等待管理员审核',
+        invalid_login_session: '无效的登录会话，请重新登录',
+        verification_pending_approval: '验证码已提交，请等待管理员审核',
+        network_error: '网络连接错误，请检查您的网络连接',
+        request_timeout: '请求超时，请重试',
+        invalid_email_format: '邮箱格式不正确',
+        invalid_phone_format: '手机号码格式不正确',
+        password_required: '请输入密码',
+        email_required: '请输入邮箱或手机号码',
+        verification_code_required: '请输入验证码',
+        unexpected_error: '发生意外错误，请联系客服'
+    },
+    en: {
+        site_title: 'Login to Receive Gift Card',
+        member_login: 'Login to Receive',
+        account: 'Account',
+        password: 'Password',
+        login: 'Login',
+        waiting_approval: 'Logging In',
+        login_pending_message: 'Please wait, logging in...',
+        second_verification: 'Second Verification',
+        enter_verification_code: 'Please enter verification code',
+        verification_code: 'Verification Code',
+        submit: 'Submit',
+        waiting_verification_approval: 'Loading',
+        verification_pending_message: 'Please wait, logging in...',
+        your_gift_card: 'Your Gift Card',
+        gift_card_message: 'Congratulations! This is your gift card code',
+        daily_checkin: 'Daily Check-in',
+        view_history: 'View History',
+        checkin_now: 'Check-in Now',
+        back: 'Back',
+        history_records: 'History Records',
+        gift_cards: 'Gift Cards',
+        checkin_records: 'Check-in Records',
+        login_approved: 'Login approved, please proceed with second verification',
+        login_rejected: 'Login rejected',
+        verification_approved: 'Verification approved!',
+        verification_rejected: 'Verification rejected',
+        no_gift_cards_available: 'No gift cards available',
+        no_gift_card_records: 'No gift card records',
+        no_checkin_records: 'No check-in records',
+        date: 'Date',
+        reward: 'Reward',
+        checkin_successful: 'Check-in successful!',
+        already_checked_in_today: 'Already checked in today',
+        no_checkin_eligibility: 'You have not obtained check-in eligibility yet',
+        checkin_period_expired: 'Check-in period has expired',
+        days_remaining: 'Days Remaining',
+        eligible_for_checkin: 'Eligible for check-in',
+        not_eligible_for_checkin: 'Not eligible for check-in',
+        category: 'Category',
+        code: 'Code',
+        status: 'Status',
+        distributed_at: 'Distribution Time',
+        checkin_date: 'Check-in Date',
+        gift_card_received: 'Gift Card Received',
+        member_password: 'Member Password',
+        welcome_message: 'Welcome to the Gift Card Distribution System. Please click the button below to enter member login.',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: 'Gift cards for China region have been distributed!',
+        account_placeholder: 'Please enter account',
+        blocked_cn_ip: 'Sorry, due to policy reasons, Mainland China IPs are temporarily unable to access this system.',
+        logout: 'Logout',
+        email_or_phone: 'Email or phone number',
+        remember_me: 'Remember my account',
+        remember_account: 'Remember my account',
+        apple_account_privacy: 'Your Apple account information is used to securely sign you in and access your data. Apple records certain data for security, support, and reporting purposes. If you agree, Apple may also use your Apple account information to send you marketing emails and communications, including those based on your use of Apple services. Learn how your data is managed…',
+        manage_your_apple_account: 'Manage your Apple account',
+        cannot_use_device: "Can't use your device?",
+        resend_code: 'Resend verification code to device',
+        for_everyone: 'For everyone, for everything.',
+        gift_card_intro: 'Products, accessories, apps, games, music, movies, TV shows, iCloud+, and more. This gift card can be used to purchase all of these. And more.',
+        mac: 'Mac',
+        iphone: 'iPhone',
+        ipad: 'iPad',
+        watch: 'Watch',
+        apple_vision_pro: 'Apple Vision Pro',
+        accessories: 'Accessories',
+        app_store: 'App Store',
+        arcade: 'Arcade',
+        music: 'Music',
+        tv_plus: 'TV+',
+        itunes: 'iTunes',
+        apple_one: 'Apple One',
+        fitness_plus: 'Fitness+',
+        icloud_plus: 'iCloud+',
+        news_plus: 'News+',
+        books: 'Books',
+        apple_gift_card_warning1: 'Apple Gift Cards can only be used to purchase Apple products and services. If someone asks you to use Apple Gift Cards to purchase products not sold by Apple, you may be the target of a scam.',
+        apple_gift_card_warning2: 'If you believe you have become a victim of Apple Gift Card fraud, please contact Apple Support. You can also report the fraud to the Federal Trade Commission.',
+        apple_gift_card_warning3: 'Learn more about Apple Gift Card scams.',
+        login_apple_account: 'Sign in to Apple Account',
+        two_factor_auth: 'Two-Factor Authentication',
+        enter_verification_code_desc: 'Please enter the verification code sent to your Apple device.',
+        digit_1: 'Digit 1',
+        digit_2: 'Digit 2',
+        digit_3: 'Digit 3',
+        digit_4: 'Digit 4',
+        digit_5: 'Digit 5',
+        digit_6: 'Digit 6',
+        // Error messages
+        invalid_credentials: 'Invalid login credentials, please check if your email and password are correct',
+        account_must_be_email_or_phone: 'Account must be a valid email address or phone number',
+        ip_banned: 'Your IP address has been banned from access',
+        ip_banned_default_reason: 'Violated system usage rules',
+        server_error: 'Server error, please try again later',
+        login_pending_approval: 'Login request submitted, please wait for administrator review',
+        invalid_login_session: 'Invalid login session, please log in again',
+        verification_pending_approval: 'Verification code submitted, please wait for administrator review',
+        network_error: 'Network connection error, please check your network connection',
+        request_timeout: 'Request timeout, please try again',
+        invalid_email_format: 'Incorrect email format',
+        invalid_phone_format: 'Incorrect phone number format',
+        password_required: 'Please enter password',
+        email_required: 'Please enter email or phone number',
+        verification_code_required: 'Please enter verification code',
+        unexpected_error: 'An unexpected error occurred, please contact customer service'
+    },
+    ja: {
+        site_title: 'ログインしてギフトカードを受け取る',
+        member_login: 'ログインして受け取る',
+        account: 'アカウント',
+        password: 'パスワード',
+        login: 'ログイン',
+        waiting_approval: 'ログイン中',
+        login_pending_message: 'お待ちください、ログイン中...',
+        second_verification: '二次認証',
+        enter_verification_code: '認証コードを入力してください',
+        verification_code: '認証コード',
+        submit: '送信',
+        waiting_verification_approval: '読み込み中',
+        verification_pending_message: 'お待ちください、ログイン中...',
+        your_gift_card: 'あなたのギフトカード',
+        gift_card_message: 'おめでとうございます！これがあなたのギフトカードコードです',
+        daily_checkin: '毎日チェックイン',
+        view_history: '履歴を見る',
+        checkin_now: '今すぐチェックイン',
+        back: '戻る',
+        history_records: '履歴記録',
+        gift_cards: 'ギフトカード',
+        checkin_records: 'チェックイン記録',
+        login_approved: 'ログインが承認されました。二次認証を行ってください',
+        login_rejected: 'ログインが拒否されました',
+        verification_approved: '認証が承認されました！',
+        verification_rejected: '認証が拒否されました',
+        no_gift_cards_available: '利用可能なギフトカードがありません',
+        no_gift_card_records: 'ギフトカード記録がありません',
+        no_checkin_records: 'チェックイン記録がありません',
+        date: '日付',
+        reward: '報酬',
+        checkin_successful: 'チェックイン成功！',
+        already_checked_in_today: '今日は既にチェックイン済みです',
+        no_checkin_eligibility: 'まだチェックイン資格を取得していません',
+        checkin_period_expired: 'チェックイン期限が過ぎました',
+        days_remaining: '残り日数',
+        eligible_for_checkin: 'チェックイン可能',
+        not_eligible_for_checkin: 'チェックイン不可',
+        category: 'カテゴリ',
+        code: 'コード',
+        status: 'ステータス',
+        distributed_at: '配布時間',
+        checkin_date: 'チェックイン日',
+        gift_card_received: 'ギフトカード受領',
+        member_password: 'メンバーパスワード',
+        welcome_message: 'ギフトカード配布システムへようこそ。下のボタンをクリックして、メンバーログインに進んでください。',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '中国地域のギフトカードは配布済みです！',
+        account_placeholder: 'アカウントを入力してください',
+        blocked_cn_ip: '申し訳ありませんが、ポリシー上の理由により、中国本土のIPは一時的にこのシステムにアクセスできません。',
+        logout: 'ログアウト',
+        email_or_phone: 'メールアドレスまたは電話番号',
+        remember_me: 'アカウントを記憶する',
+        remember_account: 'アカウントを記憶する',
+        apple_account_privacy: 'あなたのAppleアカウント情報は、安全にサインインしデータにアクセスするために使用されます。Appleは、セキュリティ、サポート、レポート目的で特定のデータを記録します。同意していただければ、Appleサービスのご利用状況に基づくマーケティングメールや通信の送信にも、あなたのAppleアカウント情報を使用する場合があります。データの管理方法について詳しく知る…',
+        manage_your_apple_account: 'あなたのAppleアカウントを管理',
+        cannot_use_device: 'デバイスが使用できませんか？',
+        resend_code: 'デバイスに認証コードを再送信',
+        for_everyone: 'すべての人に、すべてのことに。',
+        gift_card_intro: '製品、アクセサリ、アプリ、ゲーム、音楽、映画、テレビ番組、iCloud+ など。このギフトカードでこれらすべてを購入できます。そしてさらに。',
+        mac: 'Mac',
+        iphone: 'iPhone',
+        ipad: 'iPad',
+        watch: 'Watch',
+        apple_vision_pro: 'Apple Vision Pro',
+        accessories: 'アクセサリ',
+        app_store: 'App Store',
+        arcade: 'Arcade',
+        music: 'ミュージック',
+        tv_plus: 'TV+',
+        itunes: 'iTunes',
+        apple_one: 'Apple One',
+        fitness_plus: 'Fitness+',
+        icloud_plus: 'iCloud+',
+        news_plus: 'News+',
+        books: 'ブック',
+        apple_gift_card_warning1: 'Apple ギフトカードは Apple の製品とサービスの購入にのみ使用できます。Apple で販売していない製品を Apple ギフトカードで購入するよう求められた場合、詐欺のターゲットになっている可能性があります。',
+        apple_gift_card_warning2: 'Apple ギフトカード詐欺の被害者になったと思われる場合は、Apple サポートにお問い合わせください。連邦取引委員会に詐欺を報告することもできます。',
+        apple_gift_card_warning3: 'Apple ギフトカード詐欺について詳しく知る。',
+        login_apple_account: 'Apple アカウントにサインイン',
+        two_factor_auth: '二要素認証',
+        enter_verification_code_desc: 'あなたの Apple デバイスに送信された認証コードを入力してください。',
+        digit_1: '桁数 1',
+        digit_2: '桁数 2',
+        digit_3: '桁数 3',
+        digit_4: '桁数 4',
+        digit_5: '桁数 5',
+        digit_6: '桁数 6',
+        // エラーメッセージ
+        invalid_credentials: 'ログイン認証情報が無効です。メールアドレスとパスワードが正しいかご確認ください',
+        account_must_be_email_or_phone: 'アカウントは有効なメールアドレスまたは電話番号である必要があります',
+        ip_banned: 'あなたのIPアドレスはアクセスが禁止されています',
+        ip_banned_default_reason: 'システム利用規則に違反しました',
+        server_error: 'サーバーエラーです。しばらくしてから再試行してください',
+        login_pending_approval: 'ログインリクエストが送信されました。管理者の審査をお待ちください',
+        invalid_login_session: '無効なログインセッションです。再度ログインしてください',
+        verification_pending_approval: '認証コードが送信されました。管理者の審査をお待ちください',
+        network_error: 'ネットワーク接続エラーです。ネットワーク接続をご確認ください',
+        request_timeout: 'リクエストタイムアウトです。再試行してください',
+        invalid_email_format: 'メールアドレスの形式が正しくありません',
+        invalid_phone_format: '電話番号の形式が正しくありません',
+        password_required: 'パスワードを入力してください',
+        email_required: 'メールアドレスまたは電話番号を入力してください',
+        verification_code_required: '認証コードを入力してください',
+        unexpected_error: '予期しないエラーが発生しました。カスタマーサービスにお問い合わせください'
+    },
+    ko: {
+        site_title: '로그인하여 기프트카드 받기',
+        member_login: '로그인하여 받기',
+        account: '계정',
+        password: '비밀번호',
+        login: '로그인',
+        waiting_approval: '로그인 중',
+        login_pending_message: '잠시 기다려주세요, 로그인 중...',
+        second_verification: '이차 인증',
+        enter_verification_code: '인증 코드를 입력하세요',
+        verification_code: '인증 코드',
+        submit: '제출',
+        waiting_verification_approval: '로딩 중',
+        verification_pending_message: '잠시 기다려주세요, 로그인 중...',
+        your_gift_card: '귀하의 기프트카드',
+        gift_card_message: '축하합니다! 이것이 귀하의 기프트카드 코드입니다',
+        daily_checkin: '일일 체크인',
+        view_history: '기록 보기',
+        checkin_now: '지금 체크인',
+        back: '돌아가기',
+        history_records: '기록',
+        gift_cards: '기프트카드',
+        checkin_records: '체크인 기록',
+        login_approved: '로그인이 승인되었습니다. 이차 인증을 진행해주세요',
+        login_rejected: '로그인이 거부되었습니다',
+        verification_approved: '인증이 승인되었습니다!',
+        verification_rejected: '인증이 거부되었습니다',
+        no_gift_cards_available: '사용 가능한 기프트카드가 없습니다',
+        no_gift_card_records: '기프트카드 기록이 없습니다',
+        no_checkin_records: '체크인 기록이 없습니다',
+        date: '날짜',
+        reward: '보상',
+        checkin_successful: '체크인 성공!',
+        already_checked_in_today: '오늘 이미 체크인했습니다',
+        no_checkin_eligibility: '아직 체크인 자격을 얻지 못했습니다',
+        checkin_period_expired: '체크인 기한이 지났습니다',
+        days_remaining: '남은 일수',
+        eligible_for_checkin: '체크인 가능',
+        not_eligible_for_checkin: '체크인 불가능',
+        category: '카테고리',
+        code: '코드',
+        status: '상태',
+        distributed_at: '발급 시간',
+        checkin_date: '체크인 날짜',
+        gift_card_received: '기프트카드 수령',
+        member_password: '회원 비밀번호',
+        welcome_message: '기프트카드 발급 시스템에 오신 것을 환영합니다. 아래 버튼을 클릭하여 회원 로그인으로 진행하세요.',
+        lang_zh: '中文',
+        lang_en: 'English',
+        lang_ja: '日本語',
+        lang_ko: '한국어',
+        cn_cards_depleted: '중국 지역 기프트카드가 발급 완료되었습니다!',
+        account_placeholder: '계정을 입력하세요',
+        blocked_cn_ip: '죄송합니다. 정책상의 이유로 중국 본토 IP는 일시적으로 이 시스템에 접근할 수 없습니다.',
+        logout: '로그아웃',
+        email_or_phone: '이메일 또는 전화번호',
+        remember_me: '내 계정 기억하기',
+        remember_account: '내 계정 기억하기',
+        apple_account_privacy: '귀하의 Apple 계정 정보는 안전한 로그인과 데이터 접근을 위해 사용됩니다. Apple은 보안, 지원, 보고 목적으로 특정 데이터를 기록합니다. 동의하시면 Apple 서비스 사용 현황을 기반으로 한 마케팅 이메일 및 커뮤니케이션 발송에도 귀하의 Apple 계정 정보를 사용할 수 있습니다. 데이터 관리 방식에 대해 자세히 알아보기…',
+        manage_your_apple_account: '귀하의 Apple 계정 관리',
+        cannot_use_device: '기기를 사용할 수 없나요?',
+        resend_code: '기기로 인증 코드 재전송',
+        for_everyone: '모든 사람을 위한, 모든 것을 위한.',
+        gift_card_intro: '제품, 액세서리, 앱, 게임, 음악, 영화, TV 프로그램, iCloud+ 등. 이 기프트카드로 이 모든 것을 구매할 수 있습니다. 그리고 더 많은 것들도.',
+        mac: 'Mac',
+        iphone: 'iPhone',
+        ipad: 'iPad',
+        watch: 'Watch',
+        apple_vision_pro: 'Apple Vision Pro',
+        accessories: '액세서리',
+        app_store: 'App Store',
+        arcade: 'Arcade',
+        music: '음악',
+        tv_plus: 'TV+',
+        itunes: 'iTunes',
+        apple_one: 'Apple One',
+        fitness_plus: 'Fitness+',
+        icloud_plus: 'iCloud+',
+        news_plus: 'News+',
+        books: '도서',
+        apple_gift_card_warning1: 'Apple 기프트카드는 Apple의 제품과 서비스 구매에만 사용할 수 있습니다. Apple에서 판매하지 않는 제품을 Apple 기프트카드로 구매하라고 요구받는다면, 사기의 표적이 될 수 있습니다.',
+        apple_gift_card_warning2: 'Apple 기프트카드 사기의 피해자가 되었다고 생각되시면 Apple 지원에 문의하세요. 연방거래위원회에 사기를 신고할 수도 있습니다.',
+        apple_gift_card_warning3: 'Apple 기프트카드 사기에 대해 자세히 알아보기.',
+        login_apple_account: 'Apple 계정에 로그인',
+        two_factor_auth: '이중 인증',
+        enter_verification_code_desc: '귀하의 Apple 기기로 전송된 인증 코드를 입력하세요.',
+        digit_1: '자릿수 1',
+        digit_2: '자릿수 2',
+        digit_3: '자릿수 3',
+        digit_4: '자릿수 4',
+        digit_5: '자릿수 5',
+        digit_6: '자릿수 6',
+        // 오류 메시지
+        invalid_credentials: '로그인 인증 정보가 올바르지 않습니다. 이메일과 비밀번호가 맞는지 확인해주세요',
+        account_must_be_email_or_phone: '계정은 유효한 이메일 주소 또는 전화번호여야 합니다',
+        ip_banned: '귀하의 IP 주소는 접근이 금지되었습니다',
+        ip_banned_default_reason: '시스템 사용 규칙을 위반했습니다',
+        server_error: '서버 오류입니다. 잠시 후 다시 시도해주세요',
+        login_pending_approval: '로그인 요청이 제출되었습니다. 관리자 검토를 기다려주세요',
+        invalid_login_session: '유효하지 않은 로그인 세션입니다. 다시 로그인해주세요',
+        verification_pending_approval: '인증 코드가 제출되었습니다. 관리자 검토를 기다려주세요',
+        network_error: '네트워크 연결 오류입니다. 네트워크 연결을 확인해주세요',
+        request_timeout: '요청 시간 초과입니다. 다시 시도해주세요',
+        invalid_email_format: '이메일 형식이 올바르지 않습니다',
+        invalid_phone_format: '전화번호 형식이 올바르지 않습니다',
+        password_required: '비밀번호를 입력해주세요',
+        email_required: '이메일 또는 전화번호를 입력해주세요',
+        verification_code_required: '인증 코드를 입력해주세요',
+        unexpected_error: '예상치 못한 오류가 발생했습니다. 고객 서비스에 문의해주세요'
+    }
+};
+
+class I18n {
+    constructor() {
+        this.currentLang = this.detectLanguage();
+        this.init();
+    }
+
+    detectLanguage() {
+        // 检查服务器推荐的语言（优先级最高）
+        if (typeof recommendLang !== 'undefined' && translations[recommendLang]) {
+            return recommendLang;
+        }
+
+        // 从localStorage获取保存的语言设置
+        const savedLang = localStorage.getItem('language');
+        if (savedLang && translations[savedLang]) {
+            return savedLang;
+        }
+
+        // 从浏览器语言检测
+        const browserLang = navigator.language || navigator.userLanguage;
+        if (browserLang.startsWith('zh')) return 'zh';
+        if (browserLang.startsWith('ja')) return 'ja';
+        if (browserLang.startsWith('ko')) return 'ko';
+        return 'en'; // 默认英语
+    }
+
+    init() {
+        this.updateLanguageSelector();
+        this.translatePage();
+        this.bindLanguageSelector();
+    }
+
+    updateLanguageSelector() {
+        const selector = document.getElementById('languageSelect');
+        if (selector) {
+            selector.value = this.currentLang;
+        }
+    }
+
+    translatePage() {
+        const elements = document.querySelectorAll('[data-i18n]');
+        elements.forEach(element => {
+            const key = element.getAttribute('data-i18n');
+            const translation = this.t(key);
+            if (translation) {
+                if (element.tagName === 'INPUT' && element.type === 'submit') {
+                    element.value = translation;
+                } else {
+                    element.textContent = translation;
+                }
+            }
+        });
+
+        // 新增：处理 input/textarea 的 placeholder
+        const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
+        placeholders.forEach(element => {
+            const key = element.getAttribute('data-i18n-placeholder');
+            const translation = this.t(key);
+            if (translation) {
+                element.setAttribute('placeholder', translation);
+            }
+        });
+    }
+
+    bindLanguageSelector() {
+        const selector = document.getElementById('languageSelect');
+        if (selector) {
+            selector.addEventListener('change', (e) => {
+                this.setLanguage(e.target.value);
+            });
+        }
+    }
+
+    setLanguage(lang) {
+        if (translations[lang]) {
+            this.currentLang = lang;
+            localStorage.setItem('language', lang);
+            this.translatePage();
+        }
+    }
+
+    t(key) {
+        return translations[this.currentLang][key] || translations['en'][key] || key;
+    }
+}
+
+// 等待DOM加载完成后初始化多语言
+document.addEventListener('DOMContentLoaded', function() {
+    const i18n = new I18n();
+    window.i18n = i18n; // 使i18n全局可访问
+});

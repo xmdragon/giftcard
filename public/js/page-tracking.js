@@ -79,7 +79,6 @@ class PageTrackingManager {
             enterTime: new Date().toISOString()
         });
         
-        console.log(`开始追踪页面: ${pageName}`);
     }
     
     // 停止当前页面追踪
@@ -96,7 +95,6 @@ class PageTrackingManager {
                 leaveTime: new Date().toISOString()
             });
             
-            console.log(`停止追踪页面: ${pageName}, 停留时长: ${duration}秒`);
         }
         
         this.currentPage = null;

@@ -89,14 +89,8 @@ AdminApp.prototype.initTrackingTabs = function() {
             // 根据标签页加载对应内容
             if (tabName === 'trackingStats') {
                 if (this.currentAdmin && (this.currentAdmin.role === 'super' || this.hasPermissionPoint('user-tracking:stats'))) {
-                    console.log('权限检查通过，加载统计数据');
                     this.loadTrackingStats();
                 } else {
-                    console.log('权限检查失败:', {
-                        role: this.currentAdmin?.role,
-                        hasStatsPermission: this.hasPermissionPoint('user-tracking:stats'),
-                        permissions: this.currentAdmin?.permissions
-                    });
                     const container = document.getElementById('trackingStats');
                     if (container) {
                         container.innerHTML = '<div class="error">您没有权限查看统计数据</div>';
@@ -278,7 +272,6 @@ AdminApp.prototype.loadTrackingStats = function() {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     
-    console.log('正在请求统计数据:', `/api/tracking/statistics?${params}`);
     
     fetch(`/api/tracking/statistics?${params}`, {
         headers: {
@@ -286,11 +279,9 @@ AdminApp.prototype.loadTrackingStats = function() {
         }
     })
         .then(response => {
-            console.log('统计API响应状态:', response.status);
             return response.json();
         })
         .then(data => {
-            console.log('统计API响应数据:', data);
             if (data.success) {
                 this.renderTrackingStats(data.data);
             } else {

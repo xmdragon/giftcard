@@ -256,4 +256,20 @@
             alert('删除失败，请重试');
         }
     };
+
+    // 初始化分类管理事件绑定
+    AdminApp.prototype.initCategoriesEvents = function() {
+        
+        // 添加分类按钮
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        if (addCategoryBtn) {
+            // 移除旧的事件监听器，防止重复绑定
+            addCategoryBtn.replaceWith(addCategoryBtn.cloneNode(true));
+            const newAddCategoryBtn = document.getElementById('addCategoryBtn');
+            
+            newAddCategoryBtn.addEventListener('click', () => {
+                this.showAddCategoryModal();
+            });
+        }
+    };
 })();
