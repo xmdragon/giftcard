@@ -486,6 +486,7 @@ button[type="submit"]:hover {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     margin: 0 auto;
     text-align: center;
+    max-width: 520px;
 }
 
 #giftCardPage .gift-card-display {
@@ -528,9 +529,11 @@ button[type="submit"]:hover {
     gap: 16px;
     margin-top: 32px;
     width: 100%;
-    max-width: 100%;
+    max-width: 420px;
     align-items: stretch;
     justify-content: center;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .actions button {
@@ -574,8 +577,9 @@ button[type="submit"]:hover {
 .checkin-actions, .history-actions {
     display: flex;
     justify-content: center;
-    margin: 24px 0;
+    margin: 24px auto;
     gap: 16px;
+    max-width: 420px;
 }
 
 .checkin-actions .apple-btn, 
@@ -828,6 +832,9 @@ button[type="submit"]:hover {
     
     .actions {
         flex-direction: column;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
     }
     
     .gift-card-code {

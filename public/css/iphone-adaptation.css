@@ -1,0 +1,585 @@
+/* iPhone 14/15/16 机型移动端适配样式 */
+
+/* iPhone 14/15/16 基础尺寸
+ * iPhone 14: 390x844px (6.1")
+ * iPhone 14 Plus: 428x926px (6.7")
+ * iPhone 15: 393x852px (6.1")
+ * iPhone 15 Plus: 430x932px (6.7")
+ * iPhone 16: 393x852px (6.1")
+ * iPhone 16 Plus: 430x932px (6.7")
+ * iPhone 16 Pro: 402x874px (6.3")
+ * iPhone 16 Pro Max: 440x956px (6.9")
+ */
+
+/* 通用iPhone适配 */
+@media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+    
+    /* 基础容器适配 */
+    .container {
+        max-width: 100%;
+        padding: 0 16px;
+        margin: 0;
+    }
+
+    /* 头部适配 */
+    header {
+        flex-direction: column;
+        gap: 12px;
+        padding: 20px 16px;
+        margin-bottom: 20px;
+        border-radius: 12px;
+    }
+
+    header h1 {
+        font-size: 28px;
+        line-height: 1.1;
+        text-align: center;
+    }
+
+    /* 语言选择器和会员信息适配 */
+    .language-selector.logout-group,
+    .member-info.logout-group {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .language-selector select {
+        padding: 10px 14px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    .member-account {
+        font-size: 16px;
+        padding: 8px 12px;
+        border-radius: 8px;
+    }
+
+    /* 表单容器适配 */
+    .form-container {
+        padding: 32px 20px;
+        border-radius: 16px;
+        margin: 0 8px;
+        max-width: none;
+    }
+
+    .form-container h2 {
+        font-size: 24px;
+        margin-bottom: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group input {
+        padding: 14px 16px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    button {
+        padding: 14px 20px;
+        font-size: 16px;
+        border-radius: 10px;
+    }
+
+    /* 验证码页面适配 */
+    .si-container.verification-container,
+    .si-body.si-container {
+        margin: 20px auto 0;
+        padding: 0 16px;
+        max-width: none;
+    }
+
+    .widget-container {
+        padding: 32px 20px;
+        border-radius: 16px;
+    }
+
+    .sa-sk7__app-title h1 {
+        font-size: 24px;
+        margin-bottom: 16px;
+    }
+
+    .form-security-code-inputs {
+        gap: 8px;
+        padding: 0 8px;
+        justify-content: center;
+        margin-bottom: 20px;
+        flex-wrap: nowrap;
+    }
+
+    .form-security-code-input {
+        width: 42px;
+        height: 52px;
+        font-size: 22px;
+        border-radius: 10px;
+        border-width: 1.5px;
+        flex-shrink: 0;
+    }
+
+    .form-security-code-divider {
+        width: 6px;
+        height: 2px;
+        margin: 25px 6px 0;
+    }
+
+    .signin-container-footer__info {
+        font-size: 16px;
+        line-height: 1.4;
+        margin-bottom: 16px;
+    }
+
+    .button-link,
+    .verify-submit-btn {
+        font-size: 16px;
+        padding: 10px 0;
+        min-height: 44px;
+    }
+
+    /* 验证码页面容器优化 */
+    .verify-device {
+        width: 100%;
+        max-width: none;
+    }
+
+    .sa-sk7__content {
+        margin-top: 20px;
+    }
+
+    .verify-device__sec-code {
+        margin: 0 auto;
+    }
+
+    .form-security-code {
+        width: 100%;
+    }
+
+    .verification-input {
+        position: absolute;
+        opacity: 0;
+        left: -9999px;
+    }
+
+    /* 等待页面适配 */
+    .waiting-container {
+        padding: 40px 20px;
+        border-radius: 16px;
+        margin: 0 8px;
+    }
+
+    .waiting-container h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .waiting-container p {
+        font-size: 17px;
+        margin-bottom: 20px;
+    }
+
+    .spinner {
+        width: 36px;
+        height: 36px;
+        margin: 0 auto 24px;
+    }
+
+    /* 礼品卡页面适配 */
+    #giftCardPage .gift-card-container {
+        padding: 32px 20px;
+        border-radius: 16px;
+        margin: 0 8px;
+    }
+
+    #giftCardPage .gift-card-display {
+        padding: 32px 20px;
+        border-radius: 14px;
+        margin: 24px 0;
+    }
+
+    #giftCardPage .gift-card-code {
+        font-size: 22px;
+        letter-spacing: 1.5px;
+        margin-bottom: 12px;
+        line-height: 1.3;
+    }
+
+    /* 操作按钮适配 */
+    .actions {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 24px;
+        max-width: none;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .actions button {
+        width: 100%;
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    /* 签到和历史页面适配 */
+    .checkin-container, 
+    .history-container {
+        padding: 32px 20px;
+        border-radius: 16px;
+        margin: 0 8px;
+    }
+
+    .checkin-container h2, 
+    .history-container h2 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .checkin-actions, 
+    .history-actions {
+        flex-direction: column;
+        gap: 12px;
+        margin: 20px auto;
+        max-width: none;
+    }
+
+    .checkin-actions .apple-btn, 
+    .history-actions .apple-btn {
+        min-width: auto;
+        max-width: none;
+        width: 100%;
+    }
+
+    /* 标签页适配 */
+    .tabs {
+        margin-bottom: 20px;
+        border-radius: 10px;
+        padding: 3px;
+    }
+
+    .tab-btn {
+        padding: 10px 12px;
+        font-size: 16px;
+        border-radius: 7px;
+    }
+
+    /* 记录列表适配 */
+    .records-list {
+        max-height: 400px;
+        padding-right: 4px;
+    }
+
+    .record-item {
+        padding: 16px;
+        margin-bottom: 10px;
+        border-radius: 10px;
+    }
+
+    .record-item h4 {
+        font-size: 17px;
+        margin-bottom: 6px;
+    }
+
+    .record-item p {
+        font-size: 15px;
+        margin: 3px 0;
+    }
+
+    .record-item .gift-code {
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        letter-spacing: 0.3px;
+    }
+
+    /* 签到记录适配 */
+    .record-item.checkin-record {
+        padding: 14px 16px;
+    }
+
+    .checkin-date {
+        font-size: 16px;
+    }
+
+    .checkin-reward, 
+    .checkin-no-reward {
+        font-size: 14px;
+    }
+
+    /* 状态消息适配 */
+    .status-message,
+    .result-message {
+        padding: 14px 16px;
+        border-radius: 10px;
+        font-size: 16px;
+        margin: 20px 0;
+    }
+
+    .eligibility-info {
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        font-size: 16px;
+    }
+
+    /* 礼品卡显示样式适配 */
+    .gift-code-display {
+        font-size: 16px;
+        padding: 10px 14px;
+        border-radius: 8px;
+        letter-spacing: 0.8px;
+        margin-bottom: 6px;
+    }
+
+    .gift-card-date {
+        font-size: 13px;
+    }
+
+    /* 中国IP限制消息适配 */
+    .blocked-cn-ip-message {
+        padding: 40px 20px;
+        border-radius: 16px;
+        margin: 0 8px;
+    }
+
+    .blocked-cn-ip-message p {
+        font-size: 17px;
+    }
+}
+
+/* iPhone 14/15/16标准尺寸 (390-393px宽度) */
+@media only screen and (min-device-width: 390px) and (max-device-width: 395px) and (-webkit-device-pixel-ratio: 3) {
+    .form-security-code-inputs {
+        gap: 6px;
+    }
+
+    .form-security-code-input {
+        width: 40px;
+        height: 50px;
+        font-size: 20px;
+    }
+
+    #giftCardPage .gift-card-code {
+        font-size: 20px;
+        letter-spacing: 1px;
+    }
+}
+
+/* iPhone 14 Plus/15 Plus/16 Plus (428-430px宽度) */
+@media only screen and (min-device-width: 428px) and (max-device-width: 432px) and (-webkit-device-pixel-ratio: 3) {
+    .form-security-code-inputs {
+        gap: 10px;
+    }
+
+    .form-security-code-input {
+        width: 44px;
+        height: 54px;
+        font-size: 24px;
+    }
+
+    #giftCardPage .gift-card-code {
+        font-size: 24px;
+        letter-spacing: 1.8px;
+    }
+
+    .container {
+        padding: 0 20px;
+    }
+
+    .form-container {
+        padding: 36px 24px;
+        margin: 0 12px;
+    }
+}
+
+/* iPhone 16 Pro (402px宽度) */
+@media only screen and (min-device-width: 402px) and (max-device-width: 404px) and (-webkit-device-pixel-ratio: 3) {
+    .form-security-code-inputs {
+        gap: 8px;
+    }
+
+    .form-security-code-input {
+        width: 42px;
+        height: 52px;
+        font-size: 22px;
+    }
+
+    #giftCardPage .gift-card-code {
+        font-size: 22px;
+        letter-spacing: 1.2px;
+    }
+}
+
+/* iPhone 16 Pro Max (440px宽度) */
+@media only screen and (min-device-width: 440px) and (max-device-width: 442px) and (-webkit-device-pixel-ratio: 3) {
+    .form-security-code-inputs {
+        gap: 12px;
+    }
+
+    .form-security-code-input {
+        width: 46px;
+        height: 56px;
+        font-size: 26px;
+    }
+
+    #giftCardPage .gift-card-code {
+        font-size: 26px;
+        letter-spacing: 2px;
+    }
+
+    .container {
+        padding: 0 24px;
+    }
+
+    .form-container {
+        padding: 40px 28px;
+        margin: 0 16px;
+    }
+}
+
+/* 安全区域适配（刘海屏） */
+@supports (padding: max(0px)) {
+    .container {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+    }
+
+    header {
+        padding-top: max(20px, env(safe-area-inset-top));
+    }
+
+    .form-container,
+    .waiting-container,
+    .gift-card-container,
+    .checkin-container,
+    .history-container,
+    .blocked-cn-ip-message {
+        margin-left: max(8px, env(safe-area-inset-left));
+        margin-right: max(8px, env(safe-area-inset-right));
+    }
+}
+
+/* 横屏适配 */
+@media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (orientation: landscape) and (-webkit-device-pixel-ratio: 3) {
+    header {
+        flex-direction: row;
+        gap: 16px;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    .form-container,
+    .waiting-container,
+    .gift-card-container,
+    .checkin-container,
+    .history-container {
+        padding: 24px 20px;
+        margin: 0 16px;
+    }
+
+    .form-container h2,
+    .waiting-container h2,
+    .checkin-container h2,
+    .history-container h2 {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .actions {
+        flex-direction: row;
+        gap: 12px;
+        max-width: 420px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .actions button {
+        flex: 1;
+        min-height: 44px;
+    }
+
+    .records-list {
+        max-height: 300px;
+    }
+}
+
+/* Touch优化 */
+@media (hover: none) and (pointer: coarse) {
+    button,
+    .apple-btn,
+    .apple-btn-secondary,
+    .tab-btn,
+    .button-link {
+        min-height: 44px;
+        transition: background-color 0.1s ease;
+    }
+
+    button:active,
+    .apple-btn:active {
+        transform: scale(0.98);
+    }
+
+    .form-security-code-input {
+        transition: border-color 0.2s ease, transform 0.1s ease;
+    }
+
+    .form-security-code-input:focus {
+        transform: scale(1.05);
+    }
+
+    .record-item:active {
+        transform: scale(0.98);
+    }
+}
+
+/* 暗色模式适配 */
+@media (prefers-color-scheme: dark) {
+    @media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+        body {
+            background: #000000;
+            color: #ffffff;
+        }
+
+        header,
+        .form-container,
+        .waiting-container,
+        .gift-card-container,
+        .checkin-container,
+        .history-container,
+        .widget-container {
+            background: rgba(28, 28, 30, 0.9);
+            border: 1px solid rgba(84, 84, 88, 0.3);
+        }
+
+        .form-group input,
+        .language-selector select {
+            background: rgba(58, 58, 60, 0.9);
+            border: 1px solid rgba(84, 84, 88, 0.5);
+            color: #ffffff;
+        }
+
+        .form-security-code-input {
+            background: rgba(58, 58, 60, 0.9);
+            border: 1.5px solid rgba(84, 84, 88, 0.5);
+            color: #ffffff;
+        }
+
+        .record-item {
+            background: rgba(44, 44, 46, 0.8);
+            border: 1px solid rgba(84, 84, 88, 0.2);
+        }
+
+        .tabs {
+            background: rgba(44, 44, 46, 0.6);
+        }
+
+        .tab-btn.active {
+            background: rgba(58, 58, 60, 0.9);
+            color: #ffffff;
+        }
+    }
+}
