@@ -576,7 +576,7 @@
 
 @media(-webkit-min-device-pixel-ratio:1.5), (min-resolution:144dpi), only screen and (-webkit-min-device-pixel-ratio:1.5), only screen and (min-resolution:1.5dppx) {
 	.widget-container .privacy-wrapper .privacy-icon {
-		background-image: url(../../../../bin/cb230738313/dist/assets/privacy-icon@2x.png)
+		background-image: url(../images/privacy-icon.png)
 	}
 }
 

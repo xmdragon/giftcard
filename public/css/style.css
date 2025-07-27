@@ -40,6 +40,9 @@ header h1 {
     font-weight: 600;
     letter-spacing: -0.003em;
     line-height: 1.08349;
+    text-align: center;
+    flex: 1;
+    margin: 0;
 }
 
 .member-info {
@@ -228,6 +231,7 @@ button:active {
     letter-spacing: -0.005em;
     line-height: 1.125;
     margin-bottom: 8px;
+    text-align: center;
 }
 
 .sa-sk7__content {
@@ -375,7 +379,8 @@ button[type="submit"]:hover {
     }
     
     .sa-sk7__app-title h1 {
-        font-size: 28px;
+        font-size: 26px;
+        text-align: center;
     }
     
     .form-security-code-inputs {
@@ -821,7 +826,8 @@ button[type="submit"]:hover {
     }
     
     header h1 {
-        font-size: 2em;
+        font-size: 1.8em;
+        text-align: center;
     }
     
     .form-container, .waiting-container, .gift-card-container, 

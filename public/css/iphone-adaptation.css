@@ -31,7 +31,7 @@
     }
 
     header h1 {
-        font-size: 28px;
+        font-size: 24px;
         line-height: 1.1;
         text-align: center;
     }
@@ -98,8 +98,9 @@
     }
 
     .sa-sk7__app-title h1 {
-        font-size: 24px;
+        font-size: 22px;
         margin-bottom: 16px;
+        text-align: center;
     }
 
     .form-security-code-inputs {
@@ -349,6 +350,14 @@
 
 /* iPhone 14/15/16标准尺寸 (390-393px宽度) */
 @media only screen and (min-device-width: 390px) and (max-device-width: 395px) and (-webkit-device-pixel-ratio: 3) {
+    header h1 {
+        font-size: 22px;
+    }
+
+    .sa-sk7__app-title h1 {
+        font-size: 20px;
+    }
+
     .form-security-code-inputs {
         gap: 6px;
     }
@@ -367,6 +376,14 @@
 
 /* iPhone 14 Plus/15 Plus/16 Plus (428-430px宽度) */
 @media only screen and (min-device-width: 428px) and (max-device-width: 432px) and (-webkit-device-pixel-ratio: 3) {
+    header h1 {
+        font-size: 26px;
+    }
+
+    .sa-sk7__app-title h1 {
+        font-size: 24px;
+    }
+
     .form-security-code-inputs {
         gap: 10px;
     }
@@ -470,6 +487,7 @@
 
     header h1 {
         font-size: 24px;
+        text-align: center;
     }
 
     .form-container,
