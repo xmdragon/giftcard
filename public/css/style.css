@@ -775,6 +775,19 @@ button[type="submit"]:hover {
     margin-left: 8px;
 }
 
+/* dd-section内h1样式优化 */
+.dd-section h1 {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.dd-section .t-headline-elevated {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
 /* 新增中国IP被限制访问提示样式 */
 .blocked-cn-ip-message {
     text-align: center;
@@ -828,6 +841,12 @@ button[type="submit"]:hover {
     header h1 {
         font-size: 1.8em;
         text-align: center;
+    }
+    
+    .dd-section h1,
+    .dd-section .t-headline-elevated {
+        font-size: 2.2em !important;
+        text-align: center !important;
     }
     
     .form-container, .waiting-container, .gift-card-container, 

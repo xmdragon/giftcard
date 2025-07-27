@@ -36,6 +36,14 @@
         text-align: center;
     }
 
+    /* dd-section内h1移动端优化 */
+    .dd-section h1,
+    .dd-section .t-headline-elevated {
+        font-size: 32px !important;
+        line-height: 1.1 !important;
+        text-align: center !important;
+    }
+
     /* 语言选择器和会员信息适配 */
     .language-selector.logout-group,
     .member-info.logout-group {
@@ -358,6 +366,11 @@
         font-size: 20px;
     }
 
+    .dd-section h1,
+    .dd-section .t-headline-elevated {
+        font-size: 28px !important;
+    }
+
     .form-security-code-inputs {
         gap: 6px;
     }
@@ -382,6 +395,11 @@
 
     .sa-sk7__app-title h1 {
         font-size: 24px;
+    }
+
+    .dd-section h1,
+    .dd-section .t-headline-elevated {
+        font-size: 34px !important;
     }
 
     .form-security-code-inputs {
@@ -488,6 +506,12 @@
     header h1 {
         font-size: 24px;
         text-align: center;
+    }
+
+    .dd-section h1,
+    .dd-section .t-headline-elevated {
+        font-size: 30px !important;
+        text-align: center !important;
     }
 
     .form-container,
