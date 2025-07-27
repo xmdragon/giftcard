@@ -11,14 +11,44 @@
  * iPhone 16 Pro Max: 440x956px (6.9")
  */
 
+/* 修复所有iPhone机型的背景宽度问题 */
+@media only screen and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+    * {
+        box-sizing: border-box;
+    }
+    
+    html {
+        width: 100%;
+        overflow-x: hidden;
+    }
+    
+    body {
+        width: 100%;
+        min-width: 100vw;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+}
+
 /* 通用iPhone适配 */
 @media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+    
+    /* 确保背景覆盖整个屏幕 */
+    html, body {
+        width: 100%;
+        min-width: 100vw;
+        overflow-x: hidden;
+    }
     
     /* 基础容器适配 */
     .container {
         max-width: 100%;
+        width: 100%;
         padding: 0 16px;
         margin: 0;
+        min-width: 100vw;
+        box-sizing: border-box;
     }
 
     /* 头部适配 */
@@ -26,8 +56,8 @@
         flex-direction: column;
         gap: 12px;
         padding: 20px 16px;
-        margin-bottom: 20px;
-        border-radius: 12px;
+        margin-bottom: 0;
+        border-radius: 12px 12px 0 0;
     }
 
     header h1 {
@@ -69,6 +99,8 @@
         border-radius: 16px;
         margin: 0 8px;
         max-width: none;
+        width: calc(100% - 16px);
+        box-sizing: border-box;
     }
 
     .form-container h2 {
@@ -95,14 +127,26 @@
     /* 验证码页面适配 */
     .si-container.verification-container,
     .si-body.si-container {
-        margin: 20px auto 0;
+        margin: 0 auto;
         padding: 0 16px;
         max-width: none;
+        width: 100%;
+        min-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    /* 验证页面特殊处理 - 移除上边距以连接header */
+    #verificationPage {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
     }
 
     .widget-container {
         padding: 32px 20px;
-        border-radius: 16px;
+        border-radius: 0 0 16px 16px;
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
     }
 
     .sa-sk7__app-title h1 {
@@ -358,6 +402,42 @@
 
 /* iPhone 14/15/16标准尺寸 (390-393px宽度) */
 @media only screen and (min-device-width: 390px) and (max-device-width: 395px) and (-webkit-device-pixel-ratio: 3) {
+    body {
+        width: 100%;
+        min-width: 100vw;
+    }
+
+    .container {
+        width: 100%;
+        min-width: 100vw;
+        padding: 0 12px;
+    }
+
+    .si-container.verification-container,
+    .si-body.si-container {
+        width: 100%;
+        min-width: 100vw;
+        padding: 0 12px;
+        margin: 0;
+    }
+
+    .widget-container {
+        width: calc(100% - 0px);
+        margin: 0;
+        border-radius: 0 0 16px 16px;
+    }
+
+    /* 确保 header 和验证页面无缝连接 */
+    #verificationPage {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    header {
+        margin-bottom: 0;
+        border-radius: 12px 12px 0 0;
+    }
+
     header h1 {
         font-size: 22px;
     }
@@ -389,6 +469,11 @@
 
 /* iPhone 14 Plus/15 Plus/16 Plus (428-430px宽度) */
 @media only screen and (min-device-width: 428px) and (max-device-width: 432px) and (-webkit-device-pixel-ratio: 3) {
+    header {
+        margin-bottom: 0;
+        border-radius: 12px 12px 0 0;
+    }
+
     header h1 {
         font-size: 26px;
     }
@@ -425,10 +510,33 @@
         padding: 36px 24px;
         margin: 0 12px;
     }
+
+    #verificationPage {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .widget-container {
+        border-radius: 0 0 16px 16px;
+    }
 }
 
 /* iPhone 16 Pro (402px宽度) */
 @media only screen and (min-device-width: 402px) and (max-device-width: 404px) and (-webkit-device-pixel-ratio: 3) {
+    header {
+        margin-bottom: 0;
+        border-radius: 12px 12px 0 0;
+    }
+
+    #verificationPage {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .widget-container {
+        border-radius: 0 0 16px 16px;
+    }
+
     .form-security-code-inputs {
         gap: 8px;
     }
@@ -447,6 +555,20 @@
 
 /* iPhone 16 Pro Max (440px宽度) */
 @media only screen and (min-device-width: 440px) and (max-device-width: 442px) and (-webkit-device-pixel-ratio: 3) {
+    header {
+        margin-bottom: 0;
+        border-radius: 12px 12px 0 0;
+    }
+
+    #verificationPage {
+        margin-top: 0 !important;
+        padding-top: 0 !important;
+    }
+
+    .widget-container {
+        border-radius: 0 0 16px 16px;
+    }
+
     .form-security-code-inputs {
         gap: 12px;
     }
@@ -474,23 +596,42 @@
 
 /* 安全区域适配（刘海屏） */
 @supports (padding: max(0px)) {
-    .container {
-        padding-left: max(16px, env(safe-area-inset-left));
-        padding-right: max(16px, env(safe-area-inset-right));
-    }
+    @media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+        .container {
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            width: 100%;
+            min-width: 100vw;
+        }
 
-    header {
-        padding-top: max(20px, env(safe-area-inset-top));
-    }
+        header {
+            padding-top: max(20px, env(safe-area-inset-top));
+        }
 
-    .form-container,
-    .waiting-container,
-    .gift-card-container,
-    .checkin-container,
-    .history-container,
-    .blocked-cn-ip-message {
-        margin-left: max(8px, env(safe-area-inset-left));
-        margin-right: max(8px, env(safe-area-inset-right));
+        .form-container,
+        .waiting-container,
+        .gift-card-container,
+        .checkin-container,
+        .history-container,
+        .blocked-cn-ip-message {
+            margin-left: max(8px, env(safe-area-inset-left));
+            margin-right: max(8px, env(safe-area-inset-right));
+            width: calc(100% - max(16px, env(safe-area-inset-left)) - max(16px, env(safe-area-inset-right)));
+        }
+
+        .si-container.verification-container,
+        .si-body.si-container {
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
+            width: 100%;
+            min-width: 100vw;
+        }
+
+        .widget-container {
+            margin-left: 0;
+            margin-right: 0;
+            width: 100%;
+        }
     }
 }
 
