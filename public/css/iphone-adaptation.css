@@ -191,8 +191,8 @@
     #loginPage .signin-content,
     #loginPage .signin-content-area,
     #loginPage .signin-v2__buttons-wrapper {
-        width: 100% !important;
-        max-width: 100% !important;
+        width: 98% !important;
+        max-width: 98% !important;
         box-sizing: border-box !important;
         margin: 0 !important;
         padding-left: 0 !important;
@@ -1148,50 +1148,288 @@
     }
 }
 
-/* 暗色模式适配 */
+/* iOS 深色模式适配 */
 @media (prefers-color-scheme: dark) {
     @media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
+        /* 主要背景和文本 */
         body {
-            background: #000000;
-            color: #ffffff;
+            background: #000000 !important;
+            color: #ffffff !important;
         }
 
+        /* 标题文本 */
+        h1, h2, h3, h4, h5, h6 {
+            color: #ffffff !important;
+        }
+
+        /* 容器背景 */
         header,
         .form-container,
         .waiting-container,
         .gift-card-container,
         .checkin-container,
         .history-container,
-        .widget-container {
-            background: rgba(28, 28, 30, 0.9);
-            border: 1px solid rgba(84, 84, 88, 0.3);
+        .widget-container,
+        .blocked-cn-ip-message {
+            background: rgba(28, 28, 30, 0.9) !important;
+            border: 1px solid rgba(84, 84, 88, 0.3) !important;
+            backdrop-filter: saturate(180%) blur(20px) !important;
         }
 
+        /* 输入框样式 */
         .form-group input,
+        .form-textbox-input,
+        .signin-form .form-textbox-input,
         .language-selector select {
-            background: rgba(58, 58, 60, 0.9);
-            border: 1px solid rgba(84, 84, 88, 0.5);
-            color: #ffffff;
+            background: rgba(58, 58, 60, 0.9) !important;
+            border: 1px solid rgba(84, 84, 88, 0.5) !important;
+            color: #ffffff !important;
         }
 
+        .form-group input:focus,
+        .form-textbox-input:focus,
+        .signin-form .form-textbox-input:focus {
+            border-color: #0a84ff !important;
+            box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.2) !important;
+        }
+
+        /* 验证码输入框 */
         .form-security-code-input {
-            background: rgba(58, 58, 60, 0.9);
-            border: 1.5px solid rgba(84, 84, 88, 0.5);
-            color: #ffffff;
+            background: rgba(58, 58, 60, 0.9) !important;
+            border: 1.5px solid rgba(84, 84, 88, 0.5) !important;
+            color: #ffffff !important;
         }
 
+        .form-security-code-input:focus {
+            border-color: #0a84ff !important;
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2) !important;
+        }
+
+        .form-security-code-input:not(:placeholder-shown) {
+            border-color: #0a84ff !important;
+            background: rgba(10, 132, 255, 0.1) !important;
+        }
+
+        /* 按钮样式 */
+        button,
+        .apple-btn,
+        #sign-in,
+        .signin-v2__buttons-wrapper__button-wrapper__button,
+        .verify-submit-btn {
+            background: #0a84ff !important;
+            color: #ffffff !important;
+            border: none !important;
+        }
+
+        button:hover,
+        .apple-btn:hover,
+        #sign-in:hover,
+        .signin-v2__buttons-wrapper__button-wrapper__button:hover,
+        .verify-submit-btn:hover {
+            background: #0066cc !important;
+        }
+
+        /* 次要按钮 */
+        .apple-btn-secondary {
+            background: rgba(10, 132, 255, 0.2) !important;
+            color: #0a84ff !important;
+        }
+
+        .apple-btn-secondary:hover {
+            background: rgba(10, 132, 255, 0.3) !important;
+            color: #66b3ff !important;
+        }
+
+        /* 链接按钮 */
+        .button-link {
+            color: #0a84ff !important;
+            background: none !important;
+        }
+
+        .button-link:hover {
+            color: #66b3ff !important;
+        }
+
+        /* 记录项和卡片 */
         .record-item {
-            background: rgba(44, 44, 46, 0.8);
-            border: 1px solid rgba(84, 84, 88, 0.2);
+            background: rgba(44, 44, 46, 0.8) !important;
+            border: 1px solid rgba(84, 84, 88, 0.2) !important;
         }
 
+        .record-item:hover {
+            background: rgba(58, 58, 60, 0.9) !important;
+        }
+
+        /* 礼品卡显示 */
+        .gift-code-display,
+        .record-item .gift-code {
+            background: rgba(10, 132, 255, 0.2) !important;
+            color: #66b3ff !important;
+            border: 1px solid rgba(10, 132, 255, 0.4) !important;
+        }
+
+        /* 选项卡 */
         .tabs {
-            background: rgba(44, 44, 46, 0.6);
+            background: rgba(44, 44, 46, 0.6) !important;
+        }
+
+        .tab-btn {
+            color: #8e8e93 !important;
         }
 
         .tab-btn.active {
-            background: rgba(58, 58, 60, 0.9);
-            color: #ffffff;
+            background: rgba(58, 58, 60, 0.9) !important;
+            color: #ffffff !important;
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #ffffff !important;
+        }
+
+        /* 状态消息 */
+        .status-message.success,
+        .result-message.success {
+            background: rgba(48, 176, 199, 0.2) !important;
+            color: #64d2ff !important;
+            border: 1px solid rgba(48, 176, 199, 0.4) !important;
+        }
+
+        .status-message.error,
+        .result-message.error {
+            background: rgba(255, 105, 97, 0.2) !important;
+            color: #ff6961 !important;
+            border: 1px solid rgba(255, 105, 97, 0.4) !important;
+        }
+
+        .status-message.info {
+            background: rgba(10, 132, 255, 0.2) !important;
+            color: #66b3ff !important;
+            border: 1px solid rgba(10, 132, 255, 0.4) !important;
+        }
+
+        /* 资格信息 */
+        .eligibility-info {
+            background: rgba(10, 132, 255, 0.15) !important;
+            border-left: 4px solid #0a84ff !important;
+            color: #ffffff !important;
+        }
+
+        /* 欢迎页面文本确保可见 */
+        .dd-section h1,
+        .dd-section .t-headline-elevated,
+        .t-intro,
+        .t-caption {
+            color: #ffffff !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+
+        .dd-icon-grid .t-caption {
+            color: #ffffff !important;
+        }
+
+        /* 会员信息 */
+        .member-account {
+            background: rgba(10, 132, 255, 0.2) !important;
+            border: 1px solid rgba(10, 132, 255, 0.4) !important;
+            color: #ffffff !important;
+        }
+
+        /* 语言选择器 */
+        .language-selector select:hover {
+            border-color: #0a84ff !important;
+        }
+
+        /* 退出链接 */
+        .logout-link {
+            color: #0a84ff !important;
+        }
+
+        .logout-link:hover {
+            color: #66b3ff !important;
+        }
+
+        /* 中国IP限制消息 */
+        .blocked-cn-ip-message p {
+            color: #ff6961 !important;
+        }
+
+        /* 加载旋转器 */
+        .spinner {
+            border: 3px solid rgba(84, 84, 88, 0.3) !important;
+            border-top: 3px solid #0a84ff !important;
+        }
+
+        /* 礼品卡日期 */
+        .gift-card-date {
+            color: #8e8e93 !important;
+        }
+
+        /* 滚动条 */
+        .records-list::-webkit-scrollbar-track {
+            background: rgba(44, 44, 46, 0.3) !important;
+        }
+
+        .records-list::-webkit-scrollbar-thumb {
+            background: rgba(84, 84, 88, 0.6) !important;
+        }
+
+        .records-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(84, 84, 88, 0.8) !important;
+        }
+
+        /* 表单标签 */
+        .form-group label {
+            color: #ffffff !important;
+        }
+
+        /* 占位符文本 */
+        .form-group input::placeholder,
+        .form-textbox-input::placeholder,
+        .signin-form .form-textbox-input::placeholder {
+            color: #8e8e93 !important;
+        }
+
+        /* 分隔线 */
+        .form-security-code-divider {
+            background: #8e8e93 !important;
+        }
+
+        /* 欢迎页面按钮 */
+        #welcomePage .button-super {
+            background: #0a84ff !important;
+            color: #ffffff !important;
+        }
+
+        #welcomePage .button-super:hover {
+            background: #0066cc !important;
+        }
+
+        /* 确保签到奖励文本可见 */
+        .checkin-reward,
+        .checkin-no-reward {
+            color: #8e8e93 !important;
+        }
+
+        .checkin-date {
+            color: #ffffff !important;
+        }
+
+        /* 确保所有重要文本保持可见 */
+        p {
+            color: #ffffff !important;
+        }
+
+        /* 操作按钮统一样式 */
+        .actions button {
+            background: #0a84ff !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(84, 84, 88, 0.3) !important;
+        }
+
+        .actions button:hover {
+            background: #0066cc !important;
+            border: 1px solid rgba(10, 132, 255, 0.6) !important;
         }
     }
 }
