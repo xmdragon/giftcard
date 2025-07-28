@@ -34,6 +34,56 @@
 /* 通用iPhone适配 */
 @media only screen and (min-device-width: 390px) and (max-device-width: 440px) and (-webkit-device-pixel-ratio: 3) {
     
+    /* 强制修复所有输入框宽度问题 - 设置为85% */
+    .signin-form .form-textbox,
+    .signin-form .form-cell-wrapper,
+    .form-textbox,
+    .form-cell-wrapper {
+        width: 85% !important;
+        max-width: 85% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+        margin: 0 0 !important;
+        padding: 0 !important;
+    }
+    
+    .signin-form .form-textbox-input,
+    .form-textbox-input {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+    
+    /* 确保输入框容器与按钮容器使用相同的布局约束 */
+    .signin-content-area,
+    .signin-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    .account-name,
+    .password {
+        width: 85% !important;
+        max-width: 85% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+    }
+    
+    /* 登录按钮宽度设置为85% */
+    #sign-in,
+    .signin-v2__buttons-wrapper__button-wrapper__button {
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 0 !important;
+        box-sizing: border-box !important;
+    }
+    
     /* 确保背景覆盖整个屏幕 */
     html, body {
         width: 100%;
@@ -106,45 +156,79 @@
     /* 登录页面表单适配 */
     .signin-form .form-textbox,
     .signin-form .form-cell-wrapper {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
+        width: 85% !important;
+        max-width: 85% !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .signin-form .form-textbox-input {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-        padding-left: 16px;
-        padding-right: 16px;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
     }
 
     /* 登录页面widget容器修复 */
     #loginPage .widget-container {
-        width: 100%;
-        max-width: 100%;
-        margin: 0;
-        padding: 32px 16px;
-        box-sizing: border-box;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        padding: 32px 16px !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
+    }
+    
+    /* 确保登录表单所有内层容器都正确约束宽度 */
+    #loginPage .signin-form,
+    #loginPage .signin-v2,
+    #loginPage .swp-option-container,
+    #loginPage .si-container,
+    #loginPage .si-body,
+    #loginPage .container-fluid,
+    #loginPage .app-body-container,
+    #loginPage .signin-content,
+    #loginPage .signin-content-area,
+    #loginPage .signin-v2__buttons-wrapper {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        overflow: hidden !important;
+    }
+    
+    /* 统一标题容器宽度 */
+    .widget-container,
+    .sa-sk7__app-title,
+    #verificationPage .widget-container {
+        width: 85% !important;
+        max-width: 85% !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* 标题文本样式 */
+    .si-container-title,
+    .sa-sk7__app-title h1 {
+        width: 100% !important;
+        text-align: center !important;
+        margin: 16px 0 !important;
+        box-sizing: border-box !important;
     }
 
-    /* 登录表单内容区域 */
-    .signin-content-area {
-        width: 100%;
-        max-width: 100%;
-        box-sizing: border-box;
-    }
 
     /* 欢迎页面登录按钮适配 */
     #welcomePage .button-super {
         --sk-button-padding-horizontal: 24px;
-        --sk-button-padding-vertical: 12px;
+        --sk-button-padding-vertical: 8px;
         --sk-button-border-radius: 8px;
         font-size: 16px;
         line-height: 1.3;
         font-weight: 500;
-        min-height: 44px;
-        padding: 12px 24px;
+        min-height: 36px;
+        padding: 8px 24px;
         border-radius: 8px;
     }
 
@@ -282,10 +366,18 @@
     }
 
     .button-link,
-    .verify-submit-btn {
-        font-size: 16px;
-        padding: 10px 0;
-        min-height: 44px;
+    .verify-submit-btn,
+    .apple-btn,
+    .apple-btn-secondary {
+        font-size: 16px !important;
+        padding: 6px 20px !important;
+        min-height: 36px !important;
+        height: 36px !important;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        display: block !important;
+        box-sizing: border-box !important;
     }
 
     /* 验证码页面容器优化 */
@@ -395,9 +487,12 @@
 
     .checkin-actions .apple-btn, 
     .history-actions .apple-btn {
-        min-width: auto;
-        max-width: none;
-        width: 100%;
+        min-width: auto !important;
+        max-width: 85% !important;
+        width: 85% !important;
+        margin: 0 auto !important;
+        display: block !important;
+        box-sizing: border-box !important;
     }
 
     /* 标签页适配 */
@@ -570,24 +665,28 @@
 
     /* 登录页面输入框适配 - iPhone 16 */
     #loginPage .widget-container {
-        padding: 32px 12px;
-        width: 100%;
-        margin: 0;
+        padding: 32px 12px !important;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .signin-form .form-textbox-input {
-        padding-left: 12px;
-        padding-right: 12px;
-        width: 100%;
-        max-width: 100%;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* 欢迎页面优化 - iPhone 16 */
     #welcomePage .button-super {
-        padding: 10px 20px;
+        padding: 6px 20px;
         border-radius: 6px;
         font-size: 15px;
-        min-height: 40px;
+        min-height: 32px;
     }
 
     .dd-gift-cards-intro .dd-image {
@@ -661,16 +760,20 @@
 
     /* 登录页面适配 - iPhone 14 Plus/15 Plus/16 Plus */
     #loginPage .widget-container {
-        padding: 36px 20px;
-        width: 100%;
-        margin: 0;
+        padding: 36px 20px !important;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .signin-form .form-textbox-input {
-        padding-left: 16px;
-        padding-right: 16px;
-        width: 100%;
-        max-width: 100%;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* 验证页面适配 - iPhone 14 Plus/15 Plus/16 Plus */
@@ -695,10 +798,10 @@
 
     /* 欢迎页面优化 - iPhone 14 Plus/15 Plus/16 Plus */
     #welcomePage .button-super {
-        padding: 12px 28px;
+        padding: 8px 28px;
         border-radius: 8px;
         font-size: 16px;
-        min-height: 44px;
+        min-height: 36px;
     }
 
     .dd-gift-cards-intro .dd-image {
@@ -761,24 +864,28 @@
 
     /* 登录页面适配 - iPhone 16 Pro */
     #loginPage .widget-container {
-        padding: 32px 16px;
-        width: 100%;
-        margin: 0;
+        padding: 32px 16px !important;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .signin-form .form-textbox-input {
-        padding-left: 14px;
-        padding-right: 14px;
-        width: 100%;
-        max-width: 100%;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* 欢迎页面优化 - iPhone 16 Pro */
     #welcomePage .button-super {
-        padding: 11px 24px;
+        padding: 7px 24px;
         border-radius: 7px;
         font-size: 15px;
-        min-height: 42px;
+        min-height: 34px;
     }
 
     .dd-gift-cards-intro .dd-image {
@@ -850,24 +957,28 @@
 
     /* 登录页面适配 - iPhone 16 Pro Max */
     #loginPage .widget-container {
-        padding: 40px 24px;
-        width: 100%;
-        margin: 0;
+        padding: 40px 24px !important;
+        width: 85% !important;
+        max-width: 85% !important;
+        margin: 0 auto !important;
+        box-sizing: border-box !important;
+        overflow: hidden !important;
     }
 
     .signin-form .form-textbox-input {
-        padding-left: 20px;
-        padding-right: 20px;
-        width: 100%;
-        max-width: 100%;
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     /* 欢迎页面优化 - iPhone 16 Pro Max */
     #welcomePage .button-super {
-        padding: 14px 32px;
+        padding: 10px 32px;
         border-radius: 10px;
         font-size: 17px;
-        min-height: 48px;
+        min-height: 40px;
     }
 
     .dd-gift-cards-intro .dd-image {
@@ -940,9 +1051,9 @@
         }
 
         .signin-form .form-textbox-input {
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
         }
 
         /* 欢迎页面安全区域适配 */

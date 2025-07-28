@@ -174,7 +174,7 @@
     opacity: 1 !important;
     height: auto !important;
     min-height: 50px !important;
-    width: 100% !important;
+    width: 85% !important;
     position: static !important;
 }
 
@@ -184,7 +184,7 @@
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
-    width: 100% !important;
+    width: 85% !important;
     height: 47px !important;
     min-height: 47px !important;
     max-height: none !important;
