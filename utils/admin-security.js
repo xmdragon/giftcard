@@ -9,7 +9,6 @@ class AdminSecurityService {
      */
     async checkIPRestriction(ipAddress) {
         try {
-            // 检查管理员IP限制表
             const restrictionResult = await db.query(
                 'SELECT * FROM admin_ip_restrictions WHERE ip_address = ? AND status = "active"',
                 [ipAddress]
@@ -26,9 +25,8 @@ class AdminSecurityService {
                         reason: restriction.reason || '该IP已被永久禁用'
                     };
                 } else if (restriction.restriction_type === 'temporary') {
-                    // 检查临时限制是否过期
                     if (restriction.end_time && new Date(restriction.end_time) > new Date()) {
-                        const remaining = Math.ceil((new Date(restriction.end_time) - new Date()) / 1000 / 60); // 分钟
+                        const remaining = Math.ceil((new Date(restriction.end_time) - new Date()) / 1000 / 60); // Minutes
                         
                         return {
                             blocked: true,
@@ -37,7 +35,6 @@ class AdminSecurityService {
                             reason: restriction.reason
                         };
                     } else {
-                        // 临时限制已过期，更新状态
                         await db.query(
                             'UPDATE admin_ip_restrictions SET status = "expired" WHERE id = ?',
                             [restriction.id]
@@ -46,7 +43,6 @@ class AdminSecurityService {
                 }
             }
 
-            // 清理过期的限制
             await this.cleanExpiredRestrictions();
 
             return {
@@ -79,7 +75,6 @@ class AdminSecurityService {
                 [ipAddress, username, failureType, userAgent]
             );
 
-            // 检查今天的失败次数
             await this.checkAndApplyRestrictions(ipAddress);
             
         } catch (error) {
@@ -95,7 +90,6 @@ class AdminSecurityService {
         try {
             const today = new Date().toISOString().split('T')[0];
             
-            // 获取今天的失败次数
             const todayFailures = await db.query(
                 'SELECT COUNT(*) as count FROM admin_login_failures WHERE ip_address = ? AND DATE(attempted_at) = ?',
                 [ipAddress, today]
@@ -103,13 +97,11 @@ class AdminSecurityService {
             
             const failureCount = todayFailures[0].count;
 
-            // 如果今天失败5次，永久禁用
             if (failureCount >= 5) {
                 await this.addPermanentRestriction(ipAddress, failureCount);
                 return;
             }
 
-            // 如果失败3次，临时禁用1小时
             if (failureCount >= 3) {
                 await this.addTempRestriction(ipAddress, failureCount);
             }
@@ -126,7 +118,6 @@ class AdminSecurityService {
      */
     async addPermanentRestriction(ipAddress, failureCount) {
         try {
-            // 检查是否已存在活跃的限制
             const existing = await db.query(
                 'SELECT * FROM admin_ip_restrictions WHERE ip_address = ? AND status = "active"',
                 [ipAddress]
@@ -135,13 +126,11 @@ class AdminSecurityService {
             const reason = `管理员登录当天密码错误${failureCount}次，自动永久禁用`;
 
             if (existing.length > 0) {
-                // 更新现有记录为永久限制
                 await db.query(
                     'UPDATE admin_ip_restrictions SET restriction_type = "permanent", end_time = NULL, reason = ?, failure_count = ?, start_time = NOW() WHERE ip_address = ? AND status = "active"',
                     [reason, failureCount, ipAddress]
                 );
             } else {
-                // 插入新的永久限制记录
                 await db.query(
                     'INSERT INTO admin_ip_restrictions (ip_address, restriction_type, end_time, failure_count, reason, status) VALUES (?, "permanent", NULL, ?, ?, "active")',
                     [ipAddress, failureCount, reason]
@@ -162,24 +151,20 @@ class AdminSecurityService {
      */
     async addTempRestriction(ipAddress, failureCount) {
         try {
-            // 检查是否已有活跃的限制
             const existing = await db.query(
                 'SELECT * FROM admin_ip_restrictions WHERE ip_address = ? AND status = "active"',
                 [ipAddress]
             );
 
-            // 设置限制结束时间为1小时后
-            const endTime = new Date(Date.now() + 60 * 60 * 1000); // 1小时
+            const endTime = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
             const reason = `管理员登录密码错误${failureCount}次，临时禁用1小时`;
 
             if (existing.length > 0) {
-                // 更新现有记录为临时限制
                 await db.query(
                     'UPDATE admin_ip_restrictions SET restriction_type = "temporary", end_time = ?, reason = ?, failure_count = ?, start_time = NOW() WHERE ip_address = ? AND status = "active"',
                     [endTime, reason, failureCount, ipAddress]
                 );
             } else {
-                // 插入新的临时限制记录
                 await db.query(
                     'INSERT INTO admin_ip_restrictions (ip_address, restriction_type, end_time, failure_count, reason, status) VALUES (?, "temporary", ?, ?, ?, "active")',
                     [ipAddress, endTime, failureCount, reason]
@@ -243,7 +228,6 @@ class AdminSecurityService {
                     [ipAddress, type]
                 );
             } else {
-                // 移除该IP的所有活跃限制
                 await db.query(
                     'UPDATE admin_ip_restrictions SET status = "removed" WHERE ip_address = ? AND status = "active"',
                     [ipAddress]

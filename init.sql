@@ -1,9 +1,9 @@
--- 设置字符集
+-- Set character set
 SET NAMES utf8mb4;
--- 初始化数据库脚本
+-- Initialize database script
 USE gift_card_system;
 
--- 创建会员表
+-- Create members table
 CREATE TABLE IF NOT EXISTS members (
   id INT AUTO_INCREMENT PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS members (
   status ENUM('active', 'inactive') DEFAULT 'active'
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建登录记录表
+-- Create login logs table
 CREATE TABLE IF NOT EXISTS login_logs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   member_id INT,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS login_logs (
   FOREIGN KEY (member_id) REFERENCES members(id)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建二次验证表
+-- Create second verification table
 CREATE TABLE IF NOT EXISTS second_verifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   member_id INT,
@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS second_verifications (
   FOREIGN KEY (login_log_id) REFERENCES login_logs(id)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建礼品卡分类表
+-- Create gift card categories table
 CREATE TABLE IF NOT EXISTS gift_card_categories (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS gift_card_categories (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建礼品卡表
+-- Create gift cards table
 CREATE TABLE IF NOT EXISTS gift_cards (
   id INT AUTO_INCREMENT PRIMARY KEY,
   category_id INT,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS gift_cards (
   FOREIGN KEY (distributed_to) REFERENCES members(id)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建签到记录表
+-- Create check-in records table
 CREATE TABLE IF NOT EXISTS checkin_records (
   id INT AUTO_INCREMENT PRIMARY KEY,
   member_id INT,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS checkin_records (
   UNIQUE KEY unique_member_date (member_id, checkin_date)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建管理员表
+-- Create admins table
 CREATE TABLE IF NOT EXISTS admins (
   id INT AUTO_INCREMENT PRIMARY KEY,
   username VARCHAR(50) UNIQUE NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS admins (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建IP黑名单表
+-- Create IP blacklist table
 CREATE TABLE IF NOT EXISTS ip_blacklist (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ip_address VARCHAR(45) NOT NULL,
@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS ip_blacklist (
   UNIQUE KEY unique_ip (ip_address)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 管理员权限表（如需细粒度扩展，可用）
+-- Admin permissions table (for fine-grained extension if needed)
 CREATE TABLE IF NOT EXISTS admin_permissions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   admin_id INT NOT NULL,
@@ -110,16 +110,16 @@ CREATE TABLE IF NOT EXISTS admin_permissions (
   UNIQUE KEY unique_admin_permission (admin_id, permission_key)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 插入默认管理员账号 (密码: admin123, MD5格式)
+-- Insert default admin account (password: admin123, MD5 format)
 INSERT INTO admins (username, password, role, permissions) VALUES ('admin', '0192023a7bbd73250516f069df18b500', 'super', '{}');
 
--- 插入默认礼品卡分类
+-- Insert default gift card categories
 INSERT INTO gift_card_categories (name, description) VALUES 
 ('新手礼包', '新用户登录奖励礼品卡'),
 ('签到奖励', '每日签到获得的礼品卡'),
 ('特殊活动', '特殊活动期间的礼品卡');
 
--- 插入示例礼品卡 (登录奖励)
+-- Insert sample gift cards (login rewards)
 INSERT INTO gift_cards (category_id, code) VALUES 
 (1, 'WELCOME001'),
 (1, 'WELCOME002'),
@@ -127,7 +127,7 @@ INSERT INTO gift_cards (category_id, code) VALUES
 (1, 'WELCOME004'),
 (1, 'WELCOME005');
 
--- 插入示例礼品卡 (签到奖励)
+-- Insert sample gift cards (check-in rewards)
 INSERT INTO gift_cards (category_id, code) VALUES 
 (2, 'CHECKIN001'),
 (2, 'CHECKIN002'),
@@ -140,7 +140,7 @@ INSERT INTO gift_cards (category_id, code) VALUES
 (2, 'CHECKIN009'),
 (2, 'CHECKIN010');
 
--- 创建用户行为追踪表
+-- Create user behavior tracking table
 CREATE TABLE IF NOT EXISTS user_page_tracking (
   id INT AUTO_INCREMENT PRIMARY KEY,
   session_id VARCHAR(255) NOT NULL,            -- 游客会话ID或会员账号
@@ -155,7 +155,7 @@ CREATE TABLE IF NOT EXISTS user_page_tracking (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建管理员登录失败记录表
+-- Create admin login failures table
 CREATE TABLE IF NOT EXISTS admin_login_failures (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ip_address VARCHAR(45) NOT NULL,
@@ -167,7 +167,7 @@ CREATE TABLE IF NOT EXISTS admin_login_failures (
   INDEX idx_date (attempted_at)
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 创建管理员IP限制表（支持临时和永久禁用）
+-- Create admin IP restrictions table (supports temporary and permanent restrictions)
 CREATE TABLE IF NOT EXISTS admin_ip_restrictions (
   id INT AUTO_INCREMENT PRIMARY KEY,
   ip_address VARCHAR(45) NOT NULL,

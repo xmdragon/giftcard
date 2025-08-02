@@ -5,7 +5,6 @@ const router = express.Router();
 function createTrackingRoutes(io) {
     const db = require('../utils/db');
     
-    // 管理员认证中间件
     const authenticateAdmin = async (req, res, next) => {
         try {
             const token = req.headers.authorization?.split(' ')[1];
@@ -14,7 +13,7 @@ function createTrackingRoutes(io) {
             }
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
-            const adminId = decoded.adminId || decoded.id; // 兼容不同的JWT字段名
+            const adminId = decoded.adminId || decoded.id; // Compatible with different JWT field names
             const admins = await db.query('SELECT * FROM admins WHERE id = ?', [adminId]);
             
             if (!admins || admins.length === 0) {
@@ -28,7 +27,6 @@ function createTrackingRoutes(io) {
         }
     };
 
-    // 权限检查中间件
     const checkPermission = (permissionKey) => (req, res, next) => {
         if (!req.admin) {
             return res.status(401).json({ error: '认证信息丢失' });
@@ -52,7 +50,6 @@ function createTrackingRoutes(io) {
         });
     };
     
-    // 获取客户端IP地址的辅助函数
     function getClientIP(req) {
         let ip = req.headers['x-forwarded-for'] || 
                  req.connection.remoteAddress || 
@@ -66,7 +63,6 @@ function createTrackingRoutes(io) {
         return ip;
     }
     
-    // 页面追踪数据接收接口
     router.post('/page', async (req, res) => {
         try {
             const {
@@ -82,17 +78,14 @@ function createTrackingRoutes(io) {
             
             const ip = getClientIP(req);
             
-            // 验证必要字段
             if (!sessionId || !pageName || !action) {
                 return res.status(400).json({
                     error: '缺少必要字段'
                 });
             }
             
-            // 根据动作类型处理数据
             switch (action) {
                 case 'enter':
-                    // 页面进入记录
                     await db.execute(`
                         INSERT INTO user_page_tracking 
                         (session_id, user_type, page_name, ip_address, enter_time, user_agent) 
@@ -101,7 +94,6 @@ function createTrackingRoutes(io) {
                     break;
                     
                 case 'leave':
-                    // 页面离开，更新停留时长
                     await db.execute(`
                         UPDATE user_page_tracking 
                         SET stay_duration = ?, leave_time = ?
@@ -111,7 +103,6 @@ function createTrackingRoutes(io) {
                     break;
                     
                 case 'update':
-                    // 更新停留时长（用于长时间停留的页面）
                     await db.execute(`
                         UPDATE user_page_tracking 
                         SET stay_duration = ?
@@ -136,14 +127,12 @@ function createTrackingRoutes(io) {
         }
     });
     
-    // 获取追踪数据列表（管理员使用）
     router.get('/list', authenticateAdmin, checkPermission('user-tracking:view'), async (req, res) => {
         try {
             const { page = 1, limit = 20 } = req.query;
             const limitNum = parseInt(limit);
             const offsetNum = (parseInt(page) - 1) * limitNum;
             
-            // 简化查询，先不加筛选条件
             const records = await db.query(`
                 SELECT 
                     id,
@@ -160,7 +149,6 @@ function createTrackingRoutes(io) {
                 LIMIT ${limitNum} OFFSET ${offsetNum}
             `);
             
-            // 查询总数
             const countResult = await db.query(`
                 SELECT COUNT(*) as total 
                 FROM user_page_tracking
@@ -187,13 +175,11 @@ function createTrackingRoutes(io) {
         }
     });
     
-    // 获取统计数据（管理员使用）
     router.get('/statistics', authenticateAdmin, checkPermission('user-tracking:stats'), async (req, res) => {
         try {
             console.log('开始获取用户行为统计数据');
             const { startDate, endDate } = req.query;
             
-            // 首先检查表是否存在
             const tableExistsResult = await db.query(`
                 SELECT COUNT(*) as count FROM information_schema.tables 
                 WHERE table_schema = 'gift_card_system' AND table_name = 'user_page_tracking'
@@ -237,7 +223,6 @@ function createTrackingRoutes(io) {
             
             console.log('日期筛选条件:', dateFilter, params);
             
-            // 基础统计数据
             const basicStatsResult = await db.query(`
                 SELECT 
                     COUNT(*) as total_visits,
@@ -261,7 +246,6 @@ function createTrackingRoutes(io) {
                 total_duration: 0
             };
             
-            // 按页面统计
             const pageStats = await db.query(`
                 SELECT 
                     page_name,
@@ -275,7 +259,6 @@ function createTrackingRoutes(io) {
                 ORDER BY visits DESC
             `, params);
             
-            // 按用户类型统计
             const userTypeStats = await db.query(`
                 SELECT 
                     user_type,
@@ -289,7 +272,6 @@ function createTrackingRoutes(io) {
                 ORDER BY visits DESC
             `, params);
             
-            // 按时间统计（按天）
             const timeStats = await db.query(`
                 SELECT 
                     DATE(enter_time) as date,
@@ -312,7 +294,7 @@ function createTrackingRoutes(io) {
                     pages: pageStats || [],
                     userTypes: userTypeStats || [],
                     timeStats: timeStats || [],
-                    flowStats: [] // 暂时简化，不包含页面流转统计
+                    flowStats: [] // Temporarily simplified, no page flow statistics
                 }
             });
             
@@ -325,7 +307,6 @@ function createTrackingRoutes(io) {
         }
     });
     
-    // 导出追踪数据（管理员使用）
     router.get('/export', authenticateAdmin, checkPermission('user-tracking:export'), async (req, res) => {
         try {
             const { startDate, endDate, userType, pageName } = req.query;

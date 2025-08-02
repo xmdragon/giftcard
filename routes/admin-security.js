@@ -4,7 +4,6 @@ const adminSecurity = require('../utils/admin-security');
 const db = require('../utils/db');
 const router = express.Router();
 
-// 验证管理员身份的中间件
 const authenticateAdmin = async (req, res, next) => {
     try {
         const authHeader = req.headers['authorization'];
@@ -16,7 +15,6 @@ const authenticateAdmin = async (req, res, next) => {
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
         
-        // 验证管理员是否存在
         const admins = await db.query('SELECT * FROM admins WHERE id = ?', [decoded.id]);
         if (admins.length === 0) {
             return res.status(404).json({ error: '管理员不存在' });
@@ -44,7 +42,6 @@ const authenticateAdmin = async (req, res, next) => {
 
 module.exports = () => {
     
-    // 获取登录失败记录
     router.get('/login-failures', authenticateAdmin, async (req, res) => {
         try {
             const { page = 1, limit = 50, ip, days = 7 } = req.query;
@@ -81,15 +78,12 @@ module.exports = () => {
         }
     });
     
-    // 获取IP限制列表
     router.get('/ip-restrictions', authenticateAdmin, async (req, res) => {
         try {
-            // 从统一的admin_ip_restrictions表获取所有限制
             const restrictions = await db.query(
                 'SELECT ip_address, restriction_type, start_time, end_time, failure_count, reason, status FROM admin_ip_restrictions WHERE status = "active" ORDER BY start_time DESC'
             );
             
-            // 分类处理
             const permanent = [];
             const temporary = [];
             
@@ -121,11 +115,10 @@ module.exports = () => {
         }
     });
     
-    // 移除IP限制
     router.delete('/ip-restrictions/:ip', authenticateAdmin, async (req, res) => {
         try {
             const { ip } = req.params;
-            const { type } = req.query; // 'permanent' 或 'temporary'
+            const { type } = req.query; // 'permanent' or 'temporary'
             
             if (!type || !['permanent', 'temporary'].includes(type)) {
                 return res.status(400).json({ error: '请指定限制类型（permanent或temporary）' });
@@ -141,7 +134,6 @@ module.exports = () => {
         }
     });
     
-    // 手动添加IP到永久限制
     router.post('/ip-restrictions', authenticateAdmin, async (req, res) => {
         try {
             const { ip_address, reason, restriction_type = 'permanent' } = req.body;
@@ -154,7 +146,6 @@ module.exports = () => {
                 return res.status(400).json({ error: '限制类型必须是permanent或temporary' });
             }
             
-            // 检查IP是否已存在活跃限制
             const existing = await db.query(
                 'SELECT * FROM admin_ip_restrictions WHERE ip_address = ? AND status = "active"',
                 [ip_address]
@@ -164,18 +155,15 @@ module.exports = () => {
             let endTime = null;
             
             if (restriction_type === 'temporary') {
-                // 临时限制默认1小时
                 endTime = new Date(Date.now() + 60 * 60 * 1000);
             }
             
             if (existing.length > 0) {
-                // 更新现有记录
                 await db.query(
                     'UPDATE admin_ip_restrictions SET restriction_type = ?, reason = ?, end_time = ?, start_time = NOW() WHERE ip_address = ? AND status = "active"',
                     [restriction_type, finalReason, endTime, ip_address]
                 );
             } else {
-                // 插入新记录
                 await db.query(
                     'INSERT INTO admin_ip_restrictions (ip_address, restriction_type, end_time, reason, status) VALUES (?, ?, ?, ?, "active")',
                     [ip_address, restriction_type, endTime, finalReason]
@@ -190,7 +178,6 @@ module.exports = () => {
         }
     });
     
-    // 获取IP失败统计
     router.get('/ip-stats/:ip', authenticateAdmin, async (req, res) => {
         try {
             const { ip } = req.params;

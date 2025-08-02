@@ -71,25 +71,19 @@
 
 ### 前端权限检查
 ```javascript
-// 检查页面访问权限
 if (!this.hasPermission('user-tracking:view')) {
     container.innerHTML = '<div class="error">您没有权限查看用户行为数据</div>';
     return;
 }
 
-// 检查功能权限
 if (this.hasPermission('user-tracking:export')) {
-    // 显示导出按钮
 } else {
-    // 隐藏导出按钮
 }
 ```
 
 ### 后端权限验证
 ```javascript
-// API路由权限中间件
 router.get('/list', authenticateAdmin, checkPermission('user-tracking:view'), async (req, res) => {
-    // 处理请求
 });
 ```
 

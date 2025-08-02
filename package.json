@@ -1,7 +1,7 @@
 {
   "name": "gift-card-system",
   "version": "1.0.0",
-  "description": "礼品卡发放系统",
+  "description": "Gift Card Distribution System",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

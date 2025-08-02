@@ -1,6 +1,6 @@
 # docker-compose.yml
 services:
-  # MySQL数据库
+  # MySQL Database
   mysql:
     image: mysql:8.0
     container_name: gift_card_mysql
@@ -19,7 +19,7 @@ services:
       - gift_card_network
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --init-connect="SET NAMES utf8mb4"
 
-  # Node.js应用 (已修改为绑定挂载)
+  # Node.js Application (modified for bind mount)
   app:
     build: .
     container_name: gift_card_app
@@ -27,7 +27,7 @@ services:
     expose:
       - "3000"
     environment:
-      NODE_ENV: production # 注意：开发时可能需要改为 development
+      NODE_ENV: production # Note: may need to change to development during development
       DB_HOST: mysql
       DB_USER: giftcard_user
       DB_PASSWORD: GiftCard_User_2024!
@@ -40,19 +40,19 @@ services:
       - mysql
     networks:
       - gift_card_network
-    # --- 关键修改部分 ---
+    # --- Key modification section ---
     volumes:
-      # 1. 将本地的当前整个项目目录 (.) 挂载到容器的工作目录 (/app)
-      #    这样一来，你在本地对代码的任何修改都会实时同步到容器中。
-      #    假设你的 Dockerfile 中设置了 `WORKDIR /app`。
+      # 1. Mount the current project directory (.) to the container's working directory (/app)
+      #    This way, any modifications you make locally will be synchronized to the container in real-time.
+      #    Assuming your Dockerfile sets `WORKDIR /app`.
       - .:/app
       
-      # 2. [重要!] 创建一个匿名卷来隔离 node_modules 目录。
-      #    这可以防止本地的 node_modules (可能不存在或与容器环境不兼容) 覆盖掉
-      #    在 Docker 镜像构建过程中 (RUN npm install) 生成的 node_modules 目录。
-      #    这是 Node.js + Docker 绑定挂载的最佳实践。
+      # 2. [Important!] Create an anonymous volume to isolate the node_modules directory.
+      #    This prevents local node_modules (which may not exist or be incompatible with container environment) from overriding
+      #    the node_modules directory generated during Docker image build (RUN npm install).
+      #    This is the best practice for Node.js + Docker bind mount.
       - /app/node_modules
-    # --- 修改结束 ---
+    # --- End of modifications ---
     healthcheck:
       test: ["CMD", "node", "healthcheck.js"]
       interval: 30s
@@ -60,7 +60,7 @@ services:
       retries: 3
       start_period: 40s
 
-  # Nginx 反向代理
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:1.25-alpine
     container_name: gift_card_nginx

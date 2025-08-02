@@ -103,10 +103,8 @@ admin-app.js (主入口)
 ## 使用方法
 
 ```javascript
-// 全局实例仍然是 adminApp
 window.adminApp = new AdminApp();
 
-// 访问各个模块
 adminApp.auth.login();           // 认证模块
 adminApp.socketManager.init();   // Socket模块
 adminApp.approvals.loadRequests(); // 审核模块

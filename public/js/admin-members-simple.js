@@ -1,8 +1,6 @@
-// 简化的会员管理模块
 AdminApp.prototype.initMembersSection = function() {
     console.log('Simple initMembersSection called');
     
-    // 权限检查
     if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermission('members')) {
         const container = document.getElementById('membersList');
         if (container) {
@@ -11,17 +9,14 @@ AdminApp.prototype.initMembersSection = function() {
         return;
     }
     
-    // 绑定刷新按钮
     this.bindMembersRefreshButton();
     
-    // 立即加载数据
     this.loadMembersSimple();
 };
 
 AdminApp.prototype.bindMembersRefreshButton = function() {
     const refreshBtn = document.getElementById('refreshMembers');
     if (refreshBtn) {
-        // 移除旧的事件监听器
         refreshBtn.replaceWith(refreshBtn.cloneNode(true));
         const newRefreshBtn = document.getElementById('refreshMembers');
         newRefreshBtn.addEventListener('click', () => {
@@ -143,7 +138,7 @@ AdminApp.prototype.deleteMember = async function(memberId) {
         
         if (response.ok) {
             alert('会员删除成功');
-            this.loadMembersSimple(); // 重新加载列表
+            this.loadMembersSimple(); // Reload list
         } else {
             alert('删除失败');
         }

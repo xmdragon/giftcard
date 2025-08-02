@@ -1,4 +1,3 @@
-// 管理员管理与权限分配相关方法
 
 AdminApp.prototype.loadAdmins = async function() {
     const container = document.getElementById('adminList');
@@ -121,7 +120,6 @@ AdminApp.prototype.showPermissionModal = async function() {
         html += '<div style="flex:1"><div style="font-weight:bold;font-size:1.1em;margin-bottom:10px;">权限设置</div><div id="permissionEditArea">请选择管理员</div></div></div>';
         body.innerHTML = html;
         
-        // 绑定权限分配模态框关闭按钮事件
         const closePermissionModal = document.getElementById('closePermissionModal');
         if (closePermissionModal) {
             closePermissionModal.onclick = () => {
@@ -132,7 +130,6 @@ AdminApp.prototype.showPermissionModal = async function() {
             };
         }
         
-        // 点击模态框背景关闭
         const permissionModal = document.getElementById('permissionModal');
         if (permissionModal) {
             permissionModal.onclick = (e) => {
@@ -142,7 +139,6 @@ AdminApp.prototype.showPermissionModal = async function() {
             };
         }
         
-        // 绑定管理员点击和高亮
         const adminItems = document.querySelectorAll('.permission-admin-item');
         adminItems.forEach(item => {
             if(item.style.color) return;
@@ -166,7 +162,6 @@ AdminApp.prototype.showPermissionModal = async function() {
 AdminApp.prototype.renderPermissionEdit = function(admin) {
     const area = document.getElementById('permissionEditArea');
     if (!admin) return area.innerHTML = '未找到管理员';
-    // 权限点定义
     const points = [
         { key: 'login-requests:view', label: '查看登录请求', group: '登录审核' },
         { key: 'login-requests:approve', label: '审核登录请求', group: '登录审核' },
@@ -192,7 +187,6 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
     ];
     let perms = {};
     try { perms = admin.permissions ? JSON.parse(admin.permissions) : {}; } catch(e){}
-    // 分组
     const groupMap = {};
     points.forEach(p => {
         if (!groupMap[p.group]) groupMap[p.group] = [];
@@ -210,7 +204,6 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
     html += `</table>`;
     html += `<div style="text-align:right;"><button type="submit" class="btn btn-primary" style="padding:8px 32px;font-size:1.1em;">保存权限</button></div></form>`;
     area.innerHTML = html;
-    // 绑定保存
     document.getElementById('permissionEditForm').onsubmit = async (e) => {
         e.preventDefault();
         const form = e.target;
@@ -231,7 +224,6 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
             const data = await res.json();
             if(res.ok) {
                 alert('权限已保存');
-                // 关闭权限分配模态框
                 const permissionModal = document.getElementById('permissionModal');
                 if (permissionModal) {
                     permissionModal.style.display = 'none';
@@ -245,13 +237,10 @@ AdminApp.prototype.renderPermissionEdit = function(admin) {
     };
 };
 
-// 初始化管理员管理事件绑定
 AdminApp.prototype.initAdminManagementEvents = function() {
     
-    // 添加管理员按钮
     const addAdminBtn = document.getElementById('addAdminBtn');
     if (addAdminBtn) {
-        // 移除旧的事件监听器，防止重复绑定
         addAdminBtn.replaceWith(addAdminBtn.cloneNode(true));
         const newAddAdminBtn = document.getElementById('addAdminBtn');
         
@@ -261,10 +250,8 @@ AdminApp.prototype.initAdminManagementEvents = function() {
     } else {
     }
     
-    // 权限分配按钮
     const permissionManageBtn = document.getElementById('permissionManageBtn');
     if (permissionManageBtn) {
-        // 移除旧的事件监听器，防止重复绑定
         permissionManageBtn.replaceWith(permissionManageBtn.cloneNode(true));
         const newPermissionManageBtn = document.getElementById('permissionManageBtn');
         
@@ -274,10 +261,8 @@ AdminApp.prototype.initAdminManagementEvents = function() {
     } else {
     }
     
-    // 刷新按钮
     const refreshAdminsBtn = document.getElementById('refreshAdmins');
     if (refreshAdminsBtn) {
-        // 移除旧的事件监听器，防止重复绑定
         refreshAdminsBtn.replaceWith(refreshAdminsBtn.cloneNode(true));
         const newRefreshAdminsBtn = document.getElementById('refreshAdmins');
         
@@ -289,20 +274,16 @@ AdminApp.prototype.initAdminManagementEvents = function() {
     
 };
 
-// 测试函数 - 可以在浏览器控制台中调用
 AdminApp.prototype.testAdminManagement = function() {
     
-    // 强制切换到管理员管理页面
     this.switchSection('adminmanage');
     
-    // 等待一会儿再检查按钮
     setTimeout(() => {
         const addAdminBtn = document.getElementById('addAdminBtn');
         const permissionManageBtn = document.getElementById('permissionManageBtn');
         const refreshAdmins = document.getElementById('refreshAdmins');
         
         
-        // 手动触发事件绑定
         if (typeof this.initAdminManagementEvents === 'function') {
             this.initAdminManagementEvents();
         }

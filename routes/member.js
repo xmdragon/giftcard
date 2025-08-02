@@ -3,13 +3,11 @@ const router = express.Router();
 const db = require('../utils/db');
 
 module.exports = (io) => {
-  // 会员签到
   router.post('/checkin', async (req, res) => {
     try {
       const { memberId } = req.body;
       const today = new Date().toISOString().split('T')[0];
 
-      // 检查今天是否已经签到
       const existingCheckin = await db.query(
         'SELECT * FROM checkin_records WHERE member_id = ? AND checkin_date = ?',
         [memberId, today]
@@ -19,7 +17,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('already_checked_in_today') });
       }
 
-      // 检查会员是否有资格签到（之前领过礼品卡）
       const giftCardHistory = await db.query(
         'SELECT * FROM gift_cards WHERE distributed_to = ? AND status = "distributed" LIMIT 1',
         [memberId]
@@ -29,7 +26,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('no_checkin_eligibility') });
       }
 
-      // 检查7天签到期限
       const firstGiftCard = await db.query(
         'SELECT distributed_at FROM gift_cards WHERE distributed_to = ? ORDER BY distributed_at ASC LIMIT 1',
         [memberId]
@@ -42,9 +38,7 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('checkin_period_expired') });
       }
 
-      // 使用事务处理签到和礼品卡分配
       return await db.transaction(async (connection) => {
-        // 获取可用的签到礼品卡 - 从签到奖励分类中获取
         const [availableCardsResult] = await connection.execute(
           'SELECT gc.* FROM gift_cards gc JOIN gift_card_categories gcc ON gc.category_id = gcc.id WHERE gc.status = "available" AND gcc.id = 2 LIMIT 1 FOR UPDATE'
         );
@@ -57,14 +51,12 @@ module.exports = (io) => {
           giftCardId = giftCard.id;
           giftCardCode = giftCard.code;
 
-          // 更新礼品卡状态
           await connection.execute(
             'UPDATE gift_cards SET status = "distributed", distributed_to = ?, distributed_at = NOW() WHERE id = ?',
             [memberId, giftCard.id]
           );
         }
 
-        // 记录签到
         await connection.execute(
           'INSERT INTO checkin_records (member_id, checkin_date, gift_card_id) VALUES (?, ?, ?)',
           [memberId, today, giftCardId]
@@ -83,7 +75,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取会员签到历史
   router.get('/checkin-history/:memberId', async (req, res) => {
     try {
       const { memberId } = req.params;
@@ -103,7 +94,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取会员礼品卡历史
   router.get('/gift-cards/:memberId', async (req, res) => {
     try {
       const { memberId } = req.params;
@@ -123,19 +113,16 @@ module.exports = (io) => {
     }
   });
 
-  // 检查会员签到资格
   router.get('/checkin-eligibility/:memberId', async (req, res) => {
     try {
       const { memberId } = req.params;
       const today = new Date().toISOString().split('T')[0];
 
-      // 检查今天是否已签到
       const todayCheckin = await db.query(
         'SELECT * FROM checkin_records WHERE member_id = ? AND checkin_date = ?',
         [memberId, today]
       );
 
-      // 检查是否有礼品卡历史
       const giftCardHistory = await db.query(
         'SELECT distributed_at FROM gift_cards WHERE distributed_to = ? ORDER BY distributed_at ASC LIMIT 1',
         [memberId]

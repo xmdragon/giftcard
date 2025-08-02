@@ -3,9 +3,7 @@
  * 包含分类列表加载、显示、添加、编辑、删除等功能
  */
 
-// 扩展 AdminApp 类
 (function() {
-    // 加载分类列表
     AdminApp.prototype.loadCategories = async function() {
         try {
             const response = await this.apiRequest('/api/admin/gift-card-categories');
@@ -19,7 +17,6 @@
         }
     };
 
-    // 显示分类列表
     AdminApp.prototype.displayCategories = function(categories) {
         const container = document.getElementById('categoriesList');
 
@@ -28,14 +25,11 @@
             return;
         }
 
-        // 创建表格元素
         const table = document.createElement('table');
         
-        // 创建表头
         const thead = document.createElement('thead');
         const headerRow = document.createElement('tr');
         
-        // 添加表头列
         ['ID', '名称', '描述', '创建时间', '操作'].forEach(headerText => {
             const th = document.createElement('th');
             th.textContent = headerText;
@@ -45,47 +39,37 @@
         thead.appendChild(headerRow);
         table.appendChild(thead);
         
-        // 创建表体
         const tbody = document.createElement('tbody');
         
-        // 添加数据行
         categories.forEach(category => {
             const row = document.createElement('tr');
             
-            // ID 列
             const idCell = document.createElement('td');
             idCell.textContent = category.id;
             row.appendChild(idCell);
             
-            // 名称列
             const nameCell = document.createElement('td');
             nameCell.textContent = category.name;
             row.appendChild(nameCell);
             
-            // 描述列
             const descCell = document.createElement('td');
             descCell.textContent = category.description || '无';
             row.appendChild(descCell);
             
-            // 创建时间列
             const timeCell = document.createElement('td');
             timeCell.textContent = new Date(category.created_at).toLocaleString();
             row.appendChild(timeCell);
             
-            // 操作列
             const actionCell = document.createElement('td');
             
-            // 编辑按钮
             const editBtn = document.createElement('button');
             editBtn.className = 'edit-btn';
             editBtn.textContent = '编辑';
             editBtn.onclick = () => this.showEditCategoryModal(category.id, category.name, category.description || '');
             actionCell.appendChild(editBtn);
             
-            // 空格
             actionCell.appendChild(document.createTextNode(' '));
             
-            // 删除按钮
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '删除';
@@ -99,12 +83,10 @@
         
         table.appendChild(tbody);
         
-        // 清空容器并添加表格
         container.innerHTML = '';
         container.appendChild(table);
     };
 
-    // 填充分类筛选下拉框
     AdminApp.prototype.populateCategoryFilter = function(categories) {
         const select = document.getElementById('categoryFilter');
         select.innerHTML = '<option value="">所有分类</option>';
@@ -117,7 +99,6 @@
         });
     };
 
-    // 显示添加分类的模态框
     AdminApp.prototype.showAddCategoryModal = function() {
         const content = `
             <form id="addCategoryForm">
@@ -144,7 +125,6 @@
         });
     };
 
-    // 处理添加分类
     AdminApp.prototype.handleAddCategory = async function() {
         const name = document.getElementById('categoryName').value;
         const description = document.getElementById('categoryDescription').value;
@@ -166,7 +146,6 @@
         }
     };
 
-    // 显示编辑分类的模态框
     AdminApp.prototype.showEditCategoryModal = function(id, name, description) {
         const content = `
             <form id="editCategoryForm">
@@ -194,7 +173,6 @@
         });
     };
 
-    // 处理编辑分类
     AdminApp.prototype.handleEditCategory = async function() {
         const id = document.getElementById('categoryId').value;
         const name = document.getElementById('categoryName').value;
@@ -220,7 +198,6 @@
         }
     };
 
-    // 显示删除分类的确认模态框
     AdminApp.prototype.showDeleteCategoryModal = function(id, name) {
         const content = `
             <div class="confirm-dialog">
@@ -236,7 +213,6 @@
         this.showModal('删除分类', content);
     };
 
-    // 处理删除分类
     AdminApp.prototype.handleDeleteCategory = async function(id) {
         try {
             const response = await this.apiRequest(`/api/admin/gift-card-categories/${id}`, {
@@ -257,13 +233,10 @@
         }
     };
 
-    // 初始化分类管理事件绑定
     AdminApp.prototype.initCategoriesEvents = function() {
         
-        // 添加分类按钮
         const addCategoryBtn = document.getElementById('addCategoryBtn');
         if (addCategoryBtn) {
-            // 移除旧的事件监听器，防止重复绑定
             addCategoryBtn.replaceWith(addCategoryBtn.cloneNode(true));
             const newAddCategoryBtn = document.getElementById('addCategoryBtn');
             

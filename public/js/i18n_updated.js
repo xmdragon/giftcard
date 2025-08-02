@@ -1,4 +1,3 @@
-// 多语言配置 - 基于中文版本重新翻译
 const translations = {
     zh: {
         site_title: '登录领取礼品卡',
@@ -92,7 +91,6 @@ const translations = {
         digit_4: '位数 4',
         digit_5: '位数 5',
         digit_6: '位数 6',
-        // 错误提示信息
         invalid_credentials: '登录凭据无效，请检查您的邮箱和密码是否正确',
         account_must_be_email_or_phone: '账号必须是有效的邮箱地址或手机号码',
         ip_banned: '您的IP地址已被禁止访问',
@@ -449,23 +447,20 @@ class I18n {
     }
 
     detectLanguage() {
-        // 检查服务器推荐的语言（优先级最高）
         if (typeof recommendLang !== 'undefined' && translations[recommendLang]) {
             return recommendLang;
         }
 
-        // 从localStorage获取保存的语言设置
         const savedLang = localStorage.getItem('language');
         if (savedLang && translations[savedLang]) {
             return savedLang;
         }
 
-        // 从浏览器语言检测
         const browserLang = navigator.language || navigator.userLanguage;
         if (browserLang.startsWith('zh')) return 'zh';
         if (browserLang.startsWith('ja')) return 'ja';
         if (browserLang.startsWith('ko')) return 'ko';
-        return 'en'; // 默认英语
+        return 'en'; // Default English
     }
 
     init() {
@@ -495,7 +490,6 @@ class I18n {
             }
         });
 
-        // 新增：处理 input/textarea 的 placeholder
         const placeholders = document.querySelectorAll('[data-i18n-placeholder]');
         placeholders.forEach(element => {
             const key = element.getAttribute('data-i18n-placeholder');
@@ -528,8 +522,7 @@ class I18n {
     }
 }
 
-// 等待DOM加载完成后初始化多语言
 document.addEventListener('DOMContentLoaded', function() {
     const i18n = new I18n();
-    window.i18n = i18n; // 使i18n全局可访问
+    window.i18n = i18n; // Make i18n globally accessible
 });

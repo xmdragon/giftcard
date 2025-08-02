@@ -49,7 +49,7 @@ i18next
 
 app.use(middleware.handle(i18next));
 
-// Language detection based on IP
+// Language detection based on IP and system settings
 app.use(async (req, res, next) => {
   let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
@@ -66,25 +66,36 @@ app.use(async (req, res, next) => {
     else if (geo.country === 'KR') lang = 'ko';
   }
   
-  // 获取系统设置中是否阻止中国IP的设置
   try {
+    // 获取系统语言设置
+    const langSettings = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['default_language']);
+    const defaultLanguage = langSettings && langSettings.length > 0 ? langSettings[0].setting_value : 'auto';
+    
+    // 如果设置为自动，则根据IP归属地确定语言
+    if (defaultLanguage === 'auto') {
+      res.locals.recommendLang = lang;
+    } else {
+      // 如果指定了特定语言，则使用指定的语言
+      res.locals.recommendLang = defaultLanguage;
+    }
+    
     if (isChineseIP) {
       const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['block_cn_ip']);
       if (settings && settings.length > 0) {
         const blockCnIP = settings[0].setting_value === 'true';
         res.locals.blockChineseIP = blockCnIP;
       } else {
-        res.locals.blockChineseIP = false; // 默认不阻止，修复逻辑
+        res.locals.blockChineseIP = false; // Default not blocked, fixed logic
       }
     } else {
       res.locals.blockChineseIP = false;
     }
   } catch (error) {
-    console.error('获取系统设置失败:', error);
-    res.locals.blockChineseIP = false; // 出错时不阻止
+    console.error('Failed to get system settings:', error);
+    res.locals.blockChineseIP = false; // Don't block on error
+    res.locals.recommendLang = lang; // Fallback to IP-based detection
   }
   
-  res.locals.recommendLang = lang;
   res.locals.isChineseIP = isChineseIP;
   next();
 });
@@ -105,7 +116,6 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// 在全局维护在线普通管理员socket映射和分配指针，挂载到app.locals
 const onlineAdmins = new Map(); // adminId -> {socket, username}
 let adminAssignPointer = 0;
 app.locals.onlineAdmins = onlineAdmins;
@@ -117,16 +127,13 @@ function assignAdminForLogin(db, app) {
     const onlineAdmins = app.locals.onlineAdmins;
     const adminIds = Array.from(onlineAdmins ? onlineAdmins.keys() : []);
     if (adminIds.length === 0) return null;
-    // 查询每个管理员当前待审核请求数
     const counts = {};
     for (const id of adminIds) {
       const rows = await db.query('SELECT COUNT(*) as cnt FROM login_logs WHERE status = "pending" AND assigned_admin_id = ?', [id]);
       counts[id] = rows[0] ? rows[0].cnt : 0;
     }
-    // 优先分配给待审核数最少的
     let min = Math.min(...Object.values(counts));
     let candidates = adminIds.filter(id => counts[id] === min);
-    // 多个最少则轮询
     let pointer = app.locals.adminAssignPointer || 0;
     let pick = candidates[pointer % candidates.length];
     app.locals.adminAssignPointer = (pointer + 1) % candidates.length;
@@ -134,7 +141,6 @@ function assignAdminForLogin(db, app) {
   };
 }
 
-// Socket.IO连接管理
 io.on('connection', (socket) => {
   socket.on('join-admin', async (adminInfo) => {
     if (!adminInfo || !adminInfo.id || (adminInfo.role !== 'admin' && adminInfo.role !== 'super')) {
@@ -142,12 +148,11 @@ io.on('connection', (socket) => {
     }
     app.locals.onlineAdmins.set(adminInfo.id, { socket, username: adminInfo.username });
     socket.adminId = adminInfo.id;
-    socket.join('admin'); // 让管理员加入 admin 房间
+    socket.join('admin'); // Let admin join admin room
     socket.on('disconnect', () => {
       app.locals.onlineAdmins.delete(adminInfo.id);
     });
   });
-  // 新增会员房间监听
   socket.on('join-member', (memberId) => {
     if (memberId) {
       socket.join(`member-${memberId}`);
@@ -217,18 +222,15 @@ async function startServer() {
       res.sendFile(path.join(__dirname, 'favicon.ico'));
     });
     
-    // 主页路由
     app.get('/', (req, res) => {
       res.render('index', { title: '礼品卡发放系统' });
     });
 
-    // 临时测试入口 - 强制显示中国区IP效果
     app.get('/test-cn', async (req, res) => {
       res.locals.isChineseIP = true;
       res.locals.recommendLang = 'zh';  // 设置推荐语言为中文
       
-      // 获取系统设置中是否阻止中国IP的设置
-      try {
+          try {
         const [settings] = await db.execute('SELECT setting_value FROM system_settings WHERE setting_key = ?', ['block_cn_ip']);
         if (settings && settings.length > 0) {
           const blockCnIP = settings[0].setting_value === 'true';
@@ -244,7 +246,6 @@ async function startServer() {
       res.render('index', { title: '礼品卡发放系统' });
     });
 
-    // 管理员页面路由
     
     // Start HTTP server
     const PORT = process.env.PORT || 3000;

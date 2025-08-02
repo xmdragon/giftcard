@@ -3,9 +3,7 @@
  * 包含会员列表加载、显示、搜索、分页、删除等功能
  */
 
-// 扩展 AdminApp 类
 (function () {
-    // 会员管理状态
     AdminApp.prototype.membersState = {
         currentPage: 1,
         pageSize: 20,
@@ -14,10 +12,8 @@
         total: 0
     };
 
-    // 初始化会员管理区域
     AdminApp.prototype.initMembersSection = function () {
         
-        // 权限检查 - 修复权限检查逻辑
         if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermission('members')) {
             const container = document.getElementById('membersList');
             if (container) {
@@ -26,16 +22,12 @@
             return;
         }
         
-        // 初始化事件绑定
         this.initMembersEvents();
         
-        // 加载会员数据
         this.loadMembers();
     };
 
-    // 初始化会员管理事件
     AdminApp.prototype.initMembersEvents = function () {
-        // 刷新会员列表按钮
         const refreshMembersBtn = document.getElementById('refreshMembers');
         if (refreshMembersBtn) {
             refreshMembersBtn.addEventListener('click', () => {
@@ -43,7 +35,6 @@
             });
         }
 
-        // 搜索按钮
         const searchBtn = document.getElementById('searchMembersBtn');
         if (searchBtn) {
             searchBtn.addEventListener('click', () => {
@@ -51,7 +42,6 @@
             });
         }
 
-        // 清除搜索按钮
         const clearBtn = document.getElementById('clearSearchBtn');
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
@@ -59,7 +49,6 @@
             });
         }
 
-        // 搜索框回车事件
         const searchInput = document.getElementById('memberEmailSearch');
         if (searchInput) {
             searchInput.addEventListener('keypress', (e) => {
@@ -69,10 +58,8 @@
             });
         }
 
-        // 注意：分页按钮现在通过 renderMembersPagination 动态生成和绑定
     };
 
-    // 加载会员列表
     AdminApp.prototype.loadMembers = async function () {
         const membersList = document.getElementById('membersList');
         if (!membersList) {
@@ -94,19 +81,15 @@
             if (response && response.ok) {
                 const data = await response.json();
 
-                // 检查数据格式
                 if (data && typeof data === 'object') {
-                    // 新格式：包含 members 和 pagination
                     if (data.members && Array.isArray(data.members)) {
                         this.displayMembers(data.members);
                         if (data.pagination) {
                             this.updateMembersPagination(data.pagination);
                         }
                     }
-                    // 旧格式：直接是会员数组
                     else if (Array.isArray(data)) {
                         this.displayMembers(data);
-                        // 为旧格式创建默认分页信息
                         this.updateMembersPagination({
                             page: 1,
                             limit: data.length,
@@ -131,7 +114,6 @@
         }
     };
 
-    // 搜索会员
     AdminApp.prototype.searchMembers = function () {
         const searchInput = document.getElementById('memberEmailSearch');
         this.membersState.searchEmail = searchInput.value.trim();
@@ -139,7 +121,6 @@
         this.loadMembers();
     };
 
-    // 清除搜索
     AdminApp.prototype.clearMembersSearch = function () {
         document.getElementById('memberEmailSearch').value = '';
         this.membersState.searchEmail = '';
@@ -147,17 +128,14 @@
         this.loadMembers();
     };
 
-    // 更新分页信息
     AdminApp.prototype.updateMembersPagination = function (pagination) {
         this.membersState.currentPage = pagination.page;
         this.membersState.totalPages = pagination.totalPages;
         this.membersState.total = pagination.total;
 
-        // 重新渲染分页控件
         this.renderMembersPagination(pagination);
     };
 
-    // 渲染会员分页控件
     AdminApp.prototype.renderMembersPagination = function(pagination) {
         const container = document.getElementById('membersPagination');
         if (!container) return;
@@ -170,12 +148,10 @@
         let html = '<div class="pagination-info">第 ' + pagination.page + ' 页，共 ' + pagination.totalPages + ' 页 (总计 ' + pagination.total + ' 条记录)</div>';
         html += '<div class="pagination-buttons">';
         
-        // 上一页按钮
         if (pagination.page > 1) {
             html += `<button onclick="adminApp.loadMembersPage(${pagination.page - 1})">上一页</button>`;
         }
         
-        // 页码按钮
         const startPage = Math.max(1, pagination.page - 2);
         const endPage = Math.min(pagination.totalPages, pagination.page + 2);
         
@@ -184,12 +160,10 @@
             html += `<button class="page-btn${activeClass}" onclick="adminApp.loadMembersPage(${i})">${i}</button>`;
         }
         
-        // 下一页按钮
         if (pagination.page < pagination.totalPages) {
             html += `<button onclick="adminApp.loadMembersPage(${pagination.page + 1})">下一页</button>`;
         }
         
-        // 每页条数选择
         html += '<select id="pageSizeSelectNew" style="margin-left: 10px;">';
         html += '<option value="10"' + (this.membersState.pageSize === 10 ? ' selected' : '') + '>每页 10 条</option>';
         html += '<option value="20"' + (this.membersState.pageSize === 20 ? ' selected' : '') + '>每页 20 条</option>';
@@ -199,7 +173,6 @@
         html += '</div>';
         container.innerHTML = html;
         
-        // 绑定每页条数选择事件
         const pageSizeSelect = document.getElementById('pageSizeSelectNew');
         if (pageSizeSelect) {
             pageSizeSelect.addEventListener('change', (e) => {
@@ -210,13 +183,11 @@
         }
     };
 
-    // 加载指定页码的会员数据
     AdminApp.prototype.loadMembersPage = function(page) {
         this.membersState.currentPage = page;
         this.loadMembers();
     };
 
-    // 删除会员
     AdminApp.prototype.deleteMember = async function (memberId, memberEmail) {
         if (!confirm(`确定要删除会员 "${memberEmail}" 吗？\n\n此操作将删除该会员的所有相关数据，包括：\n- 登录记录\n- 签到记录\n- 验证记录\n- 已分配的礼品卡将重置为可用状态\n\n此操作不可撤销！`)) {
             return;
@@ -229,7 +200,7 @@
 
             if (response && response.ok) {
                 alert('会员删除成功');
-                this.loadMembers(); // 重新加载会员列表
+                this.loadMembers(); // Reload members list
             } else {
                 const error = await response.json();
                 alert(`删除失败: ${error.error || '未知错误'}`);
@@ -240,12 +211,11 @@
         }
     };
 
-    // 格式化时间为 月-日 时:分 格式
     AdminApp.prototype.formatDateTime = function (dateString) {
         if (!dateString) return '未设置';
 
         const date = new Date(dateString);
-        const month = date.getMonth() + 1; // 月份从0开始，需要+1
+        const month = date.getMonth() + 1; // Month starts from 0, need to add 1
         const day = date.getDate();
         const hours = date.getHours().toString().padStart(2, '0');
         const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -253,7 +223,6 @@
         return `${month}-${day} ${hours}:${minutes}`;
     };
 
-    // 显示会员列表
     AdminApp.prototype.displayMembers = function (members) {
         const container = document.getElementById('membersList');
 

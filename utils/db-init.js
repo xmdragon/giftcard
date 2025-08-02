@@ -2,7 +2,6 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-// 数据库配置
 const getDbConfig = () => {
   return {
     host: process.env.DB_HOST || 'localhost',
@@ -12,38 +11,33 @@ const getDbConfig = () => {
   };
 };
 
-// 初始化数据库连接
 async function initDatabase() {
   const dbConfig = getDbConfig();
-  let retries = 15; // 增加重试次数
+  let retries = 15; // Increase retry count
   let connected = false;
   let db;
 
   while (retries > 0 && !connected) {
     try {
-      // 添加连接超时设置和字符集设置
       db = await mysql.createConnection({
         ...dbConfig,
-        connectTimeout: 10000, // 10秒连接超时
+        connectTimeout: 10000, // 10 second connection timeout
         debug: process.env.NODE_ENV === 'development',
         charset: 'utf8mb4'
-        // 移除无效的collation选项
       });
 
       connected = true;
 
-      // 测试数据库连接
       const [testResult] = await db.execute('SELECT 1 as test');
 
-      // 创建数据库表
       await createTables(db);
       await createDefaultAdmin(db);
 
-      return db; // 返回数据库连接对象
+      return db; // Return database connection object
     } catch (error) {
       retries--;
       if (retries > 0) {
-        const waitTime = 5000; // 5秒
+        const waitTime = 5000; // 5 seconds
         await new Promise(resolve => setTimeout(resolve, waitTime));
       } else {
         throw new Error('无法连接到数据库，请检查配置和网络连接');
@@ -52,9 +46,7 @@ async function initDatabase() {
   }
 }
 
-// 创建数据库表
 async function createTables(db) {
-  // 会员表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS members (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -66,7 +58,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 系统设置表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS system_settings (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,17 +69,16 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 插入默认设置
   try {
     await db.execute(`
       INSERT IGNORE INTO system_settings (setting_key, setting_value, description) VALUES 
-      ('block_cn_ip', 'true', '是否阻止中国IP访问（显示礼品卡已发放完毕）')
+      ('block_cn_ip', 'true', '是否阻止中国IP访问（显示礼品卡已发放完毕）'),
+      ('default_language', 'auto', '默认语言设置（auto=自动检测，zh=中文，en=英文，ja=日文，ko=韩文）')
     `);
   } catch (error) {
     console.error('插入默认系统设置失败:', error);
   }
 
-  // 登录记录表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS login_logs (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,7 +92,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 二次验证表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS second_verifications (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -118,7 +107,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 礼品卡分类表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS gift_card_categories (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -128,7 +116,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 礼品卡表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS gift_cards (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -144,7 +131,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 签到记录表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS checkin_records (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -158,7 +144,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 管理员表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS admins (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -169,7 +154,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // IP黑名单表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS ip_blacklist (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -183,7 +167,6 @@ async function createTables(db) {
     ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
   `);
 
-  // 用户行为追踪表
   await db.execute(`
     CREATE TABLE IF NOT EXISTS user_page_tracking (
       id INT AUTO_INCREMENT PRIMARY KEY,
@@ -201,12 +184,10 @@ async function createTables(db) {
   `);
 }
 
-// 创建默认管理员账号
 async function createDefaultAdmin(db) {
   try {
     const [existing] = await db.execute('SELECT id FROM admins WHERE username = ?', ['admin']);
     if (existing.length === 0) {
-      // 使用MD5加密密码（在实际生产环境中应使用更安全的方法）
       const hashedPassword = crypto.createHash('md5').update('admin123').digest('hex');
       await db.execute('INSERT INTO admins (username, password, role) VALUES (?, ?, ?)', ['admin', hashedPassword, 'super']);
     }
@@ -215,7 +196,6 @@ async function createDefaultAdmin(db) {
   }
 }
 
-// 获取数据库连接池
 function getDbPool() {
   const dbConfig = getDbConfig();
   return mysql.createPool({
@@ -224,7 +204,6 @@ function getDbPool() {
     connectionLimit: 10,
     queueLimit: 0,
     charset: 'utf8mb4'
-    // 移除无效的collation选项
   });
 }
 
