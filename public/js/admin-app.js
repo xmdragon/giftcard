@@ -17,6 +17,9 @@ Object.assign(AdminApp.prototype, {
         this.socketManager = new AdminSocket(this);
         this.approvals = new AdminApprovals(this);
 
+        // Audio notification will be initialized after user interaction
+        // this.audioNotification.init();
+
         const token = localStorage.getItem('adminToken');
         if (token) {
             this.token = token;
@@ -88,6 +91,13 @@ Object.assign(AdminApp.prototype, {
                 this.closeModal();
             }
         });
+        
+        // Initialize audio on user interaction
+        document.addEventListener('click', () => {
+            if (this.audioNotification && !this.audioNotification.audio) {
+                this.audioNotification.init();
+            }
+        }, { once: true });
         
         this.bindDynamicEvents();
     },
@@ -347,6 +357,61 @@ Object.assign(AdminApp.prototype, {
         }
     },
 
+    // Audio notification management
+    audioNotification: {
+        audio: null,
+        isPlaying: false,
+        
+        init() {
+            this.audio = new Audio('/snd/notice.mp3');
+            this.audio.loop = true;
+            this.audio.volume = 1.0;
+        },
+        
+        play() {
+            if (!this.audio) {
+                this.init();
+            }
+            
+            if (!this.isPlaying) {
+                this.audio.play().then(() => {
+                    this.isPlaying = true;
+                }).catch(error => {
+                    if (error.name === 'NotAllowedError') {
+                        const notification = document.createElement('div');
+                        notification.style.cssText = `
+                            position: fixed;
+                            top: 20px;
+                            right: 20px;
+                            background: #ff6b6b;
+                            color: white;
+                            padding: 15px;
+                            border-radius: 5px;
+                            z-index: 10000;
+                            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+                        `;
+                        notification.textContent = '有新的审核请求，请点击页面任意位置播放通知音频';
+                        document.body.appendChild(notification);
+                        
+                        setTimeout(() => {
+                            if (notification.parentNode) {
+                                notification.parentNode.removeChild(notification);
+                            }
+                        }, 5000);
+                    }
+                });
+            }
+        },
+        
+        stop() {
+            if (this.audio && this.isPlaying) {
+                this.audio.pause();
+                this.audio.currentTime = 0;
+                this.isPlaying = false;
+            }
+        }
+    },
+
     // Update pending counts
     updatePendingCount() {
         const loginCount = document.querySelectorAll('#loginRequestsList .request-item').length;
@@ -381,6 +446,13 @@ Object.assign(AdminApp.prototype, {
         const dashboardVerificationRequests = document.getElementById('dashboardVerificationRequests');
         if (dashboardVerificationRequests) {
             dashboardVerificationRequests.textContent = verificationCount;
+        }
+        
+        // Audio notification logic
+        if (loginCount > 0 || verificationCount > 0) {
+            this.audioNotification.play();
+        } else {
+            this.audioNotification.stop();
         }
     },
 
