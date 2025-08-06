@@ -6,11 +6,9 @@ const db = require('../utils/db');
 const adminSecurity = require('../utils/admin-security');
 const router = express.Router();
 
-// 存储验证码的临时会话存储
 const captchaSessions = new Map();
 
 module.exports = (io) => {
-    // 管理员登录
     router.post('/login', async (req, res) => {
         const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
                         (req.connection.socket ? req.connection.socket.remoteAddress : null);
@@ -19,7 +17,6 @@ module.exports = (io) => {
         try {
             const { username, password, captcha } = req.body;
 
-            // 1. 首先检查IP是否被限制
             const ipRestriction = await adminSecurity.checkIPRestriction(clientIP);
             if (ipRestriction.blocked) {
                 let errorMessage = '';
@@ -36,7 +33,6 @@ module.exports = (io) => {
                 });
             }
             
-            // 2. 验证验证码
             if (!captcha) {
                 await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_captcha', userAgent);
                 return res.status(400).json({ error: '请输入验证码' });
@@ -46,16 +42,13 @@ module.exports = (io) => {
             const storedCaptcha = captchaSessions.get(sessionId);
             
             if (!storedCaptcha || storedCaptcha.toLowerCase() !== captcha.toLowerCase()) {
-                // 验证码错误，删除存储的验证码并记录失败
                 captchaSessions.delete(sessionId);
                 await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_captcha', userAgent);
                 return res.status(400).json({ error: '验证码错误' });
             }
             
-            // 验证码正确，删除已使用的验证码
             captchaSessions.delete(sessionId);
 
-            // 3. 验证用户名
             const admins = await db.query('SELECT * FROM admins WHERE username = ?', [username]);
 
             if (admins.length === 0) {
@@ -65,15 +58,12 @@ module.exports = (io) => {
 
             const admin = admins[0];
 
-            // 4. 验证密码
             const md5Password = crypto.createHash('md5').update(password).digest('hex');
             const validPassword = (md5Password === admin.password);
 
             if (!validPassword) {
-                // 密码错误，记录失败并检查是否需要限制
                 await adminSecurity.recordLoginFailure(clientIP, username, 'wrong_password', userAgent);
                 
-                // 获取今天的失败次数给用户提示
                 const stats = await adminSecurity.getIPFailureStats(clientIP);
                 let errorMessage = req.t ? req.t('invalid_credentials') : '用户名或密码错误';
                 
@@ -89,7 +79,6 @@ module.exports = (io) => {
                 return res.status(400).json({ error: errorMessage });
             }
 
-            // 5. 登录成功，生成token
             const token = jwt.sign(
                 { id: admin.id, username: admin.username, role: admin.role, permissions: admin.permissions },
                 process.env.JWT_SECRET || 'secret',
@@ -103,7 +92,6 @@ module.exports = (io) => {
             
         } catch (error) {
             console.error('管理员登录错误:', error);
-            // 即使出错也记录失败尝试
             try {
                 await adminSecurity.recordLoginFailure(clientIP, req.body.username || '', 'wrong_password', userAgent);
             } catch (recordError) {
@@ -114,7 +102,6 @@ module.exports = (io) => {
         }
     });
 
-    // 修改管理员密码
     router.post('/change-password', async (req, res) => {
         try {
             const { currentPassword, newPassword } = req.body;
@@ -125,11 +112,9 @@ module.exports = (io) => {
                 return res.status(401).json({ error: '需要登录' });
             }
 
-            // 验证JWT令牌
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
             const adminId = decoded.id;
 
-            // 获取管理员信息
             const admins = await db.query('SELECT * FROM admins WHERE id = ?', [adminId]);
             if (admins.length === 0) {
                 return res.status(404).json({ error: '管理员不存在' });
@@ -137,21 +122,17 @@ module.exports = (io) => {
 
             const admin = admins[0];
 
-            // 验证当前密码
             const currentMd5Password = crypto.createHash('md5').update(currentPassword).digest('hex');
             if (currentMd5Password !== admin.password) {
                 return res.status(400).json({ error: '当前密码不正确' });
             }
 
-            // 验证新密码
             if (!newPassword || newPassword.length < 6) {
                 return res.status(400).json({ error: '新密码长度至少6位' });
             }
 
-            // 生成新密码的MD5哈希
             const newMd5Password = crypto.createHash('md5').update(newPassword).digest('hex');
 
-            // 更新密码
             await db.query('UPDATE admins SET password = ? WHERE id = ?', [newMd5Password, adminId]);
 
             res.json({ message: '密码修改成功' });
@@ -174,7 +155,6 @@ module.exports = (io) => {
         }
     });
 
-    // 生成验证码接口
     router.get('/captcha', (req, res) => {
         try {
             const captcha = svgCaptcha.create({
@@ -185,12 +165,11 @@ module.exports = (io) => {
                 width: 120,
                 height: 40,
                 fontSize: 50,
-                charPreset: '2345678ABCDEFGHKLMNPQRSTUVWXYZ' // 排除容易混淆的字符 0,1,O,I
+                charPreset: '2345678ABCDEFGHKLMNPQRSTUVWXYZ' // Exclude easily confused characters 0,1,O,I
             });
             
             const sessionId = req.ip + '-' + req.headers['user-agent'];
             
-            // 存储验证码文本（5分钟过期）
             captchaSessions.set(sessionId, captcha.text);
             setTimeout(() => {
                 captchaSessions.delete(sessionId);
@@ -204,7 +183,6 @@ module.exports = (io) => {
         }
     });
 
-    // TOKEN刷新接口
     router.post('/refresh-token', async (req, res) => {
         try {
             const authHeader = req.headers['authorization'];
@@ -214,10 +192,8 @@ module.exports = (io) => {
                 return res.status(401).json({ error: '需要TOKEN' });
             }
 
-            // 验证当前TOKEN
             const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
             
-            // 获取管理员信息
             const admins = await db.query('SELECT * FROM admins WHERE id = ?', [decoded.id]);
             if (admins.length === 0) {
                 return res.status(404).json({ error: '管理员不存在' });

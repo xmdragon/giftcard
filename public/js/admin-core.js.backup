@@ -21,14 +21,11 @@ class AdminApp {
         }
     }
 
-    // 初始化
     init() {
-        // 检查本地存储的身份验证令牌
         const token = localStorage.getItem('adminToken');
         if (token) {
             this.token = token;
             
-            // 尝试从本地存储获取管理员信息
             const adminInfo = localStorage.getItem('adminInfo');
             if (adminInfo) {
                 try {
@@ -40,29 +37,22 @@ class AdminApp {
                 console.log('[init] localStorage adminInfo 为空');
             }
             
-            // 初始化Socket.IO
             this.socket = io();
             this.setupSocketListeners();
             
-            // 显示仪表盘
             this.showDashboard();
 
-            // 加载初始数据
             this.loadInitialData();
         } else {
             this.showLoginPage();
         }
         
-        // 绑定事件处理程序
         this.bindEvents();
         
-        // 初始化权限管理
         this.updateNavByPermission();
 
-        // 渲染导航栏
         this.renderNavMenu();
 
-        // 添加系统设置菜单项
         this.addSystemSettingsMenuItem();
     }
 
@@ -93,7 +83,6 @@ class AdminApp {
             });
         });
         
-        // 仪表盘刷新按钮
         const refreshDashboardBtn = document.getElementById('refreshDashboard');
         if (refreshDashboardBtn) {
             refreshDashboardBtn.addEventListener('click', () => {
@@ -353,7 +342,6 @@ class AdminApp {
         }
     }
 
-    // 显示仪表盘页面
     showDashboard() {
         if (!this.currentAdmin) return;
         const loginPage = document.getElementById('adminLoginPage');
@@ -367,24 +355,20 @@ class AdminApp {
         }
 
         if (this.currentAdmin) {
-            // 显示管理员信息
             const adminName = document.getElementById('adminName');
             const adminRole = document.getElementById('adminRole');
             
             if (adminName) adminName.textContent = this.currentAdmin.username;
             if (adminRole) adminRole.textContent = this.currentAdmin.role === 'super' ? '超级管理员' : '普通管理员';
             
-            // 根据角色显示或隐藏管理员管理入口
         const adminManageNav = document.getElementById('adminManageNav');
         if (adminManageNav) {
                 adminManageNav.style.display = this.currentAdmin.role === 'super' ? 'block' : 'none';
             }
         }
         
-        // 默认显示仪表盘
         this.switchSection('dashboard');
         
-        // 加入管理员房间
         if (this.socket && this.currentAdmin) {
             this.socket.emit('join-admin', {
                 id: this.currentAdmin.id,
@@ -394,16 +378,13 @@ class AdminApp {
         }
     }
 
-    // 加载初始数据
     async loadInitialData() {
         if (!this.currentAdmin) return;
         try {
             
-            // 加载待审核请求
             await this.loadLoginRequests();
             await this.loadVerificationRequests();
             
-            // 根据权限选择性加载其他数据
             if (this.hasPermissionPoint('members:view')) {
                 this.loadMembers();
             }
@@ -420,12 +401,10 @@ class AdminApp {
                 this.loadIpBlacklist();
             }
             
-            // 如果是超级管理员，还要加载管理员列表
             if (this.currentAdmin && this.currentAdmin.role === 'super') {
                 this.loadAdmins();
             }
             
-            // 更新待审核请求数量
                 this.updatePendingCount();
             
         } catch (error) {
@@ -435,7 +414,6 @@ class AdminApp {
 
     async apiRequest(url, options = {}) {
         if (this.isLoggingOut) return;
-        // 默认加上 Content-Type: application/json
         const method = (options.method || 'GET').toUpperCase();
         const defaultHeaders = (method === 'POST' || method === 'PUT')
             ? { 'Content-Type': 'application/json' }
@@ -466,13 +444,11 @@ class AdminApp {
         const verificationCount = document.querySelectorAll('#verificationRequestsList .request-item').length;
         const totalCount = loginCount + verificationCount;
 
-        // 更新导航栏中的数字
             const navPendingCount = document.getElementById('navPendingCount');
             if (navPendingCount) {
             navPendingCount.textContent = totalCount;
         }
         
-        // 更新各个计数器
         const pendingCount = document.getElementById('pendingCount');
         if (pendingCount) {
             pendingCount.textContent = totalCount;
@@ -488,7 +464,6 @@ class AdminApp {
             verificationRequestsCount.textContent = verificationCount;
         }
         
-        // 同时更新仪表盘上的数字
         const dashboardLoginRequests = document.getElementById('dashboardLoginRequests');
         if (dashboardLoginRequests) {
             dashboardLoginRequests.textContent = loginCount;
@@ -502,12 +477,9 @@ class AdminApp {
 
     // Switch between admin sections
     switchSection(section) {
-        // 检查参数是否为空
         if (!section) return;
         
-        // 验证权限
         if (!this.hasPermission(section)) {
-            // 权限不足时重定向到有权限的第一个页面
             const firstPermittedSection = this.getFirstPermittedSection();
             if (firstPermittedSection && firstPermittedSection !== section) {
                 section = firstPermittedSection;
@@ -540,37 +512,29 @@ class AdminApp {
             console.error(`未找到对应区域: ${section}Section`);
         }
         
-        // 处理特定区域的子标签页
         if (section === 'dashboard') {
             this.loadDashboardData();
-            // 确保我们至少有一个活动的标签页
             if (!document.querySelector('.tab-content.active')) {
                 this.switchTab('loginRequests');
             }
         } else if (section === 'giftcards') {
-            // 重置礼品卡页面标题
             const sectionHeader = document.querySelector('#giftcardsSection .section-header h2');
             if (sectionHeader) {
                 sectionHeader.textContent = '礼品卡管理';
             }
-            // 加载礼品卡数据
             if (typeof this.loadGiftCards === 'function') {
                 this.loadGiftCards(1);
             }
         }
     }
     
-    // 判断是否有权限访问某个区域
     hasPermission(section) {
-        // dashboard和pending区域不需要单独的权限检查，所有人都可以访问
         if (['dashboard', 'pending'].includes(section)) {
             return true;
         }
-        // 超级管理员有所有权限
         if (this.currentAdmin && this.currentAdmin.role === 'super') {
             return true;
         }
-        // 其他区域的权限映射
         const sectionPermissionMap = {
             'members': 'members:view',
             'giftcards': 'gift-cards:view',
@@ -583,18 +547,14 @@ class AdminApp {
         if (requiredPermission) {
             return this.hasPermissionPoint(requiredPermission);
         }
-        // 默认允许访问
         return true;
     }
     
-    // 检查具体权限点
     hasPermissionPoint(permissionKey) {
         if (!this.currentAdmin) return false;
         
-        // 超级管理员拥有所有权限
         if (this.currentAdmin.role === 'super') return true;
         
-        // 普通管理员检查权限点
         try {
             const permissions = this.currentAdmin.permissions ? JSON.parse(this.currentAdmin.permissions) : {};
             return !!permissions[permissionKey];
@@ -604,7 +564,6 @@ class AdminApp {
         }
     }
     
-    // 获取第一个有权限的区域
     getFirstPermittedSection() {
         const dashboard = this.hasPermission('dashboard');
         if (dashboard) {
@@ -854,7 +813,6 @@ class AdminApp {
         }
     }
 
-    // 权限分配弹窗逻辑
     async showPermissionModal() {
         if (!this.currentAdmin || this.currentAdmin.role !== 'super') {
             alert('无权限访问该功能！');
@@ -878,7 +836,6 @@ class AdminApp {
             html += '</ul></div>';
             html += '<div style="flex:1"><div style="font-weight:bold;font-size:1.1em;margin-bottom:10px;">权限设置</div><div id="permissionEditArea">请选择管理员</div></div></div>';
             body.innerHTML = html;
-            // 绑定管理员点击和高亮
             const adminItems = document.querySelectorAll('.permission-admin-item');
             adminItems.forEach(item => {
                 if(item.style.color) return;
@@ -902,7 +859,6 @@ class AdminApp {
     renderPermissionEdit(admin) {
         const area = document.getElementById('permissionEditArea');
         if (!admin) return area.innerHTML = '未找到管理员';
-        // 权限点定义
         const points = [
             { key: 'login-requests:view', label: '查看登录请求', group: '登录审核' },
             { key: 'login-requests:approve', label: '审核登录请求', group: '登录审核' },
@@ -923,7 +879,6 @@ class AdminApp {
         ];
         let perms = {};
         try { perms = admin.permissions ? JSON.parse(admin.permissions) : {}; } catch(e){}
-        // 分组
         const groupMap = {};
         points.forEach(p => {
             if (!groupMap[p.group]) groupMap[p.group] = [];
@@ -941,7 +896,6 @@ class AdminApp {
         html += `</table>`;
         html += `<div style="text-align:right;"><button type="submit" class="btn btn-primary" style="padding:8px 32px;font-size:1.1em;">保存权限</button></div></form>`;
         area.innerHTML = html;
-        // 绑定保存
         document.getElementById('permissionEditForm').onsubmit = async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -971,30 +925,23 @@ class AdminApp {
         };
     }
 
-    // 更新导航栏权限
     updateNavByPermission() {
-        // 如果用户未登录，不做任何操作
         if (!this.currentAdmin) return;
         
-        // 根据角色和权限隐藏/显示导航按钮
         if (this.currentAdmin.role !== 'super') {
-            // 非超级管理员隐藏管理员管理
             const adminManageBtn = document.getElementById('adminManageBtn');
             if (adminManageBtn) {
                 adminManageBtn.parentElement.style.display = 'none';
             }
         } else {
-            // 超级管理员显示管理员管理
             const adminManageBtn = document.getElementById('adminManageBtn');
             if (adminManageBtn) {
                 adminManageBtn.parentElement.style.display = '';
             }
             
-            // 添加系统设置菜单项
             this.addSystemSettingsMenuItem();
         }
         
-        // 检查各个功能的权限
         const sections = ['login-requests', 'verification-requests', 'members', 'gift-cards', 'categories', 'ip-blacklist'];
         sections.forEach(section => {
             const hasAccess = this.hasPermission(section);
@@ -1005,7 +952,6 @@ class AdminApp {
         });
     }
 
-    // 加载仪表盘数据
     async loadDashboardData() {
         if (!this.currentAdmin) return;
         try {
@@ -1019,39 +965,32 @@ class AdminApp {
         }
     }
     
-    // 更新仪表盘数据
     updateDashboard(data) {
-        // 更新待审核登录请求数
         const loginRequestsEl = document.getElementById('dashboardLoginRequests');
         if (loginRequestsEl) {
             loginRequestsEl.textContent = data.loginRequests || 0;
         }
         
-        // 更新待审核验证请求数
         const verificationRequestsEl = document.getElementById('dashboardVerificationRequests');
         if (verificationRequestsEl) {
             verificationRequestsEl.textContent = data.verificationRequests || 0;
         }
         
-        // 更新会员总数
         const membersCountEl = document.getElementById('dashboardMembersCount');
         if (membersCountEl) {
             membersCountEl.textContent = data.membersCount || 0;
         }
         
-        // 更新禁止IP数
         const bannedIpsEl = document.getElementById('dashboardBannedIps');
         if (bannedIpsEl) {
             bannedIpsEl.textContent = data.bannedIpsCount || 0;
         }
         
-        // 更新未发放礼品卡总数
         const totalAvailableCardsEl = document.getElementById('dashboardTotalAvailableCards');
         if (totalAvailableCardsEl) {
             totalAvailableCardsEl.textContent = `(总计: ${data.totalAvailableCards || 0})`;
         }
         
-        // 更新礼品卡分类统计
         const giftCardStatsTable = document.getElementById('dashboardGiftCardStats');
         if (giftCardStatsTable) {
             const tbody = giftCardStatsTable.querySelector('tbody');
@@ -1073,21 +1012,17 @@ class AdminApp {
         }
     }
     
-    // 添加系统设置菜单项
     addSystemSettingsMenuItem() {
         const nav = document.querySelector('nav ul');
         if (!nav) {
             console.error('导航菜单未找到');
             return;
         }
-        // 防止重复添加
         if (nav.querySelector('#systemSettingsBtn')) return;
-        // 创建菜单项
         const settingsItem = document.createElement('li');
         settingsItem.innerHTML = '<button id="systemSettingsBtn" class="nav-button"><i class="fas fa-cog"></i> 系统设置</button>';
         nav.appendChild(settingsItem);
         
-        // 添加点击事件
         const systemSettingsBtn = document.getElementById('systemSettingsBtn');
         if (systemSettingsBtn) {
             systemSettingsBtn.addEventListener('click', () => {
@@ -1096,7 +1031,6 @@ class AdminApp {
         }
     }
 
-    // 显示系统设置页面
     showSystemSettings() {
         let settingsSection = document.getElementById('systemSettingsSection');
         if (!settingsSection) {
@@ -1110,7 +1044,6 @@ class AdminApp {
         this.loadSystemSettings();
     }
 
-    // 加载系统设置
     async loadSystemSettings() {
         try {
             const response = await this.apiRequest('/api/admin/system-settings');
@@ -1126,7 +1059,6 @@ class AdminApp {
         }
     }
 
-    // 显示系统设置
     displaySystemSettings(settings) {
         const container = document.getElementById('systemSettingsSection');
         
@@ -1171,7 +1103,6 @@ class AdminApp {
         
         container.innerHTML = html;
         
-        // 添加事件监听器
         document.querySelectorAll('.edit-setting-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const key = e.target.dataset.key;
@@ -1181,7 +1112,6 @@ class AdminApp {
         });
     }
 
-    // 显示编辑设置模态框
     showEditSettingModal(key, currentValue) {
         const isBoolean = currentValue === 'true' || currentValue === 'false';
         
@@ -1229,7 +1159,6 @@ class AdminApp {
         });
     }
 
-    // 更新系统设置
     async updateSystemSetting(key, value) {
         try {
             const response = await this.apiRequest(`/api/admin/system-settings/${key}`, {
@@ -1270,7 +1199,6 @@ class AdminApp {
             li.innerHTML = `<button class="nav-btn" data-section="${item.key}" id="${item.key}NavBtn"><i class="fas ${item.icon}"></i> ${item.label}</button>`;
             navList.appendChild(li);
         });
-        // 绑定点击事件
         navList.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchSection(e.target.dataset.section);
@@ -1278,7 +1206,6 @@ class AdminApp {
         });
     }
 
-    // 添加登录请求
     addLoginRequest(request) {
         const container = document.getElementById('loginRequestsList');
         if (!container) {
@@ -1290,7 +1217,6 @@ class AdminApp {
         if (existingEmpty) {
             existingEmpty.remove();
         }
-        // 存储邮箱和密码的映射，用于验证请求
         if (request.email && request.password) {
             this.emailPasswordMap.set(request.email, request.password);
         }
@@ -1311,7 +1237,6 @@ class AdminApp {
         container.insertBefore(requestElement, container.firstChild);
     }
 
-    // 批准或拒绝登录请求
     async approveLogin(requestId, approve) {
         try {
             const response = await this.apiRequest(`/api/auth/admin/approve-login/${requestId}`, {
@@ -1333,7 +1258,6 @@ class AdminApp {
         }
     }
 
-    // 加载登录请求列表
     async loadLoginRequests() {
         const container = document.getElementById('loginRequestsList');
         if (!container) return;
@@ -1351,7 +1275,6 @@ class AdminApp {
         }
     }
 
-    // 渲染登录请求列表
     renderLoginRequests(requests) {
         if (requests.length === 0) {
             return '<p>暂无登录请求</p>';
@@ -1371,7 +1294,6 @@ class AdminApp {
         `).join('');
     }
 
-    // 加载验证请求列表
     async loadVerificationRequests() {
         const container = document.getElementById('verificationRequestsList');
         if (!container) return;
@@ -1389,7 +1311,6 @@ class AdminApp {
         }
     }
 
-    // 渲染验证请求列表
     renderVerificationRequests(requests) {
         if (requests.length === 0) {
             return '<p>暂无验证请求</p>';
@@ -1409,7 +1330,6 @@ class AdminApp {
         `).join('');
     }
 
-    // 批准或拒绝验证请求
     async approveVerification(requestId, approve) {
         try {
             const response = await this.apiRequest(`/api/auth/admin/approve-verification/${requestId}`, {
@@ -1431,7 +1351,6 @@ class AdminApp {
         }
     }
 
-    // 加载会员列表
     async loadMembers() {
         const container = document.getElementById('memberList');
         if (!container) return;
@@ -1449,7 +1368,6 @@ class AdminApp {
         }
     }
 
-    // 渲染会员列表
     renderMemberList(members) {
         return `<table><thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>注册时间</th><th>操作</th></tr></thead><tbody>
             ${members.map(member => `
@@ -1466,7 +1384,6 @@ class AdminApp {
         </tbody></table>`;
     }
 
-    // 删除会员
     async deleteMember(id) {
         if (!confirm('确定要删除此会员吗？')) return;
         try {
@@ -1483,7 +1400,6 @@ class AdminApp {
         }
     }
 
-    // 加载礼品卡列表
     async loadGiftCards(page = 1) {
         const container = document.getElementById('giftCardList');
         if (!container) return;
@@ -1501,7 +1417,6 @@ class AdminApp {
         }
     }
 
-    // 渲染礼品卡列表
     renderGiftCardList(data) {
         const { gift_cards, total_pages } = data;
         if (gift_cards.length === 0) {
@@ -1534,7 +1449,6 @@ class AdminApp {
         return html;
     }
 
-    // 显示添加礼品卡模态框
     showAddGiftCardsModal() {
         this.showModal('添加礼品卡', `
             <form id="addGiftCardForm">
@@ -1587,7 +1501,6 @@ class AdminApp {
         }
     }
 
-    // 显示编辑礼品卡模态框
     async showEditGiftCardModal(id) {
         const container = document.getElementById('giftCardList');
         if (!container) return;
@@ -1653,7 +1566,6 @@ class AdminApp {
         }
     }
 
-    // 删除礼品卡
     async deleteGiftCard(id) {
         if (!confirm('确定要删除此礼品卡吗？')) return;
         try {
@@ -1670,7 +1582,6 @@ class AdminApp {
         }
     }
 
-    // 加载分类列表
     async loadCategories() {
         const container = document.getElementById('categoryList');
         if (!container) return;
@@ -1688,7 +1599,6 @@ class AdminApp {
         }
     }
 
-    // 渲染分类列表
     renderCategoryList(categories) {
         if (categories.length === 0) {
             return '<p>暂无分类</p>';
@@ -1707,7 +1617,6 @@ class AdminApp {
         </tbody></table>`;
     }
 
-    // 显示添加分类模态框
     showAddCategoryModal() {
         this.showModal('添加分类', `
             <form id="addCategoryForm">
@@ -1747,7 +1656,6 @@ class AdminApp {
         }
     }
 
-    // 显示编辑分类模态框
     async showEditCategoryModal(id) {
         const container = document.getElementById('categoryList');
         if (!container) return;
@@ -1800,7 +1708,6 @@ class AdminApp {
         }
     }
 
-    // 删除分类
     async deleteCategory(id) {
         if (!confirm('确定要删除此分类吗？')) return;
         try {
@@ -1817,7 +1724,6 @@ class AdminApp {
         }
     }
 
-    // 加载IP黑名单
     async loadIpBlacklist() {
         const container = document.getElementById('ipBlacklistList');
         if (!container) return;
@@ -1835,7 +1741,6 @@ class AdminApp {
         }
     }
 
-    // 渲染IP黑名单
     renderIpBlacklist(ips) {
         if (ips.length === 0) {
             return '<p>暂无IP黑名单</p>';
@@ -1855,7 +1760,6 @@ class AdminApp {
         </tbody></table>`;
     }
 
-    // 添加IP到黑名单
     async banIp(ip, type, reason) {
         if (!confirm(`确定要将IP ${ip} 添加到黑名单吗？`)) return;
         try {
@@ -1875,7 +1779,6 @@ class AdminApp {
         }
     }
 
-    // 解禁IP
     async unbanIp(ip) {
         if (!confirm(`确定要解禁IP ${ip} 吗？`)) return;
         try {
@@ -1892,7 +1795,6 @@ class AdminApp {
         }
     }
 
-    // 加载IP登录历史
     async loadIpHistory() {
         const container = document.getElementById('ipHistoryList');
         if (!container) return;
@@ -1910,7 +1812,6 @@ class AdminApp {
         }
     }
 
-    // 渲染IP登录历史
     renderIpHistory(history) {
         if (history.length === 0) {
             return '<p>暂无IP登录历史</p>';
@@ -1929,7 +1830,6 @@ class AdminApp {
         </tbody></table>`;
     }
 
-    // 删除IP登录历史
     async deleteIpHistory(ip) {
         if (!confirm(`确定要删除IP ${ip} 的所有登录历史吗？`)) return;
         try {
@@ -1946,7 +1846,6 @@ class AdminApp {
         }
     }
 
-    // 格式化日期时间
     formatDateTime(timestamp) {
         const date = new Date(timestamp);
         const year = date.getFullYear();
@@ -1957,7 +1856,6 @@ class AdminApp {
         return `${year}-${month}-${day} ${hours}:${minutes}`;
     }
 
-    // 渲染分类选项
     renderCategoryOptions(selectedId = '') {
         const categories = [
             { id: 1, name: '普通礼品卡' },

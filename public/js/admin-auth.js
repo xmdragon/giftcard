@@ -8,7 +8,6 @@ class AdminAuth {
         this.adminApp = adminApp;
     }
 
-    // 处理管理员登录
     async handleAdminLogin() {
         const usernameField = document.getElementById('username');
         const passwordField = document.getElementById('adminPassword');
@@ -44,21 +43,18 @@ class AdminAuth {
                 this.adminApp.currentAdmin = data.admin;
                 localStorage.setItem('adminToken', this.adminApp.token);
                 localStorage.setItem('adminInfo', JSON.stringify(data.admin));
-                window.location.reload(); // 登录成功后强制刷新页面
+                window.location.reload(); // Force page refresh after successful login
                 return;
             } else {
                 alert(data.error || '登录失败');
-                // 登录失败后刷新验证码
                 this.refreshCaptcha();
             }
         } catch (error) {
             alert('网络错误，请重试');
-            // 网络错误后也刷新验证码
             this.refreshCaptcha();
         }
     }
 
-    // 刷新验证码
     refreshCaptcha() {
         const captchaImage = document.getElementById('captchaImage');
         const captchaField = document.getElementById('captcha');
@@ -70,7 +66,6 @@ class AdminAuth {
         }
     }
 
-    // 登出
     logout() {
         // Clear authentication data
         this.adminApp.token = null;
@@ -116,7 +111,6 @@ class AdminAuth {
         }
     }
 
-    // 显示仪表盘页面
     showDashboard() {
         if (!this.adminApp.currentAdmin) return;
         const loginPage = document.getElementById('adminLoginPage');
@@ -126,7 +120,6 @@ class AdminAuth {
             loginPage.classList.remove('active');
             dashboardPage.classList.add('active');
             
-            // 重新绑定动态事件
             setTimeout(() => {
                 this.adminApp.bindDynamicEvents();
             }, 100);
@@ -135,24 +128,20 @@ class AdminAuth {
         }
 
         if (this.adminApp.currentAdmin) {
-            // 显示管理员信息
             const adminName = document.getElementById('adminName');
             const adminRole = document.getElementById('adminRole');
             
             if (adminName) adminName.textContent = this.adminApp.currentAdmin.username;
             if (adminRole) adminRole.textContent = this.adminApp.currentAdmin.role === 'super' ? '超级管理员' : '普通管理员';
             
-            // 根据角色显示或隐藏管理员管理入口
             const adminManageNav = document.getElementById('adminManageNav');
             if (adminManageNav) {
                 adminManageNav.style.display = this.adminApp.currentAdmin.role === 'super' ? 'block' : 'none';
             }
         }
         
-        // 默认显示仪表盘
         this.adminApp.switchSection('dashboard');
         
-        // 加入管理员房间
         if (this.adminApp.socket && this.adminApp.currentAdmin) {
             this.adminApp.socket.emit('join-admin', {
                 id: this.adminApp.currentAdmin.id,
@@ -162,7 +151,6 @@ class AdminAuth {
         }
     }
 
-    // 显示修改密码模态框
     showChangePasswordModal() {
         const content = `
             <form id="changePasswordForm">
@@ -198,7 +186,6 @@ class AdminAuth {
         }
     }
 
-    // 处理密码修改
     async handleChangePassword() {
         const currentPasswordField = document.getElementById('currentPassword');
         const newPasswordField = document.getElementById('newPassword');
@@ -258,14 +245,11 @@ class AdminAuth {
         }
     }
 
-    // 检查具体权限点
     hasPermissionPoint(permissionKey) {
         if (!this.adminApp.currentAdmin) return false;
         
-        // 超级管理员拥有所有权限
         if (this.adminApp.currentAdmin.role === 'super') return true;
         
-        // 普通管理员检查权限点
         try {
             const permissions = this.adminApp.currentAdmin.permissions ? JSON.parse(this.adminApp.currentAdmin.permissions) : {};
             return !!permissions[permissionKey];
@@ -275,17 +259,13 @@ class AdminAuth {
         }
     }
 
-    // 判断是否有权限访问某个区域
     hasPermission(section) {
-        // dashboard和pending区域不需要单独的权限检查，所有人都可以访问
         if (['dashboard', 'pending'].includes(section)) {
             return true;
         }
-        // 超级管理员有所有权限
         if (this.adminApp.currentAdmin && this.adminApp.currentAdmin.role === 'super') {
             return true;
         }
-        // 其他区域的权限映射
         const sectionPermissionMap = {
             'members': 'members:view',
             'giftcards': 'gift-cards:view',
@@ -293,18 +273,16 @@ class AdminAuth {
             'ipmanagement': 'ip-blacklist:view',
             'tracking': 'user-tracking:view',
             'systemsettings': 'system-settings:view',
-            'adminmanage': false // 只有超级管理员才能访问
+            'adminmanage': false // Only super admin can access
         };
         const requiredPermission = sectionPermissionMap[section];
         if (requiredPermission === false) return false;
         if (requiredPermission) {
             return this.hasPermissionPoint(requiredPermission);
         }
-        // 默认允许访问
         return true;
     }
 
-    // 获取第一个有权限的区域
     getFirstPermittedSection() {
         const dashboard = this.hasPermission('dashboard');
         if (dashboard) {
@@ -324,27 +302,21 @@ class AdminAuth {
         return null;
     }
 
-    // 更新导航栏权限
     updateNavByPermission() {
-        // 如果用户未登录，不做任何操作
         if (!this.adminApp.currentAdmin) return;
         
-        // 根据角色和权限隐藏/显示导航按钮
         if (this.adminApp.currentAdmin.role !== 'super') {
-            // 非超级管理员隐藏管理员管理
             const adminManageBtn = document.getElementById('adminManageBtn');
             if (adminManageBtn) {
                 adminManageBtn.parentElement.style.display = 'none';
             }
         } else {
-            // 超级管理员显示管理员管理
             const adminManageBtn = document.getElementById('adminManageBtn');
             if (adminManageBtn) {
                 adminManageBtn.parentElement.style.display = '';
             }
         }
         
-        // 检查各个功能的权限
         const sections = ['login-requests', 'verification-requests', 'members', 'gift-cards', 'categories', 'ip-blacklist', 'user-tracking'];
         sections.forEach(section => {
             const hasAccess = this.hasPermission(section);

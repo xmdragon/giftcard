@@ -3,9 +3,7 @@
  * 包含IP黑名单加载、显示、禁止IP、解禁IP等功能
  */
 
-// 扩展 AdminApp 类
 (function() {
-    // 加载IP黑名单
     AdminApp.prototype.loadIpBlacklist = async function() {
         try {
             const response = await this.apiRequest('/api/admin/ip-blacklist');
@@ -19,7 +17,6 @@
         }
     };
 
-    // 显示IP黑名单
     AdminApp.prototype.displayIpBlacklist = function(blacklist) {
         const container = document.getElementById('ipBlacklistTable');
 
@@ -61,13 +58,11 @@
         `;
     };
 
-    // 更新IP统计信息
     AdminApp.prototype.updateIpStats = function(blacklist) {
         const activeCount = blacklist.filter(item => item.status === 'active').length;
         document.getElementById('bannedIpCount').textContent = activeCount;
     };
 
-    // 显示禁止IP的模态框
     AdminApp.prototype.showBanIpModal = function(prefilledIp = '') {
         const content = `
             <form id="banIpForm">
@@ -94,7 +89,6 @@
         });
     };
 
-    // 处理禁止IP
     AdminApp.prototype.handleBanIp = async function() {
         const ipAddress = document.getElementById('ipAddress').value.trim();
         const reason = document.getElementById('banReason').value.trim();
@@ -124,7 +118,6 @@
         }
     };
 
-    // 解禁IP
     AdminApp.prototype.unbanIp = async function(id) {
         if (!confirm('确定要解禁此IP吗？')) {
             return;
@@ -148,7 +141,6 @@
         }
     };
 
-    // 查看IP历史
     AdminApp.prototype.viewIpHistory = async function(ip) {
         try {
             const response = await this.apiRequest(`/api/admin/ip-history/${ip}`);
@@ -162,7 +154,6 @@
         }
     };
 
-    // 显示IP历史
     AdminApp.prototype.displayIpHistory = function(ip, history) {
         let content = `
             <h4>IP: ${ip} 的登录历史</h4>
@@ -203,13 +194,10 @@
         this.showModal(`IP历史 - ${ip}`, content);
     };
 
-    // 初始化IP管理事件绑定
     AdminApp.prototype.initIpManagementEvents = function() {
         
-        // 禁止IP按钮
         const banIpBtn = document.getElementById('banIpBtn');
         if (banIpBtn) {
-            // 移除旧的事件监听器，防止重复绑定
             banIpBtn.replaceWith(banIpBtn.cloneNode(true));
             const newBanIpBtn = document.getElementById('banIpBtn');
             
@@ -218,10 +206,8 @@
             });
         }
         
-        // 刷新按钮
         const refreshIpBtn = document.getElementById('refreshIpList');
         if (refreshIpBtn) {
-            // 移除旧的事件监听器，防止重复绑定
             refreshIpBtn.replaceWith(refreshIpBtn.cloneNode(true));
             const newRefreshIpBtn = document.getElementById('refreshIpList');
             

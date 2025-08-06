@@ -1,13 +1,11 @@
-// 用户行为追踪管理器
 class PageTrackingManager {
     constructor() {
         this.sessionId = this.generateSessionId();
         this.currentPage = null;
         this.pageEnterTime = null;
-        this.userType = 'guest'; // 默认为游客
+        this.userType = 'guest'; // Default to guest
         this.isTracking = false;
         
-        // 页面与标签页映射
         this.pageNameMap = {
             'welcomePage': '欢迎页',
             'loginPage': '登录页',
@@ -22,7 +20,6 @@ class PageTrackingManager {
         this.init();
     }
     
-    // 生成唯一会话ID
     generateSessionId() {
         const stored = localStorage.getItem('pageTrackingSessionId');
         if (stored) return stored;
@@ -32,11 +29,9 @@ class PageTrackingManager {
         return sessionId;
     }
     
-    // 初始化追踪
     init() {
         this.isTracking = true;
         
-        // 监听页面可见性变化
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 this.pauseTracking();
@@ -45,34 +40,28 @@ class PageTrackingManager {
             }
         });
         
-        // 监听页面卸载
         window.addEventListener('beforeunload', () => {
             this.stopPageTracking();
         });
         
-        // 监听页面关闭或刷新
         window.addEventListener('unload', () => {
             this.stopPageTracking();
         });
         
-        // 定期发送追踪数据（防止数据丢失）
         setInterval(() => {
             if (this.currentPage && this.isTracking) {
                 this.updateCurrentPageDuration();
             }
-        }, 30000); // 每30秒更新一次
+        }, 30000); // Update every 30 seconds
     }
     
-    // 开始追踪页面
     startPageTracking(pageId) {
-        // 停止当前页面追踪
         this.stopPageTracking();
         
         const pageName = this.pageNameMap[pageId] || pageId;
         this.currentPage = pageId;
         this.pageEnterTime = Date.now();
         
-        // 发送页面进入事件
         this.sendTrackingData({
             action: 'enter',
             pageName: pageName,
@@ -81,13 +70,11 @@ class PageTrackingManager {
         
     }
     
-    // 停止当前页面追踪
     stopPageTracking() {
         if (this.currentPage && this.pageEnterTime) {
             const duration = Math.floor((Date.now() - this.pageEnterTime) / 1000);
             const pageName = this.pageNameMap[this.currentPage] || this.currentPage;
             
-            // 发送页面离开事件
             this.sendTrackingData({
                 action: 'leave',
                 pageName: pageName,
@@ -101,7 +88,6 @@ class PageTrackingManager {
         this.pageEnterTime = null;
     }
     
-    // 暂停追踪（页面隐藏时）
     pauseTracking() {
         if (this.currentPage && this.isTracking) {
             this.isTracking = false;
@@ -109,15 +95,13 @@ class PageTrackingManager {
         }
     }
     
-    // 恢复追踪（页面显示时）
     resumeTracking() {
         if (this.currentPage && !this.isTracking) {
             this.isTracking = true;
-            this.pageEnterTime = Date.now(); // 重新计算开始时间
+            this.pageEnterTime = Date.now(); // Recalculate start time
         }
     }
     
-    // 更新当前页面持续时间
     updateCurrentPageDuration() {
         if (this.currentPage && this.pageEnterTime) {
             const duration = Math.floor((Date.now() - this.pageEnterTime) / 1000);
@@ -131,7 +115,6 @@ class PageTrackingManager {
         }
     }
     
-    // 设置用户类型和ID（当用户登录成功后调用）
     setUserInfo(userType, userId) {
         this.userType = userType;
         if (userType === 'member' && userId) {
@@ -140,7 +123,6 @@ class PageTrackingManager {
         }
     }
     
-    // 发送追踪数据到服务器
     sendTrackingData(data) {
         const trackingData = {
             sessionId: this.sessionId,
@@ -154,14 +136,12 @@ class PageTrackingManager {
             referrer: document.referrer
         };
         
-        // 使用 sendBeacon API 确保数据能够发送（即使在页面卸载时）
         if (navigator.sendBeacon) {
             const blob = new Blob([JSON.stringify(trackingData)], {
                 type: 'application/json'
             });
             navigator.sendBeacon('/api/tracking/page', blob);
         } else {
-            // 降级到普通 fetch（可能在页面卸载时丢失）
             fetch('/api/tracking/page', {
                 method: 'POST',
                 headers: {
@@ -175,7 +155,6 @@ class PageTrackingManager {
         }
     }
     
-    // 重置会话（用于新的访问会话）
     resetSession() {
         localStorage.removeItem('pageTrackingSessionId');
         this.sessionId = this.generateSessionId();
@@ -183,5 +162,4 @@ class PageTrackingManager {
     }
 }
 
-// 全局追踪管理器实例
 window.pageTracker = new PageTrackingManager();

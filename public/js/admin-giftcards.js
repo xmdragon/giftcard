@@ -31,7 +31,7 @@
         if (!dateString) return '';
         
         const date = new Date(dateString);
-        const month = date.getMonth() + 1; // 月份从0开始，需要+1
+        const month = date.getMonth() + 1; // Month starts from 0, need to add 1
         const day = date.getDate();
         const hours = date.getHours().toString().padStart(2, '0');
         const minutes = date.getMinutes().toString().padStart(2, '0');
@@ -124,7 +124,6 @@
             ${this.renderGiftCardPagination()}
         `;
         
-        // 绑定每页条数选择事件
         const pageSizeSelect = document.getElementById('giftCardPageSize');
         if (pageSizeSelect) {
             pageSizeSelect.addEventListener('change', (e) => {
@@ -165,7 +164,6 @@
             paginationHtml += `<button onclick="adminApp.loadGiftCards(${currentPage + 1})">下一页</button>`;
         }
         
-        // 每页条数选择
         paginationHtml += '<select id="giftCardPageSize" style="margin-left: 10px;">';
         paginationHtml += '<option value="20"' + (this.giftCardState.limit === 20 ? ' selected' : '') + '>每页 20 条</option>';
         paginationHtml += '<option value="50"' + (this.giftCardState.limit === 50 ? ' selected' : '') + '>每页 50 条</option>';
@@ -234,20 +232,17 @@
                     return;
                 }
 
-                // 保留第一个默认选项（如"请选择"），清空其他选项
                 const firstOption = select.querySelector('option[value=""]');
                 select.innerHTML = '';
                 if (firstOption) {
                     select.appendChild(firstOption);
                 } else {
-                    // 如果没有默认选项，添加一个
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
                     defaultOption.textContent = '请选择分类';
                     select.appendChild(defaultOption);
                 }
 
-                // 添加分类选项
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.id;

@@ -25,7 +25,6 @@
     <link rel="stylesheet" href="/css/login-fix.css?v=<%= Date.now() %>">
     <link rel="stylesheet" href="/css/iphone-adaptation.css?v=<%= Date.now() %>">
     <script>
-        // 服务器端传递的语言推荐
         const recommendLang = "<%= locals.recommendLang || 'en' %>";
         const isChineseIP = <%= locals.isChineseIP ? 'true' : 'false' %>;
         const blockChineseIP = <%= locals.blockChineseIP ? 'true' : 'false' %>;

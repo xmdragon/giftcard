@@ -1,14 +1,10 @@
-// 简化的待审核管理模块
 AdminApp.prototype.initPendingSection = function() {
     console.log('Simple initPendingSection called');
     
-    // 绑定标签页切换事件
     this.bindPendingTabs();
     
-    // 加载数据
     this.loadPendingData();
     
-    // 设置自动刷新
     this.startPendingAutoRefresh();
 };
 
@@ -25,21 +21,18 @@ AdminApp.prototype.bindPendingTabs = function() {
 };
 
 AdminApp.prototype.switchPendingTab = function(tab) {
-    // 更新按钮状态
     document.querySelectorAll('.pending-tabs .tab-btn').forEach(btn => {
         btn.classList.remove('active');
     });
     const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
     if (activeBtn) activeBtn.classList.add('active');
     
-    // 更新内容显示
     document.querySelectorAll('#pendingSection .tab-content').forEach(content => {
         content.classList.remove('active');
     });
     const activeContent = document.getElementById(`${tab}Tab`);
     if (activeContent) activeContent.classList.add('active');
     
-    // 加载对应数据
     if (tab === 'loginRequests') {
         this.loadLoginRequests();
     } else if (tab === 'verificationRequests') {
@@ -170,7 +163,6 @@ AdminApp.prototype.displayVerificationRequests = function(requests) {
 };
 
 AdminApp.prototype.updatePendingCounts = function() {
-    // 更新总计数
     const loginCount = document.getElementById('loginRequestsCount')?.textContent || '0';
     const verificationCount = document.getElementById('verificationRequestsCount')?.textContent || '0';
     const totalCount = parseInt(loginCount) + parseInt(verificationCount);
@@ -290,13 +282,11 @@ AdminApp.prototype.rejectVerificationRequest = async function(requestId) {
 };
 
 AdminApp.prototype.startPendingAutoRefresh = function() {
-    // 每30秒自动刷新一次待审核数据
     if (this.pendingRefreshInterval) {
         clearInterval(this.pendingRefreshInterval);
     }
     
     this.pendingRefreshInterval = setInterval(() => {
-        // 只有当待审核区域是活动状态时才刷新
         const pendingSection = document.getElementById('pendingSection');
         if (pendingSection && pendingSection.classList.contains('active')) {
             this.loadPendingData();

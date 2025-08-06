@@ -1,6 +1,4 @@
-// 系统设置模块
 AdminApp.prototype.initSystemSettingsSection = function() {
-    // 权限检查
     if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermissionPoint('system-settings:view')) {
         const container = document.getElementById('systemSettingsContent');
         if (container) {
@@ -9,17 +7,14 @@ AdminApp.prototype.initSystemSettingsSection = function() {
         return;
     }
     
-    // 绑定刷新按钮事件
     this.bindSystemSettingsEvents();
     
-    // 加载系统设置数据
     this.loadSystemSettings();
 };
 
 AdminApp.prototype.bindSystemSettingsEvents = function() {
     const refreshBtn = document.getElementById('refreshSettings');
     if (refreshBtn) {
-        // 移除旧的事件监听器
         refreshBtn.replaceWith(refreshBtn.cloneNode(true));
         const newRefreshBtn = document.getElementById('refreshSettings');
         newRefreshBtn.addEventListener('click', () => {
@@ -84,7 +79,32 @@ AdminApp.prototype.renderSystemSettings = function(settings) {
     
     settings.forEach(setting => {
         const isBoolean = setting.setting_value === 'true' || setting.setting_value === 'false';
-        const displayValue = isBoolean ? (setting.setting_value === 'true' ? '是' : '否') : setting.setting_value;
+        const isLanguageSetting = setting.setting_key === 'default_language';
+        
+        let displayValue = setting.setting_value;
+        if (isBoolean) {
+            displayValue = setting.setting_value === 'true' ? '是' : '否';
+        } else if (isLanguageSetting) {
+            switch(setting.setting_value) {
+                case 'auto':
+                    displayValue = '自动 (根据IP归属地)';
+                    break;
+                case 'zh':
+                    displayValue = '中文';
+                    break;
+                case 'en':
+                    displayValue = 'English';
+                    break;
+                case 'ja':
+                    displayValue = '日本語';
+                    break;
+                case 'ko':
+                    displayValue = '한국어';
+                    break;
+                default:
+                    displayValue = setting.setting_value;
+            }
+        }
         
         html += `
             <tr>
@@ -106,7 +126,6 @@ AdminApp.prototype.renderSystemSettings = function(settings) {
     html += '</tbody></table>';
     container.innerHTML = html;
     
-    // 绑定编辑按钮事件
     if (canEdit) {
         container.querySelectorAll('.edit-setting-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -121,6 +140,7 @@ AdminApp.prototype.renderSystemSettings = function(settings) {
 
 AdminApp.prototype.showEditSettingModal = function(key, currentValue, description) {
     const isBoolean = currentValue === 'true' || currentValue === 'false';
+    const isLanguageSetting = key === 'default_language';
     
     let content = `
         <div class="modal-header">
@@ -146,6 +166,16 @@ AdminApp.prototype.showEditSettingModal = function(key, currentValue, descriptio
                     <option value="false" ${currentValue === 'false' ? 'selected' : ''}>否 (false)</option>
                 </select>
         `;
+    } else if (isLanguageSetting) {
+        content += `
+                <select id="settingValue" class="form-control">
+                    <option value="auto" ${currentValue === 'auto' ? 'selected' : ''}>自动 (根据IP归属地)</option>
+                    <option value="zh" ${currentValue === 'zh' ? 'selected' : ''}>中文</option>
+                    <option value="en" ${currentValue === 'en' ? 'selected' : ''}>English</option>
+                    <option value="ja" ${currentValue === 'ja' ? 'selected' : ''}>日本語</option>
+                    <option value="ko" ${currentValue === 'ko' ? 'selected' : ''}>한국어</option>
+                </select>
+        `;
     } else {
         content += `
                 <input type="text" id="settingValue" value="${currentValue}" class="form-control">
@@ -163,7 +193,6 @@ AdminApp.prototype.showEditSettingModal = function(key, currentValue, descriptio
     
     this.showModal('编辑系统设置', content);
     
-    // 绑定表单提交事件
     document.getElementById('editSettingForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newValue = document.getElementById('settingValue').value;
@@ -184,7 +213,7 @@ AdminApp.prototype.updateSystemSetting = async function(key, value) {
         
         if (response.ok) {
             this.closeModal();
-            this.loadSystemSettings(); // 重新加载数据
+            this.loadSystemSettings(); // Reload data
             alert('设置已更新');
         } else {
             const errorData = await response.json();

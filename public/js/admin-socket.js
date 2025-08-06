@@ -9,18 +9,15 @@ class AdminSocket {
         this.socket = null;
     }
 
-    // 初始化Socket连接
     init() {
         this.socket = io();
         this.setupSocketListeners();
         return this.socket;
     }
 
-    // 设置Socket监听器
     setupSocketListeners() {
         if (!this.socket) return;
 
-        // 新登录请求
         this.socket.on('new-login-request', (data) => {
             const container = document.getElementById('loginRequestsList');
             if (!container) {
@@ -32,13 +29,11 @@ class AdminSocket {
             this.adminApp.updatePendingCount();
         });
 
-        // 新验证请求
         this.socket.on('new-verification-request', (data) => {
             this.adminApp.approvals?.addVerificationRequest(data);
             this.adminApp.updatePendingCount();
         });
         
-        // 更新验证请求
         this.socket.on('update-verification-request', (data) => {
             // Clear verification request list
             const container = document.getElementById('verificationRequestsList');
@@ -51,9 +46,7 @@ class AdminSocket {
             }
         });
 
-        // 取消登录请求
         this.socket.on('cancel-login-request', (data) => {
-            // 从界面移除对应的请求项
             const requestElement = document.querySelector(`[data-id="${data.id}"]`);
             if (requestElement) {
                 requestElement.remove();
@@ -61,11 +54,9 @@ class AdminSocket {
             }
         });
 
-        // 加入管理员房间
         this.joinAdminRoom();
     }
 
-    // 加入管理员房间
     joinAdminRoom() {
         if (this.adminApp.currentAdmin && this.socket) {
             this.socket.emit('join-admin', {
@@ -78,7 +69,6 @@ class AdminSocket {
         }
     }
 
-    // 断开连接
     disconnect() {
         if (this.socket) {
             this.socket.disconnect();
@@ -86,14 +76,12 @@ class AdminSocket {
         }
     }
 
-    // 重新连接
     reconnect() {
         if (this.socket && !this.socket.connected) {
             this.socket.connect();
         }
     }
 
-    // 获取连接状态
     isConnected() {
         return this.socket && this.socket.connected;
     }

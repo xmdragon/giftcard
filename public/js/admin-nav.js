@@ -1,4 +1,3 @@
-// 导航栏权限控制与渲染
 
 AdminApp.prototype.updateNavByPermission = function() {
     if (!this.currentAdmin) return;
@@ -40,14 +39,11 @@ AdminApp.prototype.renderNavMenu = function() {
     ];
     navItems.forEach(item => {
         if (item.superOnly && (!this.currentAdmin || this.currentAdmin.role !== 'super')) return;
-        // 对于系统设置和用户追踪使用权限点检查，其他使用原有的权限检查
         if (item.permission) {
             if (item.key === 'systemsettings') {
                 if (!this.hasPermissionPoint(item.permission + ':view')) return;
             } else if (item.key === 'tracking') {
-                // 超级管理员直接通过，普通管理员检查权限点
                 if (this.currentAdmin && this.currentAdmin.role === 'super') {
-                    // 超级管理员直接通过
                 } else if (!this.hasPermissionPoint(item.permission + ':view')) {
                     return;
                 }

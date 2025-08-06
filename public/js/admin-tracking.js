@@ -1,7 +1,5 @@
-// 用户行为追踪管理模块
 
 AdminApp.prototype.initTrackingSection = function() {
-    // 检查权限（超级管理员跳过权限检查）
     if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermissionPoint('user-tracking:view')) {
         const container = document.getElementById('trackingList');
         if (container) {
@@ -10,18 +8,14 @@ AdminApp.prototype.initTrackingSection = function() {
         return;
     }
     
-    // 初始化追踪列表
     this.loadTrackingList();
     
-    // 绑定事件监听器
     this.bindTrackingEvents();
     
-    // 初始化标签页
     this.initTrackingTabs();
 };
 
 AdminApp.prototype.bindTrackingEvents = function() {
-    // 刷新按钮
     const refreshBtn = document.getElementById('refreshTrackingBtn');
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => {
@@ -29,7 +23,6 @@ AdminApp.prototype.bindTrackingEvents = function() {
         });
     }
     
-    // 导出按钮
     const exportBtn = document.getElementById('exportTrackingBtn');
     if (exportBtn) {
         if (this.currentAdmin && (this.currentAdmin.role === 'super' || this.hasPermissionPoint('user-tracking:export'))) {
@@ -41,7 +34,6 @@ AdminApp.prototype.bindTrackingEvents = function() {
         }
     }
     
-    // 筛选按钮
     const applyFilterBtn = document.getElementById('applyTrackingFilter');
     if (applyFilterBtn) {
         applyFilterBtn.addEventListener('click', () => {
@@ -49,7 +41,6 @@ AdminApp.prototype.bindTrackingEvents = function() {
         });
     }
     
-    // 重置筛选按钮
     const resetFilterBtn = document.getElementById('resetTrackingFilter');
     if (resetFilterBtn) {
         resetFilterBtn.addEventListener('click', () => {
@@ -57,7 +48,6 @@ AdminApp.prototype.bindTrackingEvents = function() {
         });
     }
     
-    // 加载统计按钮
     const loadStatsBtn = document.getElementById('loadStatsBtn');
     if (loadStatsBtn) {
         loadStatsBtn.addEventListener('click', () => {
@@ -74,11 +64,9 @@ AdminApp.prototype.initTrackingTabs = function() {
         button.addEventListener('click', () => {
             const tabName = button.dataset.tab;
             
-            // 更新按钮状态
             tabButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
             
-            // 更新内容显示
             tabContents.forEach(content => {
                 content.classList.remove('active');
                 if (content.id === tabName + 'Tab') {
@@ -86,7 +74,6 @@ AdminApp.prototype.initTrackingTabs = function() {
                 }
             });
             
-            // 根据标签页加载对应内容
             if (tabName === 'trackingStats') {
                 if (this.currentAdmin && (this.currentAdmin.role === 'super' || this.hasPermissionPoint('user-tracking:stats'))) {
                     this.loadTrackingStats();
@@ -107,7 +94,6 @@ AdminApp.prototype.loadTrackingList = function(page = 1) {
     
     container.innerHTML = '加载中...';
     
-    // 获取筛选条件
     const filters = this.getTrackingFilters();
     
     const params = new URLSearchParams({
@@ -235,12 +221,10 @@ AdminApp.prototype.renderTrackingPagination = function(pagination) {
     let html = '<div class="pagination-info">第 ' + pagination.page + ' 页，共 ' + pagination.pages + ' 页</div>';
     html += '<div class="pagination-buttons">';
     
-    // 上一页按钮
     if (pagination.page > 1) {
         html += `<button onclick="adminApp.loadTrackingList(${pagination.page - 1})">上一页</button>`;
     }
     
-    // 页码按钮
     const startPage = Math.max(1, pagination.page - 2);
     const endPage = Math.min(pagination.pages, pagination.page + 2);
     
@@ -249,7 +233,6 @@ AdminApp.prototype.renderTrackingPagination = function(pagination) {
         html += `<button class="page-btn${activeClass}" onclick="adminApp.loadTrackingList(${i})">${i}</button>`;
     }
     
-    // 下一页按钮
     if (pagination.page < pagination.pages) {
         html += `<button onclick="adminApp.loadTrackingList(${pagination.page + 1})">下一页</button>`;
     }
@@ -264,7 +247,6 @@ AdminApp.prototype.loadTrackingStats = function() {
     
     container.innerHTML = '加载中...';
     
-    // 获取日期范围
     const startDate = document.getElementById('statsStartDate')?.value;
     const endDate = document.getElementById('statsEndDate')?.value;
     
@@ -300,7 +282,6 @@ AdminApp.prototype.renderTrackingStats = function(stats) {
     
     let html = '<div class="stats-grid">';
     
-    // 基础统计
     html += `
         <div class="stats-section">
             <h3>基础统计</h3>
@@ -329,7 +310,6 @@ AdminApp.prototype.renderTrackingStats = function(stats) {
         </div>
     `;
     
-    // 页面统计
     if (stats.pages && stats.pages.length > 0) {
         html += `
             <div class="stats-section">
@@ -360,7 +340,6 @@ AdminApp.prototype.renderTrackingStats = function(stats) {
         html += '</tbody></table></div>';
     }
     
-    // 用户类型统计
     if (stats.userTypes && stats.userTypes.length > 0) {
         html += `
             <div class="stats-section">
@@ -392,7 +371,6 @@ AdminApp.prototype.renderTrackingStats = function(stats) {
         html += '</tbody></table></div>';
     }
     
-    // 时间趋势统计
     if (stats.timeStats && stats.timeStats.length > 0) {
         html += `
             <div class="stats-section">
@@ -432,7 +410,6 @@ AdminApp.prototype.exportTrackingData = function() {
     const filters = this.getTrackingFilters();
     const params = new URLSearchParams(filters);
     
-    // 使用管理员API端点导出数据
     fetch(`/api/tracking/export?${params}`, {
         method: 'GET',
         headers: {
@@ -470,5 +447,3 @@ AdminApp.prototype.formatDuration = function(seconds) {
     
     return result;
 };
-
-// 追踪模块不再需要覆盖switchSection，使用统一的初始化系统

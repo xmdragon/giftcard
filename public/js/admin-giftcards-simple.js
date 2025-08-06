@@ -1,8 +1,6 @@
-// 简化的礼品卡管理模块
 AdminApp.prototype.initGiftCardsSection = function() {
     console.log('Simple initGiftCardsSection called');
     
-    // 权限检查
     if (this.currentAdmin && this.currentAdmin.role !== 'super' && !this.hasPermission('gift-cards')) {
         const container = document.getElementById('giftCardsList');
         if (container) {
@@ -11,20 +9,16 @@ AdminApp.prototype.initGiftCardsSection = function() {
         return;
     }
     
-    // 绑定事件
     this.bindGiftCardsEvents();
     
-    // 加载数据
     this.loadGiftCardsSimple();
     
-    // 加载分类数据用于筛选
     this.loadCategoriesForFilter();
 };
 
 AdminApp.prototype.bindGiftCardsEvents = function() {
     console.log('Binding gift cards events');
     
-    // 批量添加按钮
     const addBtn = document.getElementById('addGiftCardsBtn');
     if (addBtn) {
         addBtn.replaceWith(addBtn.cloneNode(true));
@@ -35,7 +29,6 @@ AdminApp.prototype.bindGiftCardsEvents = function() {
         });
     }
     
-    // 筛选按钮
     const filterBtn = document.getElementById('filterGiftCards');
     if (filterBtn) {
         filterBtn.replaceWith(filterBtn.cloneNode(true));
@@ -56,14 +49,12 @@ AdminApp.prototype.loadGiftCardsSimple = async function() {
         return;
     }
     
-    // 显示加载状态
     const tbody = container.querySelector('tbody');
     if (tbody) {
         tbody.innerHTML = '<tr><td colspan="8">正在加载礼品卡数据...</td></tr>';
     }
     
     try {
-        // 获取筛选条件
         const categoryFilter = document.getElementById('categoryFilter')?.value || '';
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         const emailFilter = document.getElementById('emailFilter')?.value || '';
@@ -187,7 +178,6 @@ AdminApp.prototype.populateCategoryFilter = function(categories) {
     const categoryFilter = document.getElementById('categoryFilter');
     if (!categoryFilter || !categories) return;
     
-    // 保留第一个"所有分类"选项
     const firstOption = categoryFilter.querySelector('option[value=""]');
     categoryFilter.innerHTML = '';
     if (firstOption) {
@@ -231,10 +221,8 @@ AdminApp.prototype.showAddGiftCardsModal = function() {
     
     this.showModal('批量添加礼品卡', content);
     
-    // 加载分类到模态框中的选择框
     this.loadCategoriesForModal();
     
-    // 绑定表单提交事件
     document.getElementById('addGiftCardsForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         await this.submitAddGiftCards();
@@ -253,20 +241,17 @@ AdminApp.prototype.loadCategoriesForModal = async function() {
             const categories = await response.json();
             const select = document.getElementById('giftCardCategory');
             if (select) {
-                // 保留第一个默认选项（如"请选择"），清空其他选项
                 const firstOption = select.querySelector('option[value=""]');
                 select.innerHTML = '';
                 if (firstOption) {
                     select.appendChild(firstOption);
                 } else {
-                    // 如果没有默认选项，添加一个
                     const defaultOption = document.createElement('option');
                     defaultOption.value = '';
                     defaultOption.textContent = '请选择分类';
                     select.appendChild(defaultOption);
                 }
 
-                // 添加分类选项
                 categories.forEach(category => {
                     const option = document.createElement('option');
                     option.value = category.id;

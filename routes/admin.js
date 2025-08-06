@@ -46,10 +46,8 @@ module.exports = (io) => {
       
       req.admin = user;
       if (user.permissions !== undefined) {
-        // JWT已带permissions，直接用
         return next();
       }
-      // 兼容老token，查库补充
       db.query('SELECT permissions FROM admins WHERE id = ?', [user.id]).then(result => {
         req.admin.permissions = result[0] ? result[0].permissions : null;
       next();
@@ -313,7 +311,6 @@ module.exports = (io) => {
         queryParams.push(`%${email}%`);
       }
       
-      // 普通管理员只能看到自己审核通过的会员
       if (req.admin.role !== 'super') {
         if (whereClause) {
           whereClause += ' AND ';
@@ -464,7 +461,6 @@ module.exports = (io) => {
     }
   });
 
-  // 删除礼品卡分类
   router.delete('/gift-card-categories/:id', authenticateAdmin, checkPermission('categories:delete'), async (req, res) => {
     try {
       const { id } = req.params;
@@ -614,7 +610,6 @@ module.exports = (io) => {
     }
   });
 
-  // 禁止IP
   router.post('/ban-ip', authenticateAdmin, checkPermission('ip-blacklist:ban'), async (req, res) => {
     try {
       const { ipAddress, reason } = req.body;
@@ -623,7 +618,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('ip_address_required') });
       }
 
-      // 检查IP是否已经被禁止
       const existing = await db.query(
         'SELECT * FROM ip_blacklist WHERE ip_address = ? AND status = "active"',
         [ipAddress]
@@ -633,7 +627,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('ip_already_banned') });
       }
 
-      // 添加到黑名单
       await db.query(
         'INSERT INTO ip_blacklist (ip_address, reason, banned_by) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = "active", reason = ?, banned_by = ?, banned_at = NOW()',
         [ipAddress, reason || req.t('banned_by_admin'), req.admin.id, reason || req.t('banned_by_admin'), req.admin.id]
@@ -646,12 +639,10 @@ module.exports = (io) => {
     }
   });
 
-  // 解禁IP
   router.post('/unban-ip/:id', authenticateAdmin, checkPermission('ip-blacklist:unban'), async (req, res) => {
     try {
       const { id } = req.params;
 
-      // 直接删除IP黑名单记录，而不是修改状态
       await db.execute('DELETE FROM ip_blacklist WHERE id = ?', [id]);
 
       res.json({ message: req.t('ip_unbanned_successfully') });
@@ -661,7 +652,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取IP登录历史
   router.get('/ip-history/:ip', authenticateAdmin, checkPermission('ip-history:view'), async (req, res) => {
     try {
       const { ip } = req.params;
@@ -681,7 +671,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取管理员列表（仅超级管理员可见）
   router.get('/admins', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
     try {
       const admins = await db.query('SELECT id, username, role, created_at FROM admins ORDER BY id ASC');
@@ -691,19 +680,16 @@ module.exports = (io) => {
     }
   });
 
-  // 添加管理员（仅超级管理员可操作）
   router.post('/admins', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
     try {
       const { username, password } = req.body;
       if (!username || !password) {
         return res.status(400).json({ error: '用户名和密码不能为空' });
       }
-      // 检查用户名是否已存在
       const existing = await db.query('SELECT id FROM admins WHERE username = ?', [username]);
       if (existing.length > 0) {
         return res.status(400).json({ error: '用户名已存在' });
       }
-      // 密码加密
       const crypto = require('crypto');
       const hashedPassword = crypto.createHash('md5').update(password).digest('hex');
       await db.insert('admins', { username, password: hashedPassword, role: 'admin' });
@@ -713,15 +699,12 @@ module.exports = (io) => {
     }
   });
 
-  // 删除管理员（仅超级管理员可操作，不能删除自己和超级管理员）
   router.delete('/admins/:id', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      // 不能删除自己
       if (parseInt(id) === req.admin.id) {
         return res.status(400).json({ error: '不能删除自己' });
       }
-      // 不能删除超级管理员
       const admin = await db.query('SELECT * FROM admins WHERE id = ?', [id]);
       if (admin.length === 0) {
         return res.status(404).json({ error: '管理员不存在' });
@@ -736,7 +719,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取所有管理员及其权限（仅超级管理员）
   router.get('/admin-permissions', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
     try {
       const admins = await db.query('SELECT id, username, role, permissions, created_at FROM admins ORDER BY id ASC');
@@ -746,7 +728,6 @@ module.exports = (io) => {
     }
   });
 
-  // 修改指定管理员权限（仅超级管理员）
   router.put('/admin-permissions/:id', authenticateAdmin, authenticateSuperAdmin, async (req, res) => {
     try {
       const { id } = req.params;
@@ -754,7 +735,6 @@ module.exports = (io) => {
       if (!permissions || typeof permissions !== 'object') {
         return res.status(400).json({ error: '权限格式错误' });
       }
-      // 超级管理员权限不可被更改
       const admin = await db.query('SELECT * FROM admins WHERE id = ?', [id]);
       if (!admin.length) return res.status(404).json({ error: '管理员不存在' });
       if (admin[0].role === 'super') return res.status(400).json({ error: '不能修改超级管理员权限' });
@@ -765,22 +745,18 @@ module.exports = (io) => {
     }
   });
 
-  // 仪表盘数据接口
   router.get('/dashboard-data', authenticateAdmin, async (req, res) => {
     try {
       const adminId = req.admin.id;
       const isSuper = req.admin.role === 'super';
       const result = {};
       
-      // 1. 待审核登录请求数量
       if (isSuper) {
-        // 超级管理员查看所有待审核请求
         const loginRequests = await db.query(
           `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending'`
         );
         result.loginRequests = loginRequests[0].count;
       } else {
-        // 普通管理员只查看分配给自己的请求
         const loginRequests = await db.query(
           `SELECT COUNT(*) as count FROM login_logs WHERE status = 'pending' 
            AND CAST(assigned_admin_id AS UNSIGNED) = ? AND assigned_admin_id IS NOT NULL`,
@@ -789,15 +765,12 @@ module.exports = (io) => {
         result.loginRequests = loginRequests[0].count;
       }
       
-      // 2. 待审核验证请求数量
       if (isSuper) {
-        // 超级管理员查看所有待审核验证请求
         const verificationRequests = await db.query(
           `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending'`
         );
         result.verificationRequests = verificationRequests[0].count;
       } else {
-        // 普通管理员只查看分配给自己的验证请求
         const verificationRequests = await db.query(
           `SELECT COUNT(*) as count FROM second_verifications WHERE status = 'pending' 
            AND assigned_admin_id = ? AND assigned_admin_id IS NOT NULL`,
@@ -806,15 +779,12 @@ module.exports = (io) => {
         result.verificationRequests = verificationRequests[0].count;
       }
       
-      // 3. 会员数量
       if (isSuper) {
-        // 超级管理员查看所有会员
         const members = await db.query(
           `SELECT COUNT(*) as count FROM members`
         );
         result.membersCount = members[0].count;
       } else {
-        // 普通管理员只查看自己审核通过的会员
         const members = await db.query(
           `SELECT COUNT(DISTINCT m.id) as count
            FROM members m
@@ -826,7 +796,6 @@ module.exports = (io) => {
         result.membersCount = members[0].count;
       }
       
-      // 4. 未发放礼品卡数量（按分类统计）
       const cardStats = await db.query(
         `SELECT gc.category_id, gcc.name as category_name, COUNT(*) as available_count
          FROM gift_cards gc
@@ -837,13 +806,11 @@ module.exports = (io) => {
       );
       result.giftCardStats = cardStats;
       
-      // 计算未发放礼品卡总数
       const totalAvailableCards = await db.query(
         `SELECT COUNT(*) as count FROM gift_cards WHERE status = 'available'`
       );
       result.totalAvailableCards = totalAvailableCards[0].count;
       
-      // 5. 禁止IP数量
       const bannedIps = await db.query(
         `SELECT COUNT(*) as count FROM ip_blacklist WHERE status = 'active'`
       );
@@ -856,7 +823,6 @@ module.exports = (io) => {
     }
   });
 
-  // 获取系统设置
   router.get('/system-settings', authenticateAdmin, checkPermission('system-settings:view'), async (req, res) => {
     try {
       const settings = await db.query('SELECT * FROM system_settings');
@@ -867,7 +833,6 @@ module.exports = (io) => {
     }
   });
 
-  // 更新系统设置
   router.put('/system-settings/:key', authenticateAdmin, checkPermission('system-settings:edit'), authenticateSuperAdmin, async (req, res) => {
     try {
       const { key } = req.params;

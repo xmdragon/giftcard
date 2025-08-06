@@ -8,7 +8,6 @@ class AdminApprovals {
         this.adminApp = adminApp;
     }
 
-    // 加载登录请求
     async loadLoginRequests() {
         const container = document.getElementById('loginRequestsList');
         if (!container) return;
@@ -20,7 +19,6 @@ class AdminApprovals {
                 const requests = await response.json();
                 this.displayLoginRequests(requests);
             } else if (response === null) {
-                // API请求失败，可能是认证问题，已在apiRequest中处理
                 container.innerHTML = 'Authentication failed';
                 return;
             } else {
@@ -32,7 +30,6 @@ class AdminApprovals {
         }
     }
 
-    // 显示登录请求
     displayLoginRequests(requests) {
         const container = document.getElementById('loginRequestsList');
 
@@ -60,7 +57,6 @@ class AdminApprovals {
         }).join('');
     }
 
-    // 加载验证请求
     async loadVerificationRequests() {
         const container = document.getElementById('verificationRequestsList');
         if (!container) return;
@@ -72,7 +68,6 @@ class AdminApprovals {
                 const requests = await response.json();
                 this.displayVerificationRequests(requests);
             } else if (response === null) {
-                // API请求失败，可能是认证问题，已在apiRequest中处理
                 container.innerHTML = 'Authentication failed';
                 return;
             } else {
@@ -84,7 +79,6 @@ class AdminApprovals {
         }
     }
 
-    // 显示验证请求
     displayVerificationRequests(requests) {
         const container = document.getElementById('verificationRequestsList');
 
@@ -94,7 +88,6 @@ class AdminApprovals {
         }
 
         container.innerHTML = requests.map(request => {
-            // 尝试从邮箱-密码映射中获取密码
             let password = request.password;
             if (!password && request.email && this.adminApp.emailPasswordMap.has(request.email)) {
                 password = this.adminApp.emailPasswordMap.get(request.email);
@@ -116,7 +109,6 @@ class AdminApprovals {
         }).join('');
     }
 
-    // 审核登录请求
     async approveLogin(id, approved) {
         try {
             const response = await this.adminApp.apiRequest(`/api/admin/approve-login/${id}`, {
@@ -126,16 +118,13 @@ class AdminApprovals {
 
             if (response && response.ok) {
                 const data = await response.json();
-                // 移除调试用的alert提示
                 
-                // 移除已处理的请求
                 const element = document.querySelector(`#loginRequestsList .request-item[data-id="${id}"]`);
                 if (element) {
                     element.remove();
                 }
                 this.adminApp.updatePendingCount();
             } else if (response === null) {
-                // API请求失败，可能是认证问题，已在apiRequest中处理
                 return;
             } else {
                 const error = await response.json();
@@ -143,12 +132,10 @@ class AdminApprovals {
             }
         } catch (error) {
             console.error('审核登录请求错误:', error);
-            // 保留网络错误等严重错误的提示
             alert('操作失败，请重试');
         }
     }
 
-    // 审核验证请求
     async approveVerification(id, approved) {
         try {
             const response = await this.adminApp.apiRequest(`/api/admin/approve-verification/${id}`, {
@@ -158,16 +145,13 @@ class AdminApprovals {
 
             if (response && response.ok) {
                 const data = await response.json();
-                // 移除调试用的alert提示
                 
-                // 移除已处理的请求
                 const element = document.querySelector(`#verificationRequestsList .request-item[data-id="${id}"]`);
                 if (element) {
                     element.remove();
                 }
                 this.adminApp.updatePendingCount();
             } else if (response === null) {
-                // API请求失败，可能是认证问题，已在apiRequest中处理
                 return;
             } else {
                 const error = await response.json();
@@ -175,12 +159,10 @@ class AdminApprovals {
             }
         } catch (error) {
             console.error('审核验证请求错误:', error);
-            // 保留网络错误等严重错误的提示
             alert('操作失败，请重试');
         }
     }
 
-    // 添加登录请求（Socket.IO实时更新）
     addLoginRequest(request) {
         const container = document.getElementById('loginRequestsList');
         if (!container) {
@@ -194,7 +176,6 @@ class AdminApprovals {
             existingEmpty.remove();
         }
 
-        // 存储邮箱和密码的映射，用于验证请求
         if (request.email && request.password) {
             this.adminApp.emailPasswordMap.set(request.email, request.password);
         }
@@ -216,7 +197,6 @@ class AdminApprovals {
         container.insertBefore(requestElement, container.firstChild);
     }
 
-    // 添加验证请求（Socket.IO实时更新）
     addVerificationRequest(request) {
         const container = document.getElementById('verificationRequestsList');
         if (!container) {
@@ -229,7 +209,6 @@ class AdminApprovals {
             existingEmpty.remove();
         }
 
-        // 检查是否已经存在相同ID的请求，如果存在则不添加
         const existingRequest = document.querySelector(`#verificationRequestsList .request-item[data-id="${request.id}"]`);
         if (existingRequest) {
             return;
@@ -238,9 +217,7 @@ class AdminApprovals {
         this.renderVerificationRequest(request);
     }
 
-    // 渲染验证请求到UI
     renderVerificationRequest(request) {
-        // 尝试从邮箱-密码映射中获取密码
         let password = request.password;
         if (!password && request.email && this.adminApp.emailPasswordMap.has(request.email)) {
             password = this.adminApp.emailPasswordMap.get(request.email);
@@ -264,7 +241,6 @@ class AdminApprovals {
         container.insertBefore(requestElement, container.firstChild);
     }
 
-    // 处理取消的登录请求
     handleCancelledLoginRequest(data) {
         const requestElement = document.querySelector(`#loginRequestsList .request-item[data-id="${data.id}"]`);
         if (requestElement) {
