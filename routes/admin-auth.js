@@ -93,7 +93,7 @@ module.exports = (io) => {
             const token = jwt.sign(
                 { id: admin.id, username: admin.username, role: admin.role, permissions: admin.permissions },
                 process.env.JWT_SECRET || 'secret',
-                { expiresIn: '1h' }
+                { expiresIn: '30d' }
             );
             
             res.json({
@@ -225,11 +225,11 @@ module.exports = (io) => {
 
             const admin = admins[0];
 
-            // 生成新的TOKEN（延长1小时）
+            // 生成新的TOKEN（延长30天）
             const newToken = jwt.sign(
                 { id: admin.id, username: admin.username, role: admin.role, permissions: admin.permissions },
                 process.env.JWT_SECRET || 'secret',
-                { expiresIn: '1h' }
+                { expiresIn: '30d' }
             );
 
             res.json({
