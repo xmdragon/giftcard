@@ -73,7 +73,9 @@ async function createTables(db) {
     await db.execute(`
       INSERT IGNORE INTO system_settings (setting_key, setting_value, description) VALUES 
       ('block_cn_ip', 'true', '是否阻止中国IP访问（显示礼品卡已发放完毕）'),
-      ('default_language', 'auto', '默认语言设置（auto=自动检测，zh=中文，en=英文，ja=日文，ko=韩文）')
+      ('default_language', 'auto', '默认语言设置（auto=自动检测，zh=中文，en=英文，ja=日文，ko=韩文）'),
+      ('whatsapp_link', '', 'WhatsApp联系链接（如：https://wa.me/1234567890）'),
+      ('telegram_link', '', 'Telegram联系链接（如：https://t.me/username）')
     `);
   } catch (error) {
     console.error('插入默认系统设置失败:', error);

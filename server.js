@@ -226,6 +226,30 @@ async function startServer() {
       res.render('index', { title: '礼品卡发放系统' });
     });
 
+    app.get('/gc', async (req, res) => {
+      try {
+        // 获取WhatsApp和Telegram配置
+        const settings = await db.query('SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN (?, ?)', ['whatsapp_link', 'telegram_link']);
+        
+        let whatsappLink = '';
+        let telegramLink = '';
+        
+        settings.forEach(setting => {
+          if (setting.setting_key === 'whatsapp_link') {
+            whatsappLink = setting.setting_value;
+          } else if (setting.setting_key === 'telegram_link') {
+            telegramLink = setting.setting_value;
+          }
+        });
+        
+        res.render('gc', { whatsappLink, telegramLink });
+      } catch (error) {
+        console.error('获取联系方式配置失败:', error);
+        // 如果获取失败，使用默认空值
+        res.render('gc', { whatsappLink: '', telegramLink: '' });
+      }
+    });
+
     app.get('/test-cn', async (req, res) => {
       res.locals.isChineseIP = true;
       res.locals.recommendLang = 'zh';  // 设置推荐语言为中文

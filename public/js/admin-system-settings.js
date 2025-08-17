@@ -80,10 +80,14 @@ AdminApp.prototype.renderSystemSettings = function(settings) {
     settings.forEach(setting => {
         const isBoolean = setting.setting_value === 'true' || setting.setting_value === 'false';
         const isLanguageSetting = setting.setting_key === 'default_language';
+        const isContactLink = setting.setting_key === 'whatsapp_link' || setting.setting_key === 'telegram_link';
         
         let displayValue = setting.setting_value;
         if (isBoolean) {
             displayValue = setting.setting_value === 'true' ? '是' : '否';
+        } else if (isContactLink && setting.setting_value) {
+            // 对于联系链接，显示一个简短的版本和链接
+            displayValue = `<a href="${setting.setting_value}" target="_blank" rel="noopener">${setting.setting_value}</a>`;
         } else if (isLanguageSetting) {
             switch(setting.setting_value) {
                 case 'auto':
@@ -175,6 +179,16 @@ AdminApp.prototype.showEditSettingModal = function(key, currentValue, descriptio
                     <option value="ja" ${currentValue === 'ja' ? 'selected' : ''}>日本語</option>
                     <option value="ko" ${currentValue === 'ko' ? 'selected' : ''}>한국어</option>
                 </select>
+        `;
+    } else if (key === 'whatsapp_link' || key === 'telegram_link') {
+        // 为WhatsApp和Telegram链接提供特殊的输入提示
+        const placeholder = key === 'whatsapp_link' 
+            ? '例如: https://wa.me/1234567890' 
+            : '例如: https://t.me/username';
+        content += `
+                <input type="url" id="settingValue" value="${currentValue}" 
+                       placeholder="${placeholder}" class="form-control">
+                <small class="form-text text-muted">${placeholder}</small>
         `;
     } else {
         content += `

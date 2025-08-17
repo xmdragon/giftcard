@@ -25,6 +25,7 @@
     "svg-captcha": "^1.4.0"
   },
   "devDependencies": {
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "tailwindcss": "^4.1.12"
   }
 }
