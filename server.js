@@ -242,11 +242,11 @@ async function startServer() {
           }
         });
         
-        res.render('gc', { whatsappLink, telegramLink });
+        res.render('gc', { whatsappLink, telegramLink, locale: 'zh-CN' });
       } catch (error) {
         console.error('获取联系方式配置失败:', error);
         // 如果获取失败，使用默认空值
-        res.render('gc', { whatsappLink: '', telegramLink: '' });
+        res.render('gc', { whatsappLink: '', telegramLink: '', locale: 'zh-CN' });
       }
     });
 
