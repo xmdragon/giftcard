@@ -1,0 +1,497 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> 
+  <style>
+    /* 苹果风格基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0071e3',
+            secondary: '#666',
+            neutral: {
+              100: '#f5f5f7',
+              200: '#e8e8ed',
+              800: '#333',
+              900: '#111'
+            }
+          },
+          boxShadow: {
+            'apple': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+            'apple-hover': '0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06)',
+          }
+        }
+      }
+    }
+
+    /* 苹果风格组件样式 */
+    .apple-card {
+      background-color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .apple-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--tw-shadow-apple-hover);
+    }
+    
+    .gift-card-image {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .gift-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+      pointer-events: none;
+    }
+    
+    .card-shine {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      transition: all 0.7s ease;
+    }
+    
+    .apple-card:hover .card-shine {
+      left: 125%;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* ID输入框样式 */
+    .id-input-container {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .id-input {
+      font-size: 1.2rem;
+      padding: 1rem 1rem 1rem 3.5rem;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .id-input:focus {
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    }
+    
+    .id-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+  </style>
+  <title>礼品卡验证 - 输入ID即可使用</title>
+</head>
+
+<body>
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold">GiftCard</span>
+        </div>
+        
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#home" class="text-neutral-800 hover:text-primary text-sm transition-colors">首页</a>
+          <a href="#verify" class="text-neutral-800 hover:text-primary text-sm transition-colors">ID验证</a>
+          <a href="#cards" class="text-neutral-800 hover:text-primary text-sm transition-colors">礼品卡</a>
+        </nav>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-neutral-800">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-neutral-200">
+      <div class="container mx-auto px-4 py-3 space-y-3">
+        <a href="#home" class="block py-2 text-sm text-neutral-800 hover:text-primary">首页</a>
+        <a href="#verify" class="block py-2 text-sm text-neutral-800 hover:text-primary">ID验证</a>
+        <a href="#cards" class="block py-2 text-sm text-neutral-800 hover:text-primary">礼品卡</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 英雄区域 -->
+  <section id="home" class="pt-32 pb-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+          输入ID，<br class="sm:hidden">轻松使用礼品卡
+        </h1>
+        <p class="text-lg text-secondary mb-10">
+          只需输入账户ID，即可快速验证并使用。简单、安全、高效。
+        </p>
+        <div class="flex justify-center">
+          <a href="#verify" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple text-lg font-medium">
+            立即验证 <i class="fa fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+      
+      <!-- 主视觉礼品卡图片 -->
+      <div class="mt-16 max-w-3xl mx-auto">
+        <div class="rounded-2xl overflow-hidden shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+          <img src="https://picsum.photos/id/1/1200/600" alt="精美礼品卡展示，卡面上有ID区域" class="w-full h-auto">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ID验证区域 - 核心功能 -->
+  <section id="verify" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-4">输入ID即可验证</h2>
+        <p class="text-secondary max-w-2xl mx-auto">只需输入账户ID编码，即可快速验证礼品卡信息并使用</p>
+      </div>
+      
+      <div class="max-w-2xl mx-auto bg-neutral-100 p-8 rounded-2xl shadow-apple">
+        <div class="id-input-container mb-6">
+          <i class="fa fa-key id-icon text-xl"></i>
+          <input type="text" id="giftcard-id" class="id-input w-full" placeholder="请输入账户ID" maxlength="16">
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button id="verify-btn" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple flex-1 sm:flex-none">
+            验证礼品卡
+          </button>
+          <button id="clear-btn" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-apple flex-1 sm:flex-none">
+            清除
+          </button>
+        </div>
+        
+        <!-- 验证结果区域 -->
+        <div id="result-area" class="mt-8 hidden">
+          <div class="p-6 bg-white rounded-xl border border-green-100">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 mt-1">
+                <i class="fa fa-check-circle text-green-500 text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-green-800">验证成功</h3>
+                <div class="mt-2 text-sm text-neutral-800">
+                  <p><span class="font-medium">账户ID：</span><span id="result-id">XXXX-XXXX-XXXX-XXXX</span></p>
+                  <p class="mt-1"><span class="font-medium">余额：</span><span id="result-balance">¥200.00</span></p>
+                  <p class="mt-1"><span class="font-medium">有效期至：</span><span id="result-expiry">2024-12-31</span></p>
+                </div>
+                <div class="mt-4">
+                  <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                    立即使用 <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 礼品卡展示区 -->
+  <section id="cards" class="py-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">礼品卡系列</h2>
+        <p class="text-secondary max-w-2xl mx-auto">
+          所有礼品卡均支持ID验证，输入账户ID即可使用
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 礼品卡1 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/26/600/400" alt="时尚购物礼品卡，卡面上有ID区域示意" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">时尚购物卡</h3>
+            <p class="text-secondary mb-4">
+              输入账户ID即可在各大品牌服装店使用
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                输入ID使用 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 礼品卡2 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/42/600/400" alt="美食体验礼品卡，卡面上有ID区域示意" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">美食体验卡</h3>
+            <p class="text-secondary mb-4">
+              输入账户ID即可在合作餐厅使用
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                输入ID使用 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 礼品卡3 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/96/600/400" alt="数字服务礼品卡，卡面上有ID区域示意" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">数字服务卡</h3>
+            <p class="text-secondary mb-4">
+              输入账户ID即可兑换数字服务
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                输入ID使用 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用流程 -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">简单三步，轻松使用</h2>
+        <p class="text-secondary max-w-2xl mx-auto">
+          只需输入ID，即可完成验证和使用，无需复杂操作
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <!-- 步骤1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">1</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">找到账户ID</h3>
+          <p class="text-secondary"></p>
+        </div>
+        
+        <!-- 步骤2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">2</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">输入账户ID</h3>
+          <p class="text-secondary">
+            在上方输入框中填写您的账户ID
+          </p>
+        </div>
+        
+        <!-- 步骤3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">3</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">完成使用</h3>
+          <p class="text-secondary">
+            验证成功后即可使用礼品卡余额
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-neutral-100 py-12 border-t border-neutral-200">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-6 w-auto mr-2">
+            <span class="font-semibold">GiftCard</span>
+          </div>
+          <p class="text-sm text-secondary mb-4">
+            输入账户ID即可轻松使用礼品卡，简单高效
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-medium mb-4">快速链接</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#home" class="text-secondary hover:text-primary transition-colors">首页</a></li>
+            <li><a href="#verify" class="text-secondary hover:text-primary transition-colors">ID验证</a></li>
+            <li><a href="#cards" class="text-secondary hover:text-primary transition-colors">礼品卡</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-medium mb-4">帮助中心</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">账户ID找不到？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">验证失败？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">使用条款</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="pt-8 border-t border-neutral-200 text-center text-sm text-secondary">
+        <p>© 2023 GiftCard. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-apple opacity-0 invisible transition-all duration-300">
+    <i class="fa fa-chevron-up"></i>
+  </button>
+
+  <script>
+    // 移动端菜单切换
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 回到顶部按钮
+    const backToTopButton = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopButton.classList.remove('opacity-0', 'invisible');
+        backToTopButton.classList.add('opacity-100', 'visible');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible');
+        backToTopButton.classList.remove('opacity-100', 'visible');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // ID输入和验证功能
+    const idInput = document.getElementById('giftcard-id');
+    const verifyBtn = document.getElementById('verify-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const resultArea = document.getElementById('result-area');
+    const resultId = document.getElementById('result-id');
+    
+    // 格式化ID，每4位添加一个短横线
+    idInput.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/-/g, '');
+      if (value.length > 0) {
+        value = value.match(/.{1,4}/g).join('-');
+      }
+      e.target.value = value;
+    });
+    
+    // 验证按钮点击事件
+    verifyBtn.addEventListener('click', () => {
+      const idValue = idInput.value.replace(/-/g, '');
+      
+      if (idValue.length !== 16) {
+        alert('请输入有效的账户ID');
+        return;
+      }
+      
+      // 显示验证结果（实际项目中这里会调用API进行验证）
+      resultId.textContent = idInput.value;
+      resultArea.classList.remove('hidden');
+      
+      // 平滑滚动到结果区域
+      resultArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    
+    // 清除按钮点击事件
+    clearBtn.addEventListener('click', () => {
+      idInput.value = '';
+      resultArea.classList.add('hidden');
+    });
+    
+    // 图片加载动画
+    document.addEventListener('DOMContentLoaded', () => {
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s ease';
+        
+        img.onload = () => {
+          img.style.opacity = '1';
+        };
+        
+        // 如果图片已经缓存
+        if (img.complete) {
+          img.style.opacity = '1';
+        }
+      });
+    });
+  </script>
+
+
+    
+    </body></html>

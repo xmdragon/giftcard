@@ -1,589 +1,525 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="<%= locale || 'zh-CN' %>">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>免费礼品卡 - 完美的礼物选择</title>
-    <link rel="stylesheet" href="/css/gc-tailwind.css">
-    <link rel="stylesheet" href="/css/font-awesome.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> 
+  <style>
+    /* 苹果风格基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0071e3',
+            secondary: '#666',
+            neutral: {
+              100: '#f5f5f7',
+              200: '#e8e8ed',
+              800: '#333',
+              900: '#111'
+            }
+          },
+          boxShadow: {
+            'apple': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+            'apple-hover': '0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06)',
+          }
+        }
+      }
+    }
+
+    /* 苹果风格组件样式 */
+    .apple-card {
+      background-color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .apple-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--tw-shadow-apple-hover);
+    }
+    
+    .gift-card-image {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .gift-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+      pointer-events: none;
+    }
+    
+    .card-shine {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      transition: all 0.7s ease;
+    }
+    
+    .apple-card:hover .card-shine {
+      left: 125%;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* ID输入框样式 */
+    .id-input-container {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .id-input {
+      font-size: 1.2rem;
+      padding: 1rem 1rem 1rem 3.5rem;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .id-input:focus {
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+    }
+    
+    .id-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+
+    /* 成功/错误消息样式 */
+    .message {
+      border-radius: 12px;
+      padding: 1rem;
+      margin: 1rem 0;
+      display: none;
+    }
+    
+    .message.success {
+      background-color: #d1fae5;
+      border: 1px solid #86efac;
+      color: #065f46;
+    }
+    
+    .message.error {
+      background-color: #fee2e2;
+      border: 1px solid #fca5a5;
+      color: #991b1b;
+    }
+    
+    .message.show {
+      display: block;
+    }
+  </style>
+  <title data-i18n="page.title">礼品卡验证 - 输入ID即可使用</title>
 </head>
-<body class="font-sans text-neutral-800 bg-white">
-    <!-- 导航栏 -->
-    <header class="fixed w-full bg-white/90 backdrop-blur-sm shadow-sm z-50 transition-all duration-300">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
-                    <span class="text-primary text-2xl font-bold">GiftCard<span class="text-secondary">Pro</span></span>
-                </div>
-                
-                <!-- 桌面导航 -->
-                <nav class="hidden md:flex space-x-8">
-                    <a href="#home" class="text-neutral-800 hover:text-primary font-medium transition-colors">首页</a>
-                    <a href="#cards" class="text-neutral-800 hover:text-primary font-medium transition-colors">礼品卡</a>
-                    <a href="#features" class="text-neutral-800 hover:text-primary font-medium transition-colors">特色</a>
-                    <a href="#how-it-works" class="text-neutral-800 hover:text-primary font-medium transition-colors">使用方法</a>
-                    <a href="#testimonials" class="text-neutral-800 hover:text-primary font-medium transition-colors">用户评价</a>
-                </nav>
-                
-                <!-- 联系按钮 -->
-                <div class="hidden md:block">
-                    <a href="#contact" class="bg-primary hover:bg-primary/90 text-white font-medium py-2 px-6 rounded-full transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                        联系我们
-                    </a>
-                </div>
-                
-                <!-- 移动端菜单按钮 -->
-                <button id="menu-toggle" class="md:hidden text-neutral-800 focus:outline-none">
-                    <i class="fa fa-bars text-2xl"></i>
-                </button>
-            </div>
+
+<body>
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold" data-i18n="nav.brand">GiftCard</span>
         </div>
         
-        <!-- 移动端导航菜单 -->
-        <div id="mobile-menu" class="md:hidden hidden bg-white border-t">
-            <div class="container mx-auto px-4 py-3 space-y-3">
-                <a href="#home" class="block text-neutral-800 hover:text-primary font-medium py-2">首页</a>
-                <a href="#cards" class="block text-neutral-800 hover:text-primary font-medium py-2">礼品卡</a>
-                <a href="#features" class="block text-neutral-800 hover:text-primary font-medium py-2">特色</a>
-                <a href="#how-it-works" class="block text-neutral-800 hover:text-primary font-medium py-2">使用方法</a>
-                <a href="#testimonials" class="block text-neutral-800 hover:text-primary font-medium py-2">用户评价</a>
-                <a href="#contact" class="block bg-primary text-white font-medium py-2 px-4 rounded text-center">联系我们</a>
-            </div>
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#home" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.home">首页</a>
+          <a href="#verify" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.verify">ID验证</a>
+          <a href="#cards" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.cards">礼品卡</a>
+          <div class="ml-4 flex space-x-2">
+            <button onclick="changeLanguage('zh')" class="px-2 py-1 text-xs rounded <%= locale === 'zh' ? 'bg-primary text-white' : 'text-neutral-600' %>">中</button>
+            <button onclick="changeLanguage('en')" class="px-2 py-1 text-xs rounded <%= locale === 'en' ? 'bg-primary text-white' : 'text-neutral-600' %>">EN</button>
+            <button onclick="changeLanguage('ja')" class="px-2 py-1 text-xs rounded <%= locale === 'ja' ? 'bg-primary text-white' : 'text-neutral-600' %>">日</button>
+          </div>
+        </nav>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-neutral-800">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-neutral-200">
+      <div class="container mx-auto px-4 py-3 space-y-3">
+        <a href="#home" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.home">首页</a>
+        <a href="#verify" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.verify">ID验证</a>
+        <a href="#cards" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.cards">礼品卡</a>
+        <div class="flex space-x-2 py-2">
+          <button onclick="changeLanguage('zh')" class="px-3 py-1 text-xs rounded <%= locale === 'zh' ? 'bg-primary text-white' : 'text-neutral-600' %>">中文</button>
+          <button onclick="changeLanguage('en')" class="px-3 py-1 text-xs rounded <%= locale === 'en' ? 'bg-primary text-white' : 'text-neutral-600' %>">English</button>
+          <button onclick="changeLanguage('ja')" class="px-3 py-1 text-xs rounded <%= locale === 'ja' ? 'bg-primary text-white' : 'text-neutral-600' %>">日本語</button>
         </div>
-    </header>
+      </div>
+    </div>
+  </header>
 
-    <main>
-        <!-- 英雄区域 -->
-        <section id="home" class="pt-28 pb-20 md:pt-40 md:pb-32 bg-gradient-to-br from-primary/5 to-primary/10">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex flex-col lg:flex-row items-center">
-                    <div class="lg:w-1/2 mb-10 lg:mb-0">
-                        <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold leading-tight text-neutral-900 mb-6">
-                            完美礼物，<br>
-                            <span class="text-primary">免费领取</span>
-                        </h1>
-                        <p class="text-lg md:text-xl text-neutral-800 mb-8 max-w-lg">
-                            精选免费礼品卡，满足各种场合需求。无论是生日、节日还是商务馈赠，都能传递您的心意。
-                        </p>
-                        <div class="flex flex-col sm:flex-row gap-4">
-                            <a href="#cards" class="bg-primary hover:bg-primary/90 text-white font-medium py-3 px-8 rounded-full transition-all shadow-lg hover:shadow-xl text-center">
-                                领取礼品卡
-                            </a>
-                            <a href="#how-it-works" class="bg-white hover:bg-neutral-100 text-primary border border-primary font-medium py-3 px-8 rounded-full transition-all shadow-md hover:shadow-lg text-center">
-                                了解更多
-                            </a>
-                        </div>
-                    </div>
-                    <div class="lg:w-1/2 relative">
-                        <div class="relative z-10 rounded-xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
-                            <img src="/images/gc/hero-image.jpg" alt="精美的礼品卡展示" class="w-full h-auto">
-                        </div>
-                        <div class="absolute -bottom-6 -left-6 w-40 h-40 bg-secondary/20 rounded-full -z-10"></div>
-                        <div class="absolute -top-6 -right-6 w-60 h-60 bg-primary/20 rounded-full -z-10"></div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 礼品卡展示区 -->
-        <section id="cards" class="py-20 bg-white">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-900 mb-4">精选免费礼品卡</h2>
-                    <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-                        从时尚购物到美食体验，从休闲娱乐到数字服务，多种免费礼品卡供您选择
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- 礼品卡1 -->
-                    <div class="bg-white rounded-xl overflow-hidden shadow-lg card-hover border border-neutral-200">
-                        <div class="h-48 overflow-hidden">
-                            <img src="/images/gc/shopping-card.jpg" alt="时尚购物礼品卡" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
-                        </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <h3 class="text-xl font-bold text-neutral-900">时尚购物卡</h3>
-                                <span class="bg-primary/10 text-primary text-sm font-medium px-3 py-1 rounded-full">热门</span>
-                            </div>
-                            <p class="text-neutral-600 mb-4">
-                                适用于各大品牌服装店、百货商场，让收礼者自由选购心仪服饰。
-                            </p>
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-2xl font-bold text-green-600">免费</span>
-                                </div>
-                                <a href="#contact" class="text-primary hover:text-primary/80 font-medium flex items-center transition-colors">
-                                    立即领取 <i class="fa fa-arrow-right ml-2"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 礼品卡2 -->
-                    <div class="bg-white rounded-xl overflow-hidden shadow-lg card-hover border border-neutral-200">
-                        <div class="h-48 overflow-hidden">
-                            <img src="/images/gc/food-card.jpg" alt="美食体验礼品卡" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
-                        </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <h3 class="text-xl font-bold text-neutral-900">美食体验卡</h3>
-                                <span class="bg-secondary/10 text-secondary text-sm font-medium px-3 py-1 rounded-full">畅销</span>
-                            </div>
-                            <p class="text-neutral-600 mb-4">
-                                可在多家高端餐厅、咖啡馆使用，享受精致美食与优质服务。
-                            </p>
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-2xl font-bold text-green-600">免费</span>
-                                </div>
-                                <a href="#contact" class="text-primary hover:text-primary/80 font-medium flex items-center transition-colors">
-                                    立即领取 <i class="fa fa-arrow-right ml-2"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 礼品卡3 -->
-                    <div class="bg-white rounded-xl overflow-hidden shadow-lg card-hover border border-neutral-200">
-                        <div class="h-48 overflow-hidden">
-                            <img src="/images/gc/digital-card.jpg" alt="数字服务礼品卡" class="w-full h-full object-cover transition-transform duration-500 hover:scale-110">
-                        </div>
-                        <div class="p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <h3 class="text-xl font-bold text-neutral-900">数字服务卡</h3>
-                                <span class="bg-green-100 text-green-600 text-sm font-medium px-3 py-1 rounded-full">新品</span>
-                            </div>
-                            <p class="text-neutral-600 mb-4">
-                                包含流媒体订阅、云存储、游戏点数等多种数字服务选择。
-                            </p>
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <span class="text-2xl font-bold text-green-600">免费</span>
-                                </div>
-                                <a href="#contact" class="text-primary hover:text-primary/80 font-medium flex items-center transition-colors">
-                                    立即领取 <i class="fa fa-arrow-right ml-2"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-12">
-                    <a href="#contact" class="inline-flex items-center justify-center bg-white border border-primary text-primary hover:bg-primary hover:text-white font-medium py-3 px-8 rounded-full transition-all shadow-md hover:shadow-lg">
-                        查看全部免费礼品卡 <i class="fa fa-long-arrow-right ml-2"></i>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-        <!-- 特色介绍 -->
-        <section id="features" class="py-20 bg-neutral-100">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-900 mb-4">为什么选择我们的免费礼品卡</h2>
-                    <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-                        我们提供便捷、灵活且安全的免费礼品卡服务，满足您的各种赠送需求
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    <!-- 特色1 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa fa-bolt text-primary text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">即时发送</h3>
-                        <p class="text-neutral-600">
-                            领取后可立即通过邮件或短信发送，无需等待物流，紧急情况下也能从容应对。
-                        </p>
-                    </div>
-                    
-                    <!-- 特色2 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa fa-lock text-primary text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">安全可靠</h3>
-                        <p class="text-neutral-600">
-                            采用先进的安全技术保障，每一张礼品卡都有唯一验证码，确保使用安全。
-                        </p>
-                    </div>
-                    
-                    <!-- 特色3 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa fa-calendar text-primary text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">灵活期限</h3>
-                        <p class="text-neutral-600">
-                            长达12个月的有效期，让收礼者有充足时间选择合适的时机使用。
-                        </p>
-                    </div>
-                    
-                    <!-- 特色4 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md hover:shadow-lg transition-shadow">
-                        <div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa fa-paint-brush text-primary text-2xl"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">个性定制</h3>
-                        <p class="text-neutral-600">
-                            可添加个性化祝福语和照片，让礼品卡更具心意，传递独特情感。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 使用方法 -->
-        <section id="how-it-works" class="py-20 bg-white">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-900 mb-4">简单三步，领取完美礼物</h2>
-                    <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-                        我们简化了礼品卡的领取和发送流程，让您轻松完成赠礼
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-                    <!-- 连接线（仅在中等以上屏幕显示） -->
-                    <div class="hidden md:block absolute top-1/4 left-0 right-0 h-1 bg-primary/20 -translate-y-1/2 z-0"></div>
-                    
-                    <!-- 步骤1 -->
-                    <div class="relative z-10 bg-white p-8 rounded-xl shadow-md text-center">
-                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg">
-                            1
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">选择免费礼品卡</h3>
-                        <p class="text-neutral-600">
-                            浏览我们的礼品卡种类，根据场合和收礼者喜好选择合适的免费礼品卡。
-                        </p>
-                    </div>
-                    
-                    <!-- 步骤2 -->
-                    <div class="relative z-10 bg-white p-8 rounded-xl shadow-md text-center">
-                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg">
-                            2
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">个性化定制</h3>
-                        <p class="text-neutral-600">
-                            添加个性化祝福语、上传照片（可选），设置发送时间和接收方式。
-                        </p>
-                    </div>
-                    
-                    <!-- 步骤3 -->
-                    <div class="relative z-10 bg-white p-8 rounded-xl shadow-md text-center">
-                        <div class="w-16 h-16 bg-primary text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-6 shadow-lg">
-                            3
-                        </div>
-                        <h3 class="text-xl font-bold text-neutral-900 mb-3">完成发送</h3>
-                        <p class="text-neutral-600">
-                            领取完成后，礼品卡将按您设置的方式和时间发送给收礼者。
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 客户评价 -->
-        <section id="testimonials" class="py-20 bg-neutral-100">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="text-center mb-16">
-                    <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-neutral-900 mb-4">用户的真实评价</h2>
-                    <p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-                        看看其他用户如何评价我们的免费礼品卡服务
-                    </p>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <!-- 评价1 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md">
-                        <div class="flex items-center mb-4">
-                            <div class="text-secondary">
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                            </div>
-                        </div>
-                        <p class="text-neutral-600 mb-6 italic">
-                            "忘记了朋友的生日，幸好发现了这个免费礼品卡网站，5分钟内就完成了领取和发送，朋友非常喜欢！"
-                        </p>
-                        <div class="flex items-center">
-                            <img src="/images/gc/user1.jpg" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
-                            <div>
-                                <h4 class="font-bold text-neutral-900">李明</h4>
-                                <p class="text-sm text-neutral-500">上海</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 评价2 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md">
-                        <div class="flex items-center mb-4">
-                            <div class="text-secondary">
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                            </div>
-                        </div>
-                        <p class="text-neutral-600 mb-6 italic">
-                            "作为公司福利领取了一批免费礼品卡，员工们可以自由选择喜欢的商品，非常方便管理，客服也很贴心。"
-                        </p>
-                        <div class="flex items-center">
-                            <img src="/images/gc/user2.jpg" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
-                            <div>
-                                <h4 class="font-bold text-neutral-900">张婷</h4>
-                                <p class="text-sm text-neutral-500">北京</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 评价3 -->
-                    <div class="bg-white p-8 rounded-xl shadow-md">
-                        <div class="flex items-center mb-4">
-                            <div class="text-secondary">
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star"></i>
-                                <i class="fa fa-star-half-o"></i>
-                            </div>
-                        </div>
-                        <p class="text-neutral-600 mb-6 italic">
-                            "定制功能非常棒，我上传了家庭照片作为礼品卡背景，父母收到时特别感动，说这是最有心意的免费礼物。"
-                        </p>
-                        <div class="flex items-center">
-                            <img src="/images/gc/user3.jpg" alt="用户头像" class="w-12 h-12 rounded-full object-cover mr-4">
-                            <div>
-                                <h4 class="font-bold text-neutral-900">王浩</h4>
-                                <p class="text-sm text-neutral-500">广州</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 联系部分 -->
-        <section id="contact" class="py-20 bg-white">
-            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
-                    <div class="bg-primary p-10 md:p-16 text-white">
-                        <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold mb-6">联系我们</h2>
-                        <p class="mb-8 text-white/90">
-                            无论您有任何疑问、建议或合作意向，都欢迎与我们联系，我们将尽快回复您。
-                        </p>
-                        
-                        <div class="space-y-6">
-                            <div class="flex items-start">
-                                <div class="mt-1 mr-4 bg-white/20 p-3 rounded-full">
-                                    <i class="fa fa-envelope"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg mb-1">电子邮件</h3>
-                                    <p class="text-white/80">support@giftcardpro.com</p>
-                                </div>
-                            </div>
-                            
-                            <% if (whatsappLink) { %>
-                            <div class="flex items-start">
-                                <div class="mt-1 mr-4 bg-white/20 p-3 rounded-full">
-                                    <i class="fa fa-whatsapp"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg mb-1">WhatsApp</h3>
-                                    <a href="<%= whatsappLink %>" target="_blank" class="text-white/80 hover:text-white transition-colors">
-                                        点击联系我们
-                                    </a>
-                                </div>
-                            </div>
-                            <% } %>
-                            
-                            <% if (telegramLink) { %>
-                            <div class="flex items-start">
-                                <div class="mt-1 mr-4 bg-white/20 p-3 rounded-full">
-                                    <i class="fa fa-telegram"></i>
-                                </div>
-                                <div>
-                                    <h3 class="font-bold text-lg mb-1">Telegram</h3>
-                                    <a href="<%= telegramLink %>" target="_blank" class="text-white/80 hover:text-white transition-colors">
-                                        点击联系我们
-                                    </a>
-                                </div>
-                            </div>
-                            <% } %>
-                        </div>
-                        
-                        <div class="mt-12">
-                            <h3 class="font-bold text-lg mb-4">关注我们</h3>
-                            <div class="flex space-x-4">
-                                <a href="#" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                                    <i class="fa fa-weixin"></i>
-                                </a>
-                                <a href="#" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                                    <i class="fa fa-weibo"></i>
-                                </a>
-                                <a href="#" class="bg-white/20 hover:bg-white/30 w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                                    <i class="fa fa-instagram"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- 页脚 -->
-    <footer class="bg-neutral-900 text-white py-12">
-        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
-                <div>
-                    <h3 class="text-xl font-bold mb-4">GiftCard<span class="text-secondary">Pro</span></h3>
-                    <p class="text-neutral-400 mb-6">
-                        提供高品质免费礼品卡服务，让每一份礼物都传递心意。
-                    </p>
-                    <div class="flex space-x-4">
-                        <a href="#" class="text-neutral-400 hover:text-white transition-colors">
-                            <i class="fa fa-weixin text-xl"></i>
-                        </a>
-                        <a href="#" class="text-neutral-400 hover:text-white transition-colors">
-                            <i class="fa fa-weibo text-xl"></i>
-                        </a>
-                        <a href="#" class="text-neutral-400 hover:text-white transition-colors">
-                            <i class="fa fa-instagram text-xl"></i>
-                        </a>
-                    </div>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-bold mb-4">快速链接</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#home" class="text-neutral-400 hover:text-white transition-colors">首页</a></li>
-                        <li><a href="#cards" class="text-neutral-400 hover:text-white transition-colors">礼品卡</a></li>
-                        <li><a href="#features" class="text-neutral-400 hover:text-white transition-colors">特色</a></li>
-                        <li><a href="#how-it-works" class="text-neutral-400 hover:text-white transition-colors">使用方法</a></li>
-                        <li><a href="#contact" class="text-neutral-400 hover:text-white transition-colors">联系我们</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-bold mb-4">帮助中心</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="text-neutral-400 hover:text-white transition-colors">常见问题</a></li>
-                        <li><a href="#" class="text-neutral-400 hover:text-white transition-colors">领取指南</a></li>
-                        <li><a href="#" class="text-neutral-400 hover:text-white transition-colors">使用条款</a></li>
-                        <li><a href="#" class="text-neutral-400 hover:text-white transition-colors">隐私政策</a></li>
-                        <li><a href="#" class="text-neutral-400 hover:text-white transition-colors">退款政策</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-lg font-bold mb-4">联系信息</h4>
-                    <ul class="space-y-3">
-                        <li class="flex items-start">
-                            <i class="fa fa-map-marker text-secondary mt-1 mr-3"></i>
-                            <span class="text-neutral-400">上海市浦东新区张江高科技园区</span>
-                        </li>
-                        <% if (whatsappLink) { %>
-                        <li class="flex items-center">
-                            <i class="fa fa-whatsapp text-secondary mr-3"></i>
-                            <a href="<%= whatsappLink %>" target="_blank" class="text-neutral-400 hover:text-white transition-colors">WhatsApp</a>
-                        </li>
-                        <% } %>
-                        <% if (telegramLink) { %>
-                        <li class="flex items-center">
-                            <i class="fa fa-telegram text-secondary mr-3"></i>
-                            <a href="<%= telegramLink %>" target="_blank" class="text-neutral-400 hover:text-white transition-colors">Telegram</a>
-                        </li>
-                        <% } %>
-                        <li class="flex items-center">
-                            <i class="fa fa-envelope text-secondary mr-3"></i>
-                            <span class="text-neutral-400">support@giftcardpro.com</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="border-t border-neutral-800 pt-8 text-center text-neutral-500 text-sm">
-                <p>© 2023 GiftCardPro. 保留所有权利。</p>
-            </div>
+  <!-- 英雄区域 -->
+  <section id="home" class="pt-32 pb-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+          <span data-i18n="hero.title.line1">输入ID，</span><br class="sm:hidden"><span data-i18n="hero.title.line2">轻松使用礼品卡</span>
+        </h1>
+        <p class="text-lg text-secondary mb-10" data-i18n="hero.subtitle">
+          只需输入账户ID，即可快速验证并使用。简单、安全、高效。
+        </p>
+        <div class="flex justify-center">
+          <a href="#verify" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple text-lg font-medium">
+            <span data-i18n="hero.cta">立即验证</span> <i class="fa fa-arrow-right ml-2"></i>
+          </a>
         </div>
-    </footer>
+      </div>
+      
+      <!-- 主视觉礼品卡图片 -->
+      <div class="mt-16 max-w-3xl mx-auto">
+        <div class="rounded-2xl overflow-hidden shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+          <img src="https://picsum.photos/id/1/1200/600" alt="精美礼品卡展示，卡面上有ID区域" class="w-full h-auto">
+        </div>
+      </div>
+    </div>
+  </section>
 
-    <!-- 返回顶部按钮 -->
-    <button id="back-to-top" class="fixed bottom-8 right-8 bg-primary hover:bg-primary/90 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all opacity-0 invisible">
-        <i class="fa fa-arrow-up"></i>
-    </button>
+  <!-- ID验证区域 - 核心功能 -->
+  <section id="verify" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-4" data-i18n="verify.title">输入ID即可验证</h2>
+        <p class="text-secondary max-w-2xl mx-auto" data-i18n="verify.subtitle">只需输入账户ID编码，即可快速验证礼品卡信息并使用</p>
+      </div>
+      
+      <div class="max-w-2xl mx-auto bg-neutral-100 p-8 rounded-2xl shadow-apple">
+        <!-- 消息显示区域 -->
+        <div id="message-area">
+          <% if (typeof message !== 'undefined' && message) { %>
+            <div class="message <%= messageType %> show">
+              <i class="fa fa-<%= messageType === 'success' ? 'check-circle' : 'exclamation-circle' %> mr-2"></i>
+              <%= message %>
+            </div>
+          <% } %>
+        </div>
+        
+        <form action="/verify-giftcard" method="POST">
+          <div class="id-input-container mb-6">
+            <i class="fa fa-key id-icon text-xl"></i>
+            <input type="text" name="giftcard-id" id="giftcard-id" class="id-input w-full" 
+                   placeholder="<%= typeof t !== 'undefined' ? t('verify.input.placeholder') : '请输入账户ID' %>" 
+                   maxlength="19" 
+                   value="<%= typeof formData !== 'undefined' && formData.giftcardId ? formData.giftcardId : '' %>"
+                   required>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button type="submit" id="verify-btn" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple flex-1 sm:flex-none">
+              <span data-i18n="verify.button.submit">验证礼品卡</span>
+            </button>
+            <button type="button" id="clear-btn" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-apple flex-1 sm:flex-none">
+              <span data-i18n="verify.button.clear">清除</span>
+            </button>
+          </div>
+        </form>
+        
+        <!-- 验证结果区域 -->
+        <% if (typeof giftCardInfo !== 'undefined' && giftCardInfo) { %>
+        <div id="result-area" class="mt-8">
+          <div class="p-6 bg-white rounded-xl border border-green-100">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 mt-1">
+                <i class="fa fa-check-circle text-green-500 text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-green-800" data-i18n="verify.result.success">验证成功</h3>
+                <div class="mt-2 text-sm text-neutral-800">
+                  <p><span class="font-medium" data-i18n="verify.result.id">账户ID：</span><span id="result-id"><%= giftCardInfo.id %></span></p>
+                  <p class="mt-1"><span class="font-medium" data-i18n="verify.result.balance">余额：</span><span id="result-balance">¥<%= giftCardInfo.balance %></span></p>
+                  <p class="mt-1"><span class="font-medium" data-i18n="verify.result.category">类别：</span><span id="result-category"><%= giftCardInfo.category %></span></p>
+                  <% if (giftCardInfo.expiry) { %>
+                  <p class="mt-1"><span class="font-medium" data-i18n="verify.result.expiry">有效期至：</span><span id="result-expiry"><%= giftCardInfo.expiry %></span></p>
+                  <% } %>
+                </div>
+                <div class="mt-4">
+                  <button class="text-primary hover:text-primary/80 text-sm font-medium" onclick="useGiftCard('<%= giftCardInfo.id %>')">
+                    <span data-i18n="verify.result.use">立即使用</span> <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </section>
 
-    <!-- JavaScript -->
-    <script>
-        // 移动端菜单切换
-        const menuToggle = document.getElementById('menu-toggle');
-        const mobileMenu = document.getElementById('mobile-menu');
+  <!-- 礼品卡展示区 -->
+  <section id="cards" class="py-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4" data-i18n="cards.title">礼品卡系列</h2>
+        <p class="text-secondary max-w-2xl mx-auto" data-i18n="cards.subtitle">
+          所有礼品卡均支持ID验证，输入账户ID即可使用
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <% 
+        const defaultCategories = [
+          { name: '时尚购物卡', description: '输入账户ID即可在各大品牌服装店使用', image: 'https://picsum.photos/id/26/600/400' },
+          { name: '美食体验卡', description: '输入账户ID即可在合作餐厅使用', image: 'https://picsum.photos/id/42/600/400' },
+          { name: '数字服务卡', description: '输入账户ID即可兑换数字服务', image: 'https://picsum.photos/id/96/600/400' }
+        ];
+        const cardCategories = typeof categories !== 'undefined' && categories.length > 0 ? categories : defaultCategories;
+        %>
         
-        menuToggle.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
+        <% cardCategories.forEach(function(card, index) { %>
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="<%= card.image || 'https://picsum.photos/id/' + (26 + index * 16) + '/600/400' %>" 
+                 alt="<%= card.name %>礼品卡，卡面上有ID区域示意" 
+                 class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2"><%= card.name %></h3>
+            <p class="text-secondary mb-4"><%= card.description %></p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold" data-i18n="cards.multiple_amounts">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                <span data-i18n="cards.use_with_id">输入ID使用</span> <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <% }) %>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用流程 -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4" data-i18n="steps.title">简单三步，轻松使用</h2>
+        <p class="text-secondary max-w-2xl mx-auto" data-i18n="steps.subtitle">
+          只需输入ID，即可完成验证和使用，无需复杂操作
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <!-- 步骤1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">1</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-i18n="steps.step1.title">找到账户ID</h3>
+          <p class="text-secondary" data-i18n="steps.step1.description">查看您的礼品卡上的账户ID编码</p>
+        </div>
         
-        // 平滑滚动
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                
-                // 关闭移动端菜单（如果打开）
-                if (!mobileMenu.classList.contains('hidden')) {
-                    mobileMenu.classList.add('hidden');
-                }
-                
-                const targetId = this.getAttribute('href');
-                const targetElement = document.querySelector(targetId);
-                
-                if (targetElement) {
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 80,
-                        behavior: 'smooth'
-                    });
-                }
-            });
-        });
+        <!-- 步骤2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">2</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-i18n="steps.step2.title">输入账户ID</h3>
+          <p class="text-secondary" data-i18n="steps.step2.description">
+            在上方输入框中填写您的账户ID
+          </p>
+        </div>
         
-        // 导航栏滚动效果
-        const header = document.querySelector('header');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                header.classList.add('py-2', 'shadow-md');
-                header.classList.remove('py-4', 'shadow-sm');
-            } else {
-                header.classList.add('py-4', 'shadow-sm');
-                header.classList.remove('py-2', 'shadow-md');
-            }
-        });
+        <!-- 步骤3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">3</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3" data-i18n="steps.step3.title">完成使用</h3>
+          <p class="text-secondary" data-i18n="steps.step3.description">
+            验证成功后即可使用礼品卡余额
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="bg-neutral-100 py-12 border-t border-neutral-200">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-6 w-auto mr-2">
+            <span class="font-semibold" data-i18n="nav.brand">GiftCard</span>
+          </div>
+          <p class="text-sm text-secondary mb-4" data-i18n="footer.description">
+            输入账户ID即可轻松使用礼品卡，简单高效
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-instagram"></i>
+            </a>
+          </div>
+        </div>
         
-        // 返回顶部按钮
-        const backToTopButton = document.getElementById('back-to-top');
+        <div>
+          <h4 class="font-medium mb-4" data-i18n="footer.quicklinks.title">快速链接</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#home" class="text-secondary hover:text-primary transition-colors" data-i18n="nav.home">首页</a></li>
+            <li><a href="#verify" class="text-secondary hover:text-primary transition-colors" data-i18n="nav.verify">ID验证</a></li>
+            <li><a href="#cards" class="text-secondary hover:text-primary transition-colors" data-i18n="nav.cards">礼品卡</a></li>
+          </ul>
+        </div>
         
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) {
-                backToTopButton.classList.remove('opacity-0', 'invisible');
-                backToTopButton.classList.add('opacity-100', 'visible');
-            } else {
-                backToTopButton.classList.add('opacity-0', 'invisible');
-                backToTopButton.classList.remove('opacity-100', 'visible');
-            }
-        });
+        <div>
+          <h4 class="font-medium mb-4" data-i18n="footer.help.title">帮助中心</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors" data-i18n="footer.help.find_id">账户ID找不到？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors" data-i18n="footer.help.verify_failed">验证失败？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors" data-i18n="footer.help.terms">使用条款</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="pt-8 border-t border-neutral-200 text-center text-sm text-secondary">
+        <p data-i18n="footer.copyright">© 2023 GiftCard. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-apple opacity-0 invisible transition-all duration-300">
+    <i class="fa fa-chevron-up"></i>
+  </button>
+
+  <!-- 多语言支持脚本 -->
+  <script src="/js/i18n.js"></script>
+  <script>
+    // 移动端菜单切换
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 回到顶部按钮
+    const backToTopButton = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopButton.classList.remove('opacity-0', 'invisible');
+        backToTopButton.classList.add('opacity-100', 'visible');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible');
+        backToTopButton.classList.remove('opacity-100', 'visible');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // ID输入格式化功能
+    const idInput = document.getElementById('giftcard-id');
+    
+    // 格式化ID，每4位添加一个短横线
+    idInput.addEventListener('input', (e) => {
+      let value = e.target.value.replace(/-/g, '');
+      if (value.length > 0) {
+        value = value.match(/.{1,4}/g).join('-');
+      }
+      e.target.value = value;
+    });
+    
+    // 清除按钮功能
+    const clearBtn = document.getElementById('clear-btn');
+    clearBtn.addEventListener('click', () => {
+      idInput.value = '';
+      const resultArea = document.getElementById('result-area');
+      if (resultArea) {
+        resultArea.remove();
+      }
+      // 清除消息
+      const messageArea = document.getElementById('message-area');
+      messageArea.innerHTML = '';
+    });
+    
+    // 使用礼品卡功能
+    function useGiftCard(giftCardId) {
+      if (confirm('<%= typeof t !== "undefined" ? t("verify.result.use_confirm") : "确认使用此礼品卡？" %>')) {
+        // 这里可以添加使用礼品卡的逻辑
+        window.location.href = '/use-giftcard/' + giftCardId;
+      }
+    }
+    
+    // 语言切换功能
+    function changeLanguage(lang) {
+      window.location.href = '?lang=' + lang;
+    }
+    
+    // 图片加载动画
+    document.addEventListener('DOMContentLoaded', () => {
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s ease';
         
-        backToTopButton.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    </script>
+        img.onload = () => {
+          img.style.opacity = '1';
+        };
+        
+        // 如果图片已经缓存
+        if (img.complete) {
+          img.style.opacity = '1';
+        }
+      });
+      
+      // 初始化i18n
+      if (typeof i18next !== 'undefined') {
+        initI18n('<%= typeof locale !== "undefined" ? locale : "zh" %>');
+      }
+    });
+  </script>
 </body>
 </html>
-    
