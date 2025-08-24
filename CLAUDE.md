@@ -2,151 +2,152 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 项目概述
+## 常用命令
 
-礼品卡发放系统 - 基于 Node.js、Express、MySQL 和 Docker 的双重验证礼品卡发放管理系统，支持实时通知、多语言和签到奖励功能。
-
-## 开发命令
-
-### 本地开发
+### 开发环境
 ```bash
-# 快速启动（推荐）
-./dev-start.sh  # 自动启动MySQL容器并运行应用
+# 安装依赖
+npm install
 
-# 手动启动
-npm install     # 安装依赖
-npm run dev     # 启动开发服务器（带nodemon自动重载）
-npm start       # 启动生产服务器
+# 开发模式启动（热重载）
+npm run dev
+
+# 生产模式启动
+npm start
+
+# 构建 Tailwind CSS
+npx tailwindcss -i tailwind-input.css -o public/css/gc-tailwind.css --watch
 ```
 
-### Docker 环境
+### Docker 开发
 ```bash
-# 启动所有服务
+# 启动所有服务（推荐开发方式）
 docker compose up -d
 
-# 查看应用日志
-docker compose logs -f app
+# 仅启动数据库用于本地开发
+docker compose up -d mysql
 
-# 重启应用服务
-docker compose restart app
+# 查看日志
+docker compose logs -f app
+docker compose logs -f mysql  
+docker compose logs -f nginx
 
 # 停止所有服务
 docker compose down
 ```
 
-### 域名和SSL配置
+### 数据库管理
 ```bash
-# 自动更新域名和SSL（推荐）
-./update-domain.sh --auto your-domain.com
+# 测试数据库连接
+./test-db-connection.sh
 
-# 手动申请SSL证书
+# 重建数据库（危险操作）
+./rebuild-db.sh
+
+# Docker 数据库初始化
+docker compose up -d mysql
+# 数据库会自动通过 init.sql 初始化
+```
+
+### SSL 开发
+```bash
+# 设置开发环境 SSL 证书
+./dev-ssl-setup.sh
+
+# 生产环境申请 SSL 证书
 ./get-ssl-cert.sh your-domain.com your-email@example.com
 ```
 
-## 系统架构
+### 生产环境脚本
+```bash
+# 更新域名配置
+./update-domain.sh
 
-### 核心技术栈
-- **后端**: Node.js + Express 4.18
-- **实时通信**: Socket.IO WebSocket
-- **数据库**: MySQL 8.0 (连接池)
-- **认证**: JWT + bcryptjs
-- **国际化**: i18next (中/英/日)
-- **模板引擎**: EJS服务端渲染
-- **容器化**: Docker Compose + Nginx
+# 安装 Docker（如需要）
+sudo ./install-docker.sh
 
-### 目录结构
-```
-├── server.js              # 主入口，包含Socket.IO和Express配置
-├── routes/
-│   ├── admin.js           # 管理员API (会员管理、礼品卡、IP黑名单)
-│   ├── admin-auth.js      # 管理员认证 (登录、验证码、JWT)
-│   ├── member.js          # 会员API (签到、礼品卡历史)
-│   └── member-auth.js     # 会员认证 (双重验证流程)
-├── utils/
-│   ├── db.js              # MySQL连接池和查询工具
-│   ├── db-init.js         # 数据库初始化
-│   └── admin-security.js  # 管理员安全策略 (IP限制、失败记录)
-├── views/                 # EJS模板 (支持data-i18n属性)
-├── public/
-│   ├── js/               # 前端JS模块
-│   └── css/              # 样式文件
-└── locales/              # i18n语言包 (zh/en/ja)
+# 诊断和修复工具
+./debug-and-fix.sh
 ```
 
-## 核心功能流程
+## 核心架构
 
-### 双重验证登录流程
-1. 会员提交登录 → 创建待审核记录 (`login_logs`)
-2. 管理员实时收到通知 (Socket.IO) → 审核通过/拒绝
-3. 通过后进入二次验证 → 提交验证码 (`second_verifications`)
-4. 管理员审核验证码 → 成功后发放礼品卡
+### 主要组件
+- **Node.js/Express** - 主应用服务器，使用 EJS 模板引擎
+- **MySQL 8.0** - 主数据库，使用 UTF8MB4 字符集
+- **Socket.IO** - 实时 WebSocket 通信，用于管理员通知
+- **Nginx** - 反向代理和静态文件服务
+- **i18next** - 国际化系统，支持文件后端加载
 
-### 管理员安全策略
-- 3次密码错误 → IP临时禁用1小时
-- 当天5次错误 → IP永久禁用
-- 所有失败记录存储在 `admin_login_failures` 表
-- IP限制存储在 `admin_ip_restrictions` 表
+### 关键目录结构
+- `routes/` - Express 路由处理器，按功能分离
+  - `member-auth.js` - 会员认证和注册
+  - `admin-auth.js` - 管理员认证
+  - `member.js` - 会员操作（签到、礼品卡）
+  - `admin.js` - 管理员管理操作
+  - `admin-security.js` - IP 管理和安全控制
+  - `tracking.js` - 用户活动追踪
+- `utils/` - 数据库工具和初始化
+- `views/` - EJS 模板，包含组件化的 partial
+- `public/` - 静态资源（CSS、JS、图片、字体）
 
-### 实时通知机制
-- WebSocket连接: `/socket.io/`
-- 事件: `newLoginRequest`, `newVerificationRequest`
-- 管理员界面自动更新待审核列表
+### 数据库设计
+核心表：`members`、`login_logs`、`second_verifications`、`gift_cards`、`gift_card_categories`、`checkin_records`、`admins`、`ip_blacklist`
 
-## 数据库架构
+## 开发工作流
 
-主要数据表:
-- `members` - 会员账户 (包含签到资格时间)
-- `login_logs` - 登录请求记录 (待审核/已审核)
-- `second_verifications` - 二次验证请求
-- `gift_cards` - 礼品卡库存
-- `gift_card_categories` - 礼品卡分类
-- `checkin_records` - 签到记录
-- `admins` - 管理员账户 (super/admin角色)
-- `ip_blacklist` - IP黑名单
-- `admin_ip_restrictions` - 管理员IP限制
+### 认证系统
+系统使用**双重验证流程**：
+1. 会员登录创建 `login_logs` 记录（等待管理员审核）
+2. 管理员通过 WebSocket 实时界面审核登录
+3. 会员输入验证码，创建 `second_verifications` 记录
+4. 管理员审核验证码
+5. 系统签发 JWT 令牌并发放礼品卡
 
-## 环境配置
+### 实时通信
+Socket.IO 处理：
+- 管理员的待审核登录/验证通知
+- 实时审核状态更新
+- 声音通知（`public/snd/notice.mp3`）
 
-必需环境变量 (.env):
-```
-DB_HOST=localhost (Docker中用'mysql')
-DB_USER=giftcard_user
-DB_PASSWORD=GiftCard_User_2024!
-DB_NAME=gift_card_system
-JWT_SECRET=your-jwt-secret-key
-PORT=3000
-NODE_ENV=production/development
-```
+### 国际化
+- 文件应采用 `locales/{lang}/translation.json` 格式（当前缺失）
+- 所有 UI 文本使用 `data-i18n` 属性
+- 地理 IP 检测自动选择语言
+- 前端：`public/js/i18n.js` 处理客户端翻译
 
-## API端点
+### 安全特性
+- IP 黑名单系统（`ip_blacklist` 表）
+- JWT 认证，30天过期时间
+- 管理员角色层次（超级管理员 vs 普通管理员权限）
+- HTTPS/SSL 集成，支持 Let's Encrypt
 
-### 管理员API (需JWT认证)
-- `GET /api/admin/login-requests` - 待审核登录列表
-- `POST /api/admin/approve-login/:id` - 审核登录
-- `GET /api/admin/verification-requests` - 待审核验证列表
-- `POST /api/admin/approve-verification/:id` - 审核验证
-- `POST /api/admin/gift-cards/batch` - 批量添加礼品卡
-- `GET /api/admin/security/ip-restrictions` - IP限制列表
-- `DELETE /api/admin/security/ip-restrictions/:ip` - 移除IP限制
+### 前端架构
+- **模块化 JS**：管理员功能分布在多个文件（`admin-*.js`）
+- **Tailwind CSS**：自定义配置在 `tailwind.config.js`
+- **EJS Partials**：`views/partials/` 中的组件化视图结构
+- **响应式设计**：`iphone-adaptation.css` 适配 iPhone
 
-### 会员API
-- `POST /api/auth/member/login` - 会员登录
-- `POST /api/auth/member/verify` - 二次验证
-- `POST /api/member/checkin` - 每日签到
+## 重要注意事项
 
-## 访问入口
+### 环境配置
+系统读取 `.env` 文件，但会回退到 Docker Compose 环境变量。关键变量：
+- `DB_HOST`、`DB_USER`、`DB_PASSWORD`、`DB_NAME` - 数据库连接
+- `JWT_SECRET` - 令牌签名密钥
+- `NODE_ENV` - 环境模式
+- `PORT` - 应用端口（默认 3000）
 
-- 会员端: http://localhost:3000
-- 管理员: http://localhost:3000/admin
-- 健康检查: http://localhost:3000/health
+### Docker 开发设置
+docker-compose.yml 配置了绑定挂载（`.:/app`）以支持开发时的实时代码变更。`/app/node_modules` 卷防止本地 node_modules 冲突。
 
-默认管理员: admin / admin123
+### 数据库初始化
+MySQL 容器在首次启动时会自动运行 `init.sql` 创建表和初始管理员用户（admin/admin123）。
 
-## 注意事项
+### 多语言支持
+当前配置中文（`zh`）为回退语言。i18next 系统期望翻译文件在 `locales/` 目录中，该目录可能需要创建。
 
-- 所有密码使用bcryptjs加密存储
-- JWT令牌30天过期
-- 静态资源通过Nginx缓存
-- 数据库使用UTF8MB4支持完整Unicode
-- 第一个注册的管理员自动成为超级管理员
-- IP地理位置检测使用geoip-lite库
+### 管理员功能
+- 带 WebSocket 更新的实时审核仪表板
+- 礼品卡批量管理和分类
+- 会员追踪和 IP 管理
+- 系统安全控制（IP 封禁、管理员管理）

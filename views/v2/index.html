@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> 
+  <style>
+    /* 礼品卡风格基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0071e3',
+            secondary: '#666',
+            neutral: {
+              100: '#f5f5f7',
+              200: '#e8e8ed',
+              800: '#333',
+              900: '#111'
+            }
+          },
+          boxShadow: {
+            'giftcard': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+          }
+        }
+      }
+    }
+
+    /* 输入框样式 */
+    .input-container {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .form-input {
+      font-size: 1.2rem;
+      padding: 1rem 1rem 1rem 3.5rem;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+      outline: none;
+    }
+    
+    .form-input.error {
+      border-color: #ff3b30;
+      box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      cursor: pointer;
+    }
+
+    /* 错误提示样式 */
+    .error-message {
+      color: #ff3b30;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      text-align: left;
+      padding-left: 3.5rem;
+      display: none;
+    }
+
+    /* 按钮样式 */
+    .primary-btn {
+      background-color: #0071e3;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .primary-btn:hover {
+      background-color: #0066cc;
+      transform: translateY(-2px);
+    }
+    
+    .primary-btn:active {
+      transform: translateY(0);
+    }
+
+    /* 加载动画容器 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 113, 227, 0.1);
+      border-top-color: #0071e3;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 步骤指示器 */
+    .steps-indicator {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .step {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #e8e8ed;
+      margin: 0 4px;
+    }
+    
+    .step.active {
+      background-color: #0071e3;
+    }
+  </style>
+  <title>登录 - 礼品卡ID</title>
+</head>
+
+<body>
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <img src="logo.png" alt="礼品卡风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold">GiftCard</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 登录区域 -->
+  <section class="py-32 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold">登录您的礼品卡ID</h1>
+          <p class="text-secondary mt-2">请输入您的礼品卡ID和密码以领取礼品卡</p>
+        </div>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps-indicator">
+          <div class="step active"></div>
+          <div class="step"></div>
+          <div class="step"></div>
+        </div>
+        
+        <!-- 登录表单 -->
+        <form id="login-form" class="mt-8">
+          <!-- 礼品卡ID输入框 -->
+          <div class="input-container mb-2">
+            <i class="fa fa-user input-icon text-xl"></i>
+            <input type="email" id="giftcard-id" class="form-input w-full" placeholder="礼品卡ID（通常是邮箱地址）" maxlength="100" required>
+          </div>
+          <div id="id-error" class="error-message">请输入有效的礼品卡ID（例如：example@domain.com）</div>
+          
+          <!-- 密码输入框 -->
+          <div class="input-container mb-8 mt-6">
+            <i class="fa fa-lock input-icon text-xl"></i>
+            <input type="password" id="giftcard-password" class="form-input w-full" placeholder="密码" maxlength="20" required>
+            <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+          </div>
+          
+          <div class="space-y-4">
+            <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-giftcard text-lg font-medium">
+              继续
+            </button>
+            
+            <div class="text-center text-sm">
+              <a href="#" class="text-primary hover:underline">忘记礼品卡ID或密码？</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-neutral-100 py-12 border-t border-neutral-200 mt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-sm text-secondary">
+        <p>© 2023 GiftCard. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 密码显示/隐藏切换
+    const passwordInput = document.getElementById('giftcard-password');
+    const togglePassword = document.getElementById('toggle-password');
+    
+    togglePassword.addEventListener('click', () => {
+      // 切换密码可见性
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // 切换图标
+      togglePassword.classList.toggle('fa-eye');
+      togglePassword.classList.toggle('fa-eye-slash');
+    });
+    
+    // 礼品卡ID验证逻辑
+    const giftcardIdInput = document.getElementById('giftcard-id');
+    const idError = document.getElementById('id-error');
+    const loginForm = document.getElementById('login-form');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    // 礼品卡ID验证正则表达式（通常是邮箱格式）
+    const giftcardIdRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // 实时验证礼品卡ID格式
+    giftcardIdInput.addEventListener('input', () => {
+      validateGiftcardId();
+    });
+    
+    // 礼品卡ID验证函数
+    function validateGiftcardId() {
+      const giftcardIdValue = giftcardIdInput.value.trim();
+      
+      if (giftcardIdValue && !giftcardIdRegex.test(giftcardIdValue)) {
+        giftcardIdInput.classList.add('error');
+        idError.style.display = 'block';
+        return false;
+      } else {
+        giftcardIdInput.classList.remove('error');
+        idError.style.display = 'none';
+        return true;
+      }
+    }
+    
+    // 登录表单提交
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const giftcardIdValue = giftcardIdInput.value.trim();
+      const passwordValue = passwordInput.value;
+      
+      // 验证礼品卡ID格式
+      if (!validateGiftcardId()) {
+        return;
+      }
+      
+      // 验证礼品卡ID不为空
+      if (!giftcardIdValue) {
+        giftcardIdInput.classList.add('error');
+        idError.textContent = '请输入您的礼品卡ID';
+        idError.style.display = 'block';
+        return;
+      }
+      
+      // 验证密码长度
+      if (passwordValue.length < 6) {
+        alert('请输入至少6位密码');
+        return;
+      }
+      
+      // 显示加载动画
+      loadingOverlay.classList.add('active');
+      
+      // 保存礼品卡ID到本地存储
+      localStorage.setItem('giftcardId', giftcardIdValue);
+      
+      // 生成模拟设备名称并保存
+      const devices = ['iPhone', 'iPad', 'Mac'];
+      const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+      localStorage.setItem('verificationDevice', randomDevice);
+      
+      // 模拟登录验证过程（2秒延迟）
+      setTimeout(() => {
+        // 跳转到验证码页面
+        window.location.href = 'verification.html';
+      }, 2000);
+    });
+  </script>
+</body>
+</html>
+    

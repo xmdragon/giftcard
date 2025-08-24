@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="<%= recommendLang || 'zh' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="/v2/css/tailwind.min.css">
+  <link rel="stylesheet" href="/v2/css/font-awesome.min.css">
+  <style>
+    /* 基础样式与其他页面保持一致 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    /* 输入框样式 */
+    .input-container {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .form-input {
+      font-size: 1.2rem;
+      padding: 1rem 1rem 1rem 3.5rem;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+      outline: none;
+    }
+    
+    .form-input.error {
+      border-color: #ff3b30;
+      box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+
+    /* 错误提示样式 */
+    .error-message {
+      color: #ff3b30;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      text-align: center;
+      display: none;
+    }
+
+    /* 验证码倒计时样式 */
+    .countdown {
+      color: #0071e3;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    
+    .countdown.disabled {
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    /* 按钮样式 */
+    .primary-btn {
+      background-color: #0071e3;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .primary-btn:hover {
+      background-color: #0066cc;
+      transform: translateY(-2px);
+    }
+    
+    .primary-btn:active {
+      transform: translateY(0);
+    }
+
+    /* 加载动画容器 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 113, 227, 0.1);
+      border-top-color: #0071e3;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* 步骤指示器 */
+    .steps-indicator {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    
+    .step {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #e8e8ed;
+      margin: 0 4px;
+    }
+    
+    .step.active {
+      background-color: #0071e3;
+    }
+
+    /* 语言选择器 */
+    .language-selector {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+    }
+    
+    .language-selector select {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+  <script>
+    const recommendLang = "<%= recommendLang || 'zh' %>";
+    const isChineseIP = <%= isChineseIP ? 'true' : 'false' %>;
+    const blockChineseIP = <%= blockChineseIP ? 'true' : 'false' %>;
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <title data-i18n="verification_title">验证 - 礼品卡ID</title>
+</head>
+
+<body>
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 语言选择器 -->
+  <div class="language-selector">
+    <select id="languageSelect">
+      <option value="zh" data-i18n="lang_zh">中文</option>
+      <option value="en" data-i18n="lang_en">English</option>
+      <option value="ja" data-i18n="lang_ja">日本語</option>
+      <option value="ko" data-i18n="lang_ko">한국어</option>
+    </select>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-gray-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <button id="back-btn" class="text-gray-800">
+          <i class="fa fa-arrow-left"></i> <span data-i18n="back">返回</span>
+        </button>
+        <div class="flex items-center">
+          <img src="/v2/images/logo.png" alt="礼品卡风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold" data-i18n="site_name">GiftCard</span>
+        </div>
+        <div class="w-16"></div> <!-- 占位，保持居中 -->
+      </div>
+    </div>
+  </header>
+
+  <!-- 验证码区域 -->
+  <section class="py-32 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold" data-i18n="verify_identity">验证您的身份</h1>
+          <p class="text-gray-600 mt-2" id="verification-message" data-i18n="verification_sent">
+            验证码已发送至您的礼品卡设备
+          </p>
+          <p class="text-sm text-gray-500 mt-1" id="device-name">
+            iPhone
+          </p>
+        </div>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps-indicator">
+          <div class="step active"></div>
+          <div class="step active"></div>
+          <div class="step"></div>
+        </div>
+        
+        <!-- 验证码表单 -->
+        <form id="verification-form" class="mt-8">
+          <!-- 验证码输入框 -->
+          <div class="input-container mb-2">
+            <i class="fa fa-shield input-icon text-xl"></i>
+            <input type="text" id="code-input" class="form-input w-full text-center" placeholder="输入6位验证码" maxlength="6" required data-i18n-placeholder="verification_placeholder">
+          </div>
+          <div id="code-error" class="error-message" data-i18n="invalid_code">请输入有效的6位验证码</div>
+          
+          <div class="text-center mb-8 mt-2">
+            <span id="resend-code" class="countdown" data-i18n="resend_code">重新发送</span>
+          </div>
+          
+          <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-blue-600 transition-colors shadow-lg text-lg font-medium" data-i18n="continue">
+            继续
+          </button>
+        </form>
+        
+        <!-- 说明信息 -->
+        <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-start">
+            <i class="fa fa-info-circle text-blue-600 mt-1 mr-3"></i>
+            <div class="text-left">
+              <h4 class="text-sm font-medium text-blue-800 mb-1" data-i18n="verification_tips">验证说明</h4>
+              <ul class="text-sm text-blue-700 space-y-1">
+                <li data-i18n="verification_tip1">• 请检查您的设备是否收到验证码</li>
+                <li data-i18n="verification_tip2">• 验证码有效期为5分钟</li>
+                <li data-i18n="verification_tip3">• 如未收到可点击重新发送</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-gray-100 py-12 border-t border-gray-200 mt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-sm text-gray-600">
+        <p>&copy; 2023 GiftCard. <span data-i18n="all_rights_reserved">保留所有权利。</span></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/i18n.js?v=<%= Date.now() %>"></script>
+  <script src="/v2/js/app.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

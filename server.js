@@ -167,6 +167,7 @@ const createAdminRoutes = require('./routes/admin');
 const createAdminSecurityRoutes = require('./routes/admin-security');
 const createMemberRoutes = require('./routes/member');
 const createTrackingRoutes = require('./routes/tracking');
+const createV2Routes = require('./routes/v2');
 
 // Start server
 async function startServer() {
@@ -181,6 +182,7 @@ async function startServer() {
     const adminSecurityRoutes = createAdminSecurityRoutes();
     const memberRoutes = createMemberRoutes(io);
     const trackingRoutes = createTrackingRoutes(io);
+    const v2Routes = createV2Routes(io);
     
     // Use routes
     app.use('/api/auth/member', memberAuthRoutes);
@@ -189,6 +191,9 @@ async function startServer() {
     app.use('/api/admin/security', adminSecurityRoutes);
     app.use('/api/member', memberRoutes);
     app.use('/api/tracking', trackingRoutes);
+    
+    // V2 routes
+    app.use('/v2', v2Routes);
     
     // Health check route
     app.get('/health', async (req, res) => {
