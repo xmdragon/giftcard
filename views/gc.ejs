@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.tailwindcss.com"></script> 
-  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> 
+  <script src="/vendor/js/tailwind.js"></script> 
+  <link href="/vendor/css/font-awesome.min.css" rel="stylesheet"> 
   <style>
     /* 苹果风格基础样式 */
     * {
@@ -145,51 +145,9 @@
 </head>
 
 <body>
-  <!-- 顶部导航 -->
-  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-16">
-        <div class="flex items-center">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
-          <span class="text-lg font-semibold" data-i18n="nav.brand">GiftCard</span>
-        </div>
-        
-        <!-- 桌面导航 -->
-        <nav class="hidden md:flex items-center space-x-8">
-          <a href="#home" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.home">首页</a>
-          <a href="#verify" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.verify">ID验证</a>
-          <a href="#cards" class="text-neutral-800 hover:text-primary text-sm transition-colors" data-i18n="nav.cards">礼品卡</a>
-          <div class="ml-4 flex space-x-2">
-            <button onclick="changeLanguage('zh')" class="px-2 py-1 text-xs rounded <%= locale === 'zh' ? 'bg-primary text-white' : 'text-neutral-600' %>">中</button>
-            <button onclick="changeLanguage('en')" class="px-2 py-1 text-xs rounded <%= locale === 'en' ? 'bg-primary text-white' : 'text-neutral-600' %>">EN</button>
-            <button onclick="changeLanguage('ja')" class="px-2 py-1 text-xs rounded <%= locale === 'ja' ? 'bg-primary text-white' : 'text-neutral-600' %>">日</button>
-          </div>
-        </nav>
-        
-        <!-- 移动端菜单按钮 -->
-        <button id="menu-toggle" class="md:hidden text-neutral-800">
-          <i class="fa fa-bars text-xl"></i>
-        </button>
-      </div>
-    </div>
-    
-    <!-- 移动端导航菜单 -->
-    <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-neutral-200">
-      <div class="container mx-auto px-4 py-3 space-y-3">
-        <a href="#home" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.home">首页</a>
-        <a href="#verify" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.verify">ID验证</a>
-        <a href="#cards" class="block py-2 text-sm text-neutral-800 hover:text-primary" data-i18n="nav.cards">礼品卡</a>
-        <div class="flex space-x-2 py-2">
-          <button onclick="changeLanguage('zh')" class="px-3 py-1 text-xs rounded <%= locale === 'zh' ? 'bg-primary text-white' : 'text-neutral-600' %>">中文</button>
-          <button onclick="changeLanguage('en')" class="px-3 py-1 text-xs rounded <%= locale === 'en' ? 'bg-primary text-white' : 'text-neutral-600' %>">English</button>
-          <button onclick="changeLanguage('ja')" class="px-3 py-1 text-xs rounded <%= locale === 'ja' ? 'bg-primary text-white' : 'text-neutral-600' %>">日本語</button>
-        </div>
-      </div>
-    </div>
-  </header>
 
   <!-- 英雄区域 -->
-  <section id="home" class="pt-32 pb-20 bg-neutral-100">
+  <section id="home" class="pt-20 pb-20 bg-neutral-100">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center max-w-3xl mx-auto">
         <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
@@ -208,7 +166,7 @@
       <!-- 主视觉礼品卡图片 -->
       <div class="mt-16 max-w-3xl mx-auto">
         <div class="rounded-2xl overflow-hidden shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
-          <img src="https://picsum.photos/id/1/1200/600" alt="精美礼品卡展示，卡面上有ID区域" class="w-full h-auto">
+          <img src="/images/apple-gift-cards-landing-202006.png" alt="精美礼品卡展示，卡面上有ID区域" class="w-full h-auto">
         </div>
       </div>
     </div>
@@ -298,9 +256,9 @@
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <% 
         const defaultCategories = [
-          { name: '时尚购物卡', description: '输入账户ID即可在各大品牌服装店使用', image: 'https://picsum.photos/id/26/600/400' },
-          { name: '美食体验卡', description: '输入账户ID即可在合作餐厅使用', image: 'https://picsum.photos/id/42/600/400' },
-          { name: '数字服务卡', description: '输入账户ID即可兑换数字服务', image: 'https://picsum.photos/id/96/600/400' }
+          { name: '时尚购物卡', description: '输入账户ID即可在各大品牌服装店使用', image: '/images/gift-card-1.jpg' },
+          { name: '美食体验卡', description: '输入账户ID即可在合作餐厅使用', image: '/images/gift-card-2.jpg' },
+          { name: '数字服务卡', description: '输入账户ID即可兑换数字服务', image: '/images/gift-card-3.jpg' }
         ];
         const cardCategories = typeof categories !== 'undefined' && categories.length > 0 ? categories : defaultCategories;
         %>
@@ -308,7 +266,7 @@
         <% cardCategories.forEach(function(card, index) { %>
         <div class="apple-card shadow-apple">
           <div class="gift-card-image h-56">
-            <img src="<%= card.image || 'https://picsum.photos/id/' + (26 + index * 16) + '/600/400' %>" 
+            <img src="<%= card.image || '/images/gift-card-' + (index + 1) + '.jpg' %>" 
                  alt="<%= card.name %>礼品卡，卡面上有ID区域示意" 
                  class="w-full h-full object-cover">
             <div class="gift-card-overlay"></div>
@@ -380,7 +338,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-6 w-auto mr-2">
+            <img src="/images/apple-logo.svg" alt="苹果风格图标" class="h-5 w-5 mr-2">
             <span class="font-semibold" data-i18n="nav.brand">GiftCard</span>
           </div>
           <p class="text-sm text-secondary mb-4" data-i18n="footer.description">
@@ -432,13 +390,6 @@
   <!-- 多语言支持脚本 -->
   <script src="/js/i18n.js"></script>
   <script>
-    // 移动端菜单切换
-    const menuToggle = document.getElementById('menu-toggle');
-    const mobileMenu = document.getElementById('mobile-menu');
-    
-    menuToggle.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-    });
     
     // 回到顶部按钮
     const backToTopButton = document.getElementById('back-to-top');
