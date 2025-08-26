@@ -11,7 +11,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
     }
 
     body {
@@ -34,7 +34,7 @@
             }
           },
           boxShadow: {
-            'giftcard': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+            'apple': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
           }
         }
       }
@@ -114,7 +114,7 @@
           <i class="fa fa-arrow-left"></i> 返回
         </button>
         <div class="flex items-center">
-          <img src="logo.png" alt="礼品卡风格图标" class="h-8 w-auto mr-2">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
           <span class="text-lg font-semibold">GiftCard</span>
         </div>
         <div class="w-6"></div> <!-- 占位，保持居中 -->
@@ -130,7 +130,7 @@
           <i class="fa fa-check text-success text-2xl"></i>
         </div>
         <h2 class="text-3xl font-bold mb-2">领取成功！</h2>
-        <p class="text-secondary max-w-2xl mx-auto">您的礼品卡已成功添加至您的礼品卡账户</p>
+        <p class="text-secondary max-w-2xl mx-auto">您的礼品卡已成功添加至您的苹果账户</p>
       </div>
       
       <!-- 步骤指示器 -->
@@ -169,7 +169,7 @@
             </div>
             <div class="flex justify-between">
               <span class="text-secondary">添加至：</span>
-              <span class="font-medium" id="giftcard-id-display"></span>
+              <span class="font-medium" id="apple-id-display"></span>
             </div>
             <div class="flex justify-between">
               <span class="text-secondary">有效期至：</span>
@@ -184,10 +184,10 @@
         
         <!-- 操作按钮 -->
         <div class="flex flex-col sm:flex-row gap-4">
-          <a href="https://www.giftcard.com/cn/itunes/" target="_blank" class="primary-btn px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-giftcard flex items-center justify-center flex-1">
-            <i class="fa fa-giftcard mr-2"></i> 前往App Store
+          <a href="https://www.apple.com/cn/itunes/" target="_blank" class="primary-btn px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple flex items-center justify-center flex-1">
+            <i class="fa fa-apple mr-2"></i> 前往App Store
           </a>
-          <a href="index.html" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-giftcard flex items-center justify-center flex-1">
+          <a href="index.html" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-apple flex items-center justify-center flex-1">
             返回首页
           </a>
         </div>
@@ -205,16 +205,16 @@
   </footer>
 
   <script>
-    // 从本地存储获取礼品卡ID
-    const giftcardId = localStorage.getItem('giftcardId');
+    // 从本地存储获取苹果ID
+    const appleId = localStorage.getItem('appleId');
     
     // 验证是否有登录信息，没有则返回登录页
-    if (!giftcardId) {
+    if (!appleId) {
       window.location.href = 'index.html';
     }
     
-    // 显示礼品卡ID（隐藏部分字符保护隐私）
-    function maskGiftcardId(id) {
+    // 显示苹果ID（隐藏部分字符保护隐私）
+    function maskAppleId(id) {
       const [localPart, domain] = id.split('@');
       if (localPart.length > 3) {
         return localPart.substring(0, 3) + '***@' + domain;
@@ -222,7 +222,7 @@
       return localPart + '***@' + domain;
     }
     
-    document.getElementById('giftcard-id-display').textContent = maskGiftcardId(giftcardId);
+    document.getElementById('apple-id-display').textContent = maskAppleId(appleId);
     
     // 显示当前时间作为添加时间
     function formatDate(date) {

