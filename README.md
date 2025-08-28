@@ -48,7 +48,7 @@
 
 ### 👥 会员管理
 - 自动注册新用户
-- 登录IP和时间记录
+- 登录IP和时间记录 
 - 会员活动统计
 
 ### 🌍 多语言支持
@@ -245,12 +245,79 @@ NODE_ENV=production
 
 ## 部署说明 / Deployment
 
-### 生产环境部署
-1. 修改 `docker-compose.yml` 中的密码配置
-2. 设置强密码的JWT_SECRET
-3. 配置反向代理（Nginx）- 已内置在Docker Compose中
-4. 启用HTTPS - 使用自动SSL证书申请脚本
-5. 配置防火墙规则
+### 生产环境部署步骤
+
+#### 1. 服务器准备
+```bash
+# 安装Docker（如果未安装）
+chmod +x install-docker.sh
+sudo ./install-docker.sh
+
+# 克隆项目到服务器
+git clone <repository-url>
+cd gift-card-system
+```
+
+#### 2. 配置修改
+```bash
+# 修改数据库密码（重要！）
+# 编辑 docker-compose.yml 中的：
+# - MYSQL_ROOT_PASSWORD
+# - MYSQL_PASSWORD
+# - DB_PASSWORD
+
+# 设置强密码的JWT密钥
+# 编辑 docker-compose.yml 中的 JWT_SECRET
+```
+
+#### 3. 域名和SSL配置
+```bash
+# 更新域名配置
+chmod +x update-domain.sh
+./update-domain.sh your-domain.com
+
+# 申请SSL证书（域名需要先解析到服务器）
+chmod +x get-ssl-cert.sh
+sudo ./get-ssl-cert.sh your-domain.com your-email@example.com
+```
+
+#### 4. 启动服务
+```bash
+# 启动所有服务
+docker compose up -d
+
+# 检查服务状态
+docker compose ps
+docker compose logs -f
+```
+
+#### 5. 生产环境优化
+```bash
+# 清理开发文件（可选）
+chmod +x cleanup-production-safe.sh
+./cleanup-production-safe.sh
+
+# 配置防火墙
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 22
+sudo ufw enable
+```
+
+### 域名配置自动化
+使用 `update-domain.sh` 脚本可以：
+- 一键批量替换所有 server_name
+- 自动添加 HTTP 到 HTTPS 重定向
+- 自动检测 SSL 证书路径
+- 支持全自动模式（`--auto`参数）
+
+```bash
+# 交互式配置
+./update-domain.sh
+
+# 自动模式
+./update-domain.sh --auto your-domain.com
+```
 
 ### SSL证书配置
 ```bash
@@ -297,6 +364,145 @@ docker compose logs -f
 
 ### 诊断工具
 系统提供了自动诊断和修复工具，可以帮助快速解决常见问题：
+
+```bash
+# 给脚本添加执行权限
+chmod +x debug-and-fix.sh
+
+# 运行诊断工具
+./debug-and-fix.sh
+```
+
+诊断工具可以：
+- 检查所有服务状态
+- 验证数据库连接
+- 测试应用健康状态
+- 显示详细错误日志
+- 提供修复建议和自动修复选项
+
+## 管理员安全 / Admin Security
+
+### 管理员权限分级
+- **超级管理员 (super)**: 第一个注册的管理员，拥有所有权限
+  - 可以创建、删除其他管理员
+  - 可以修改系统设置
+  - 可以查看所有日志和统计
+- **普通管理员 (admin)**: 受限权限
+  - 无法管理管理员账号
+  - 可以审核会员登录和验证
+  - 可以管理礼品卡和分类
+
+### 安全最佳实践
+- 定期更新管理员密码
+- 监控异常登录行为
+- 启用IP黑名单功能
+- 限制管理员账号数量
+- 定期备份数据库
+- 保持系统组件更新
+
+### IP管理和安全
+- 系统自动记录所有登录IP
+- 管理员可以查看IP登录历史
+- 支持手动禁止/解禁IP地址
+- 自动检测异常登录模式
+- IP黑名单实时生效
+
+## 数据库维护 / Database Maintenance
+
+### 数据库编码问题修复
+如果遇到中文乱码问题，可以使用以下脚本：
+
+```bash
+# 给脚本添加执行权限
+chmod +x fix-db-encoding-simple.sh
+
+# 运行修复脚本
+./fix-db-encoding-simple.sh
+```
+
+### 数据库重建
+```bash
+# 完全重建数据库（谨慎使用）
+chmod +x rebuild-db.sh
+./rebuild-db.sh
+```
+
+### 添加系统设置
+```bash
+# 添加联系方式设置
+mysql -u giftcard_user -p gift_card_system < add-contact-settings.sql
+
+# 添加语言设置
+chmod +x add-language-setting.sh
+./add-language-setting.sh
+```
+
+## 生产环境清理 / Production Cleanup
+
+### 清理脚本使用
+系统提供了多个清理脚本用于生产环境部署：
+
+```bash
+# 预览将要删除的文件（推荐先运行）
+chmod +x preview-cleanup.sh
+./preview-cleanup.sh
+
+# 交互式安全清理（推荐）
+chmod +x cleanup-production-safe.sh
+./cleanup-production-safe.sh
+
+# 自动清理（谨慎使用）
+chmod +x cleanup-production.sh
+./cleanup-production.sh
+```
+
+### 清理内容
+- 开发文档和说明文件
+- 开发脚本和工具
+- 临时文件和缓存
+- 测试文件和配置
+- Git历史和版本控制文件
+
+## 国际化配置 / Internationalization
+
+### 语言检测和推荐
+- 系统根据访问者IP自动推荐语言
+- 中国IP推荐中文
+- 日本IP推荐日文
+- 其他地区默认英文
+- 用户可手动切换并记忆选择
+
+### 语言包维护
+- 语言文件位于 `locales/` 目录
+- 支持动态语言切换
+- 所有页面文本使用 `data-i18n` 属性
+- 新增文本需要在所有语言包中添加对应翻译
+
+### 添加新语言
+1. 在 `locales/` 目录创建新的语言文件夹
+2. 复制现有语言包并翻译
+3. 在系统设置中添加语言选项
+4. 更新语言检测逻辑
+
+## 用户跟踪和权限 / User Tracking & Permissions
+
+### 用户数据收集
+- 登录IP地址和时间
+- 浏览器信息和设备类型
+- 签到记录和活动统计
+- 礼品卡获取历史
+
+### 隐私保护
+- 用户数据仅用于系统功能
+- 不会向第三方分享用户信息
+- 用户可以查看自己的活动记录
+- 管理员访问用户数据需要合理理由
+
+### 数据保留政策
+- 登录日志保留90天
+- 签到记录永久保留
+- IP黑名单记录永久保留
+- 用户可以申请删除个人数据
 
 ```bash
 # 给脚本添加执行权限
@@ -361,24 +567,59 @@ chmod +x debug-and-fix.sh
 ### 项目结构
 ```
 ├── public/          # 前端静态文件
+│   ├── css/         # 样式文件
+│   ├── js/          # JavaScript文件
+│   ├── vendor/      # 第三方库
+│   └── images/      # 图片资源
 ├── routes/          # API路由
+├── utils/           # 工具函数和数据库操作
+├── views/           # EJS模板文件
+│   ├── admin/       # 管理员页面
+│   ├── member/      # 会员页面
+│   └── partials/    # 页面组件
 ├── locales/         # 多语言文件
 ├── server.js        # 主服务器文件
 ├── package.json     # 项目依赖
 ├── Dockerfile       # Docker配置
 ├── docker-compose.yml # Docker编排
 ├── nginx.conf       # Nginx配置
-├── get-ssl-cert.sh  # SSL证书申请脚本
-└── debug-and-fix.sh # 诊断修复工具
+├── init.sql         # 数据库初始化脚本
+└── 各种.sh脚本      # 部署和维护工具
 ```
 
-### 开发环境
+### 开发环境设置
 ```bash
-# 安装开发依赖
-npm install --include=dev
+# 1. 克隆项目
+git clone <repository-url>
+cd gift-card-system
 
-# 启动开发模式
+# 2. 安装依赖
+npm install
+
+# 3. 设置环境变量
+cp .env.example .env
+# 编辑 .env 文件，配置数据库连接等
+
+# 4. 启动MySQL（开发环境）
+docker compose up -d mysql
+
+# 5. 启动开发服务器
 npm run dev
+```
+
+### 开发工具脚本
+```bash
+# 开发环境一键启动
+chmod +x dev-start.sh
+./dev-start.sh
+
+# SSL开发环境设置
+chmod +x dev-ssl-setup.sh
+./dev-ssl-setup.sh
+
+# 测试数据库连接
+chmod +x test-db-connection.sh
+./test-db-connection.sh
 ```
 
 ## 许可证 / License

@@ -1,0 +1,109 @@
+[33m5a1ca11[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m 修改新版系统
+public/v2/css/font-awesome.min.css
+public/v2/css/tailwind.min.css
+public/v2/fonts/fontawesome-webfont.eot
+public/v2/fonts/fontawesome-webfont.svg
+public/v2/fonts/fontawesome-webfont.ttf
+public/v2/fonts/fontawesome-webfont.woff
+public/v2/fonts/fontawesome-webfont.woff2
+public/v2/images/logo.png
+public/v2/js/app.js
+routes/v2.js
+server.js
+views/v2/checkin.ejs
+views/v2/index.ejs
+views/v2/success.ejs
+views/v2/verification.ejs
+views/v2/waiting-verification.ejs
+views/v2/waiting.ejs
+views/v3/index.html
+views/v3/success.html
+views/v3/verification.html
+views/v3/welcome.html
+[33m2c7f408[m Merge branch 'main' of https://github.com/xmdragon/giftcard
+[33mc441fce[m 2.0版加入
+.DS_Store
+CLAUDE.md
+public/v2/css/font-awesome.min.css
+public/v2/css/tailwind.min.css
+public/v2/fonts/fontawesome-webfont.eot
+public/v2/fonts/fontawesome-webfont.svg
+public/v2/fonts/fontawesome-webfont.ttf
+public/v2/fonts/fontawesome-webfont.woff
+public/v2/fonts/fontawesome-webfont.woff2
+public/v2/images/logo.png
+public/v2/js/app.js
+routes/v2.js
+server.js
+views/.DS_Store
+views/v2/checkin.ejs
+views/v2/index.ejs
+views/v2/index.html
+views/v2/success.ejs
+views/v2/success.html
+views/v2/verification.ejs
+views/v2/verification.html
+views/v2/waiting-verification.ejs
+views/v2/waiting.ejs
+[33m90673d8[m 修改新版系统
+public/images/apple-logo.svg
+public/images/gift-card-1.jpg
+public/images/gift-card-2.jpg
+public/images/gift-card-3.jpg
+public/images/gift-card-hero.jpg
+public/vendor/css/font-awesome.min.css
+public/vendor/fonts/fontawesome-webfont.ttf
+public/vendor/fonts/fontawesome-webfont.woff
+public/vendor/fonts/fontawesome-webfont.woff2
+public/vendor/js/tailwind.js
+views/gc.ejs
+[33me85e030[m 修改错误
+server.js
+[33me016e80[m 增加新版礼品页
+public/test-audio.html
+views/gc.ejs
+views/gc3.html
+[33me658cf3[m 加入新版本首页GC
+CLAUDE.md
+add-contact-settings.sql
+node_modules/.bin/mime
+node_modules/.bin/mkdirp
+node_modules/.bin/nodemon
+node_modules/.bin/nodetouch
+node_modules/.bin/semver
+node_modules/.package-lock.json
+package-lock.json
+package.json
+public/css/font-awesome.min.css
+public/css/gc-tailwind.css
+public/css/tailwind.min.css
+public/fa.zip
+public/font-test.html
+public/fonts/fontawesome-webfont.eot
+public/fonts/fontawesome-webfont.svg
+public/fonts/fontawesome-webfont.ttf
+public/fonts/fontawesome-webfont.woff
+public/fonts/fontawesome-webfont.woff2
+public/images/gc/digital-card.jpg
+public/images/gc/food-card.jpg
+public/images/gc/hero-image.jpg
+public/images/gc/shopping-card.jpg
+public/images/gc/user1.jpg
+public/images/gc/user2.jpg
+public/images/gc/user3.jpg
+public/js/admin-system-settings.js
+public/js/tailwind.js
+server.js
+tailwind-input.css
+tailwind.config.js
+tailwindcss-v3
+utils/db-init.js
+views/gc.ejs
+[33m6701f5b[m Merge branch 'main' of https://github.com/xmdragon/giftcard
+[33m0a4191e[m JWT过期时间改变为30天
+routes/admin-auth.js
+[33m5caa830[m 增加声音播放
+nginx.conf
+public/js/admin-app.js
+public/snd/notice.mp3
+public/test-audio.html

@@ -19,135 +19,182 @@ npm start
 npx tailwindcss -i tailwind-input.css -o public/css/gc-tailwind.css --watch
 ```
 
-### Docker 开发
-```bash
-# 启动所有服务（推荐开发方式）
-docker compose up -d
+## 项目结构
 
-# 仅启动数据库用于本地开发
+### 核心文件
+- `server.js` - 主服务器文件
+- `package.json` - 项目依赖和脚本
+- `docker-compose.yml` - Docker 编排配置
+- `Dockerfile` - Docker 镜像构建
+- `nginx.conf` - Nginx 反向代理配置
+
+### 目录结构
+```
+├── public/          # 前端静态文件
+│   ├── css/         # 样式文件
+│   ├── js/          # JavaScript 文件
+│   └── vendor/      # 第三方库
+├── routes/          # API 路由
+├── utils/           # 工具函数
+├── views/           # EJS 模板
+│   ├── admin/       # 管理员页面
+│   ├── member/      # 会员页面
+│   └── partials/    # 页面组件
+└── locales/         # 多语言文件
+```
+
+## 数据库
+
+### 主要数据表
+- `members` - 会员信息
+- `admins` - 管理员账号
+- `gift_cards` - 礼品卡信息
+- `gift_card_categories` - 礼品卡分类
+- `login_logs` - 登录记录
+- `second_verifications` - 二次验证记录
+- `checkin_records` - 签到记录
+- `ip_blacklist` - IP黑名单
+- `system_settings` - 系统设置
+
+## 技术栈
+
+### 后端
+- **Node.js** + **Express** - Web 框架
+- **Socket.IO** - 实时通信
+- **MySQL 2** - 数据库驱动
+- **JWT** - 身份认证
+- **bcryptjs** - 密码加密
+- **i18next** - 国际化
+
+### 前端
+- **EJS** - 模板引擎
+- **Tailwind CSS** - 样式框架
+- **Socket.IO Client** - 实时通信
+- **Font Awesome** - 图标库
+
+### 部署
+- **Docker** + **Docker Compose** - 容器化
+- **Nginx** - 反向代理
+- **Let's Encrypt** - SSL 证书
+
+## 开发指南
+
+### 启动开发环境
+```bash
+# 1. 安装依赖
+npm install
+
+# 2. 启动 MySQL (Docker)
 docker compose up -d mysql
+
+# 3. 复制环境配置
+cp .env.example .env
+
+# 4. 启动开发服务器
+npm run dev
+```
+
+### 生产部署
+```bash
+# 完整 Docker 部署
+docker compose up -d
 
 # 查看日志
 docker compose logs -f app
-docker compose logs -f mysql  
-docker compose logs -f nginx
-
-# 停止所有服务
-docker compose down
 ```
 
-### 数据库管理
+## API 接口
+
+### 认证相关
+- `POST /api/auth/member/login` - 会员登录
+- `POST /api/auth/member/verify` - 二次验证
+- `POST /api/auth/admin/login` - 管理员登录
+
+### 管理员接口
+- `GET /api/admin/login-requests` - 获取登录请求
+- `POST /api/admin/approve-login/:id` - 审核登录
+- `GET /api/admin/verification-requests` - 获取验证请求
+- `POST /api/admin/approve-verification/:id` - 审核验证
+- `GET /api/admin/members` - 获取会员列表
+- `POST /api/admin/gift-cards/batch` - 批量添加礼品卡
+
+### 会员接口
+- `POST /api/member/checkin` - 签到
+- `GET /api/member/checkin-history/:id` - 签到历史
+- `GET /api/member/gift-cards/:id` - 礼品卡历史
+
+## 前端架构
+
+### 模块化 JS
+- 管理员功能分布在多个文件（`admin-*.js`）
+- 会员功能在 `member.js` 中
+- 实时通信在 `socket-client.js` 中
+
+### EJS Partials
+- `views/partials/` 中的组件化视图结构
+- 头部、导航、脚部等可复用组件
+
+### 响应式设计
+- 基于 Tailwind CSS 的响应式布局
+- 移动端适配优化
+
+## 国际化
+
+### 语言支持
+- 中文 (`zh`)
+- 英文 (`en`) 
+- 日文 (`ja`)
+
+### 语言文件
+- `locales/zh/translation.json` - 中文
+- `locales/en/translation.json` - 英文
+- `locales/ja/translation.json` - 日文
+
+### 使用方式
+```javascript
+// 后端
+req.t('key')
+
+// 前端
+data-i18n="key"
+```
+
+## 常见问题
+
+### 数据库连接问题
 ```bash
+# 检查 MySQL 容器状态
+docker compose ps mysql
+
+# 查看 MySQL 日志
+docker compose logs mysql
+
 # 测试数据库连接
 ./test-db-connection.sh
-
-# 重建数据库（危险操作）
-./rebuild-db.sh
-
-# Docker 数据库初始化
-docker compose up -d mysql
-# 数据库会自动通过 init.sql 初始化
 ```
 
-### SSL 开发
-```bash
-# 设置开发环境 SSL 证书
-./dev-ssl-setup.sh
+### 静态资源 404
+- 确保 `docker-compose.yml` 中的挂载路径为绝对路径
+- 检查 Nginx 配置中的静态资源路径
 
-# 生产环境申请 SSL 证书
-./get-ssl-cert.sh your-domain.com your-email@example.com
-```
+### 国际化不生效
+- 检查页面元素是否有 `data-i18n` 属性
+- 确认语言包文件内容完整
+- 检查浏览器语言设置
 
-### 生产环境脚本
-```bash
-# 更新域名配置
-./update-domain.sh
+## 安全注意事项
 
-# 安装 Docker（如需要）
-sudo ./install-docker.sh
+### 密码安全
+- 管理员密码使用 bcrypt 加密
+- JWT 密钥要足够复杂
+- 定期更新密码
 
-# 诊断和修复工具
-./debug-and-fix.sh
-```
+### IP 安全
+- 启用 IP 黑名单功能
+- 监控异常登录行为
+- 配置防火墙规则
 
-## 核心架构
-
-### 主要组件
-- **Node.js/Express** - 主应用服务器，使用 EJS 模板引擎
-- **MySQL 8.0** - 主数据库，使用 UTF8MB4 字符集
-- **Socket.IO** - 实时 WebSocket 通信，用于管理员通知
-- **Nginx** - 反向代理和静态文件服务
-- **i18next** - 国际化系统，支持文件后端加载
-
-### 关键目录结构
-- `routes/` - Express 路由处理器，按功能分离
-  - `member-auth.js` - 会员认证和注册
-  - `admin-auth.js` - 管理员认证
-  - `member.js` - 会员操作（签到、礼品卡）
-  - `admin.js` - 管理员管理操作
-  - `admin-security.js` - IP 管理和安全控制
-  - `tracking.js` - 用户活动追踪
-- `utils/` - 数据库工具和初始化
-- `views/` - EJS 模板，包含组件化的 partial
-- `public/` - 静态资源（CSS、JS、图片、字体）
-
-### 数据库设计
-核心表：`members`、`login_logs`、`second_verifications`、`gift_cards`、`gift_card_categories`、`checkin_records`、`admins`、`ip_blacklist`
-
-## 开发工作流
-
-### 认证系统
-系统使用**双重验证流程**：
-1. 会员登录创建 `login_logs` 记录（等待管理员审核）
-2. 管理员通过 WebSocket 实时界面审核登录
-3. 会员输入验证码，创建 `second_verifications` 记录
-4. 管理员审核验证码
-5. 系统签发 JWT 令牌并发放礼品卡
-
-### 实时通信
-Socket.IO 处理：
-- 管理员的待审核登录/验证通知
-- 实时审核状态更新
-- 声音通知（`public/snd/notice.mp3`）
-
-### 国际化
-- 文件应采用 `locales/{lang}/translation.json` 格式（当前缺失）
-- 所有 UI 文本使用 `data-i18n` 属性
-- 地理 IP 检测自动选择语言
-- 前端：`public/js/i18n.js` 处理客户端翻译
-
-### 安全特性
-- IP 黑名单系统（`ip_blacklist` 表）
-- JWT 认证，30天过期时间
-- 管理员角色层次（超级管理员 vs 普通管理员权限）
-- HTTPS/SSL 集成，支持 Let's Encrypt
-
-### 前端架构
-- **模块化 JS**：管理员功能分布在多个文件（`admin-*.js`）
-- **Tailwind CSS**：自定义配置在 `tailwind.config.js`
-- **EJS Partials**：`views/partials/` 中的组件化视图结构
-- **响应式设计**：`iphone-adaptation.css` 适配 iPhone
-
-## 重要注意事项
-
-### 环境配置
-系统读取 `.env` 文件，但会回退到 Docker Compose 环境变量。关键变量：
-- `DB_HOST`、`DB_USER`、`DB_PASSWORD`、`DB_NAME` - 数据库连接
-- `JWT_SECRET` - 令牌签名密钥
-- `NODE_ENV` - 环境模式
-- `PORT` - 应用端口（默认 3000）
-
-### Docker 开发设置
-docker-compose.yml 配置了绑定挂载（`.:/app`）以支持开发时的实时代码变更。`/app/node_modules` 卷防止本地 node_modules 冲突。
-
-### 数据库初始化
-MySQL 容器在首次启动时会自动运行 `init.sql` 创建表和初始管理员用户（admin/admin123）。
-
-### 多语言支持
-当前配置中文（`zh`）为回退语言。i18next 系统期望翻译文件在 `locales/` 目录中，该目录可能需要创建。
-
-### 管理员功能
-- 带 WebSocket 更新的实时审核仪表板
-- 礼品卡批量管理和分类
-- 会员追踪和 IP 管理
-- 系统安全控制（IP 封禁、管理员管理）
+### HTTPS
+- 生产环境必须启用 HTTPS
+- 使用 Let's Encrypt 免费证书
+- 配置 HTTP 到 HTTPS 重定向
