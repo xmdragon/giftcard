@@ -4,3 +4,12 @@ ssl/privkey.pem
 .vscode/
 *.bak
 *.log
+.editorconfig
+.gitattributes
+.prettierignore
+.vscode/settings.json
+auto_sync.sh
+remove_proxy.sh
+setup_proxy.sh
+.kiro/settings/workspace.json
+.vscode/settings.json
