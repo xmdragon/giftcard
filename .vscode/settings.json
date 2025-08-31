@@ -1,3 +1,15 @@
 {
-    "kiroAgent.configureMCP": "Disabled"
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "editor.formatOnType": false,
+    "[ejs]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false,
+        "editor.formatOnType": false,
+        "editor.autoIndent": "none"
+    },
+    "html.format.enable": false,
+    "emmet.includeLanguages": {
+        "ejs": "html"
+    }
 }

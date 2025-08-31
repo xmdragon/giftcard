@@ -1,0 +1,87 @@
+<!-- 礼品卡展示区域 -->
+<section id="giftCardPage" class="page py-32 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl mx-auto">
+      <!-- 成功标题 -->
+      <div class="text-center mb-8">
+        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <i class="fa fa-check text-green-600 text-2xl"></i>
+        </div>
+        <h2 class="text-3xl font-bold mb-2" data-i18n="your_gift_card">您的礼品卡</h2>
+        <p class="text-secondary" data-i18n="gift_card_message">恭喜！这是您的礼品卡代码</p>
+      </div>
+      
+      <!-- 礼品卡展示 -->
+      <div class="gift-card-display mb-8">
+        <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 text-white shadow-xl">
+          <div class="flex justify-between items-start mb-6">
+            <div>
+              <h3 class="text-lg font-medium opacity-90" data-i18n="apple_gift_card">Apple礼品卡</h3>
+              <p class="text-sm opacity-75" data-i18n="digital_gift_card">数字礼品卡</p>
+            </div>
+            <img src="/v3-enhanced/images/logo.png" alt="Apple Logo" class="w-8 h-8 opacity-90">
+          </div>
+          
+          <!-- 礼品卡代码 -->
+          <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-6">
+            <p class="text-sm opacity-90 mb-2" data-i18n="gift_card_code">礼品卡代码</p>
+            <div id="giftCardCode" class="font-mono text-xl font-bold tracking-wider">
+              <!-- 礼品卡代码将在这里显示 -->
+            </div>
+          </div>
+          
+          <!-- 礼品卡信息 -->
+          <div class="flex justify-between items-end">
+            <div>
+              <p class="text-sm opacity-90" data-i18n="balance">余额</p>
+              <p class="text-2xl font-bold">¥200.00</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm opacity-90" data-i18n="expires">有效期至</p>
+              <p class="text-sm font-medium">2024-12-31</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 使用说明 -->
+      <div class="bg-neutral-100 p-6 rounded-2xl mb-8">
+        <h3 class="text-lg font-medium mb-4" data-i18n="how_to_use">如何使用</h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start">
+            <i class="fa fa-mobile text-primary mt-1 mr-3"></i>
+            <span data-i18n="redeem_on_device">在您的设备上打开App Store或iTunes Store</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-credit-card text-primary mt-1 mr-3"></i>
+            <span data-i18n="enter_gift_code">输入上方的礼品卡代码</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-shopping-cart text-primary mt-1 mr-3"></i>
+            <span data-i18n="start_shopping">开始购买您喜欢的内容</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 操作按钮 -->
+      <div class="flex flex-col sm:flex-row gap-4 mb-8">
+        <button id="checkinBtn" class="primary-btn px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift flex items-center justify-center flex-1">
+          <i class="fa fa-calendar-check-o mr-2"></i>
+          <span data-i18n="daily_checkin">每日签到</span>
+        </button>
+        <button id="viewHistoryBtn" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-gift flex items-center justify-center flex-1">
+          <i class="fa fa-history mr-2"></i>
+          <span data-i18n="view_history">查看历史</span>
+        </button>
+      </div>
+      
+      <!-- 快速链接 -->
+      <div class="text-center">
+        <a href="https://www.apple.com/cn/app-store/" target="_blank" class="text-primary hover:text-primary/80 text-sm font-medium">
+          <i class="fa fa-external-link mr-1"></i>
+          <span data-i18n="visit_app_store">访问App Store</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

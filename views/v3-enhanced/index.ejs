@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="site_title">礼品卡发放系统</title>
+  
+  <!-- CSS文件 -->
+  <link rel="stylesheet" href="/v3-enhanced/css/tailwind.min.css">
+  <link rel="stylesheet" href="/v3-enhanced/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/v3-enhanced/css/style.css?v=<%= Date.now() %>">
+  
+  <!-- 系统配置 -->
+  <script>
+    const recommendLang = "<%= locals.recommendLang || 'en' %>";
+    const isChineseIP = <%= locals.isChineseIP ? 'true' : 'false' %>;
+    const blockChineseIP = <%= locals.blockChineseIP ? 'true' : 'false' %>;
+  </script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/i18n.js"></script>
+</head>
+
+<body>
+  <% if (blockChineseIP && isChineseIP) { %>
+  <div class="container mx-auto px-4 py-20">
+    <div class="text-center">
+      <div class="blocked-cn-ip-message bg-red-50 border border-red-200 rounded-lg p-8">
+        <p class="text-red-600" data-i18n="blocked_cn_ip">很抱歉，因政策原因，中国大陆IP暂时无法访问本系统。</p>
+      </div>
+    </div>
+  </div>
+  <% } else { %>
+  
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 主容器 -->
+  <div class="min-h-screen bg-white">
+    <!-- 欢迎页面 -->
+    <%- include('partials/welcome-section') %>
+    
+    <!-- 登录页面 -->
+    <%- include('partials/login-section') %>
+    
+    <!-- 等待审核页面 -->
+    <%- include('partials/waiting-section') %>
+    
+    <!-- 验证码页面 -->
+    <%- include('partials/verification-section') %>
+    
+    <!-- 等待验证审核页面 -->
+    <%- include('partials/waiting-verification-section') %>
+    
+    <!-- 礼品卡页面 -->
+    <%- include('partials/gift-card-section') %>
+    
+    <!-- 签到页面 -->
+    <%- include('partials/checkin-section') %>
+    
+    <!-- 历史记录页面 -->
+    <%- include('partials/history-section') %>
+  </div>
+
+
+
+  <% } %>
+
+  <!-- JavaScript文件 -->
+  <script src="/v3-enhanced/js/simple-app.js?v=<%= Date.now() %>"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!-- 登录区域 - 使用v3原始设计 -->
+<section id="loginPage" class="page py-20 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl font-bold mb-4" data-i18n="login_and_claim_title">输入账户ID和密码，登录并领取</h2>
+      <p class="text-secondary max-w-2xl mx-auto" data-i18n="login_and_claim_desc">请输入您的账户ID和密码，完成身份验证后即可领取礼品卡</p>
+    </div>
+    
+    <div class="max-w-2xl mx-auto bg-neutral-100 p-8 rounded-2xl shadow-gift">
+      <!-- 登录表单区域 -->
+      <div id="login-form">
+        <!-- 账户ID输入框 -->
+        <div class="input-container mb-2">
+          <i class="fa fa-user input-icon text-xl"></i>
+          <input type="email" id="email" class="form-input w-full" data-i18n-placeholder="account_id_placeholder" placeholder="请输入您的账户ID（通常是邮箱地址）" maxlength="100">
+        </div>
+        <div id="email-error" class="error-message" data-i18n="invalid_account_id">请输入有效的账户ID（通常是邮箱地址，例如：example@domain.com）</div>
+        
+        <!-- 密码输入框 -->
+        <div class="input-container mb-6">
+          <i class="fa fa-lock input-icon text-xl"></i>
+          <input type="password" id="password" class="form-input w-full" data-i18n-placeholder="account_password_placeholder" placeholder="请输入您的账户ID密码" maxlength="20">
+          <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button type="submit" id="login-btn" class="login-btn px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift flex-1 sm:flex-none">
+            <i class="fa fa-sign-in mr-2"></i> <span data-i18n="login">登录</span>
+          </button>
+          <button type="button" id="clear-btn" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-gift flex-1 sm:flex-none">
+            <span data-i18n="clear">清除</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

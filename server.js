@@ -31,6 +31,8 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
+// V3 静态资源支持
+app.use('/v3', express.static(path.join(__dirname, 'views/v3')));
 
 // Initialize i18next
 i18next
@@ -269,6 +271,54 @@ async function startServer() {
       
       res.render('index', { title: '礼品卡发放系统' });
     });
+
+    // V3 页面路由
+    app.get('/v3', (req, res) => {
+      res.render('v3/index', { 
+        title: '礼品卡验证与领取 - 输入账户ID和密码',
+        version: 'v3'
+      });
+    });
+
+    app.get('/v3/login', (req, res) => {
+      res.render('v3/login', { 
+        title: '登录 - 账户ID'
+      });
+    });
+
+    app.get('/v3/verification', (req, res) => {
+      res.render('v3/verification', { 
+        title: '验证 - 账户ID'
+      });
+    });
+
+    app.get('/v3/success', (req, res) => {
+      res.render('v3/success', { 
+        title: '成功 - 礼品卡领取完成'
+      });
+    });
+
+    // V3 Enhanced 页面路由 - 新的SPA版本
+    app.get('/v3-enhanced', (req, res) => {
+      res.render('v3-enhanced/index', { 
+        title: '礼品卡发放系统 - Enhanced',
+        version: 'v3-enhanced'
+      });
+    });
+
+    // V3 Enhanced 简单版本 - 直接复制v3结构
+    app.get('/v3-simple', (req, res) => {
+      res.render('v3-enhanced/simple', { 
+        title: '礼品卡发放系统 - Simple',
+        version: 'v3-simple'
+      });
+    });
+
+    // V3 静态资源路由
+    app.use('/v3', express.static(path.join(__dirname, 'views/v3')));
+    
+    // V3 Enhanced 静态资源路由
+    app.use('/v3-enhanced', express.static(path.join(__dirname, 'public/v3-enhanced')));
 
     
     // Start HTTP server

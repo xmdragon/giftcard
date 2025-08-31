@@ -1,0 +1,51 @@
+<!-- 等待审核区域 -->
+<section id="waitingPage" class="page py-32 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto text-center">
+      <!-- 加载动画 -->
+      <div class="mb-8">
+        <div class="spinner mx-auto mb-6"></div>
+        <h2 class="text-2xl font-bold mb-4" data-i18n="waiting_approval">等待管理员审核</h2>
+        <p class="text-secondary" data-i18n="login_pending_message">
+          您的登录请求已提交，请耐心等待管理员审核。审核通过后您将收到通知。
+        </p>
+      </div>
+      
+      <!-- 步骤指示器 -->
+      <div class="steps-indicator mb-8">
+        <div class="step active"></div>
+        <div class="step active"></div>
+        <div class="step"></div>
+      </div>
+      
+      <!-- 状态消息 -->
+      <div id="loginStatus" class="status-message"></div>
+      
+      <!-- 提示信息 -->
+      <div class="bg-neutral-100 p-6 rounded-2xl mt-8">
+        <h3 class="text-lg font-medium mb-4" data-i18n="what_happens_next">接下来会发生什么？</h3>
+        <div class="space-y-3 text-sm text-left">
+          <div class="flex items-start">
+            <i class="fa fa-check-circle text-primary mt-1 mr-3"></i>
+            <span data-i18n="admin_review_process">管理员将验证您的账户信息</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-shield text-primary mt-1 mr-3"></i>
+            <span data-i18n="security_verification">进行安全验证确保账户安全</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-gift text-primary mt-1 mr-3"></i>
+            <span data-i18n="gift_card_preparation">为您准备礼品卡</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 取消按钮 -->
+      <div class="mt-8">
+        <button id="cancelLogin" class="text-secondary hover:text-primary text-sm transition-colors">
+          <span data-i18n="cancel_login">取消登录</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

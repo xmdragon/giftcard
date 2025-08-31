@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title || '登录 - 账户ID' %></title>
+  
+  <!-- 本地CSS文件 -->
+  <link rel="stylesheet" href="/v3/css/tailwind.min.css">
+  <link rel="stylesheet" href="/v3/css/font-awesome.min.css">
+  <link rel="stylesheet" href="/v3/css/style.css">
+</head>
+
+<body>
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- 顶部导航 -->
+  <header class="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-sm border-b border-neutral-200 z-50">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <div class="flex items-center">
+          <img src="/v3/images/logo.png" class="h-8 w-auto mr-2" alt="Logo">
+          <span class="text-lg font-semibold">GiftCard</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 登录区域 -->
+  <section class="py-32 bg-white">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <div class="text-center mb-8">
+          <h1 class="text-2xl font-bold">登录您的账户ID</h1>
+          <p class="text-secondary mt-2">请输入您的账户ID和密码以领取礼品卡</p>
+        </div>
+        
+        <!-- 步骤指示器 -->
+        <div class="steps-indicator">
+          <div class="step active"></div>
+          <div class="step"></div>
+          <div class="step"></div>
+        </div>
+        
+        <!-- 登录表单 -->
+        <form id="login-form" class="mt-8">
+          <!-- 输入框 -->
+          <div class="input-container mb-2">
+            <i class="fa fa-user input-icon text-xl"></i>
+            <input type="email" id="gift-id" class="form-input w-full" placeholder="邮箱地址" maxlength="100" required>
+          </div>
+          <div id="id-error" class="error-message">请输入有效的账户ID（例如：example@domain.com）</div>
+          
+          <!-- 密码输入框 -->
+          <div class="input-container mb-8 mt-6">
+            <i class="fa fa-lock input-icon text-xl"></i>
+            <input type="password" id="gift-password" class="form-input w-full" placeholder="密码" maxlength="20" required>
+            <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+          </div>
+          
+          <div class="space-y-4">
+            <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift text-lg font-medium">
+              继续
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 页脚 -->
+  <footer class="bg-neutral-100 py-12 border-t border-neutral-200 mt-16">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center text-sm text-secondary">
+        <p>© 2023 GiftCard. 保留所有权利。</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- 本地JavaScript文件 -->
+  <script src="/v3/js/app.js"></script>
+  <script src="/v3/js/login.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!-- 验证码区域 -->
+<section id="verificationPage" class="page py-32 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md mx-auto">
+      <div class="text-center mb-8">
+        <h1 class="text-2xl font-bold" data-i18n="two_factor_auth">双重认证</h1>
+        <p class="text-secondary mt-2" data-i18n="enter_verification_code_desc">
+          请输入发送到您信任设备的验证码
+        </p>
+      </div>
+      
+      <!-- 步骤指示器 -->
+      <div class="steps-indicator">
+        <div class="step active"></div>
+        <div class="step active"></div>
+        <div class="step"></div>
+      </div>
+      
+      <!-- 验证码表单 -->
+      <form id="verificationForm" class="mt-8">
+        <!-- 验证码输入框组 -->
+        <div class="flex justify-center mb-6">
+          <div class="flex space-x-3">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-0" data-i18n-label="digit_1">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-1" data-i18n-label="digit_2">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-2" data-i18n-label="digit_3">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-3" data-i18n-label="digit_4">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-4" data-i18n-label="digit_5">
+            <input type="tel" class="form-security-code-input w-12 h-12 text-center text-xl font-bold border border-neutral-300 rounded-lg focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                   maxlength="1" autocapitalize="off" autocorrect="off" spellcheck="false" autocomplete="off" 
+                   id="digit-5" data-i18n-label="digit_6">
+          </div>
+        </div>
+        
+        <!-- 隐藏的完整验证码输入框（用于兼容） -->
+        <input type="tel" id="verificationCode" class="verification-input hidden" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code">
+        
+        <!-- 错误提示 -->
+        <div id="verification-error" class="error-message text-center mb-6" style="display: none;" data-i18n="invalid_verification_code">
+          请输入有效的6位验证码
+        </div>
+        
+        <!-- 提交按钮 -->
+        <button type="button" class="verify-submit-btn primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift text-lg font-medium mb-4">
+          <span data-i18n="submit">提交</span>
+        </button>
+        
+        <!-- 重新发送选项 -->
+        <div class="text-center">
+          <p class="text-sm text-secondary mb-2" data-i18n="didnt_receive_code">没有收到验证码？</p>
+          <button type="button" id="resendCode" class="text-primary hover:text-primary/80 text-sm font-medium">
+            <span data-i18n="resend_code">重新发送</span>
+          </button>
+        </div>
+      </form>
+      
+      <!-- 帮助信息 -->
+      <div class="bg-neutral-100 p-6 rounded-2xl mt-8">
+        <h3 class="text-lg font-medium mb-4" data-i18n="verification_help">验证码帮助</h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-start">
+            <i class="fa fa-mobile text-primary mt-1 mr-3"></i>
+            <span data-i18n="check_trusted_device">检查您的信任设备上的通知</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-clock-o text-primary mt-1 mr-3"></i>
+            <span data-i18n="code_expires_info">验证码将在几分钟后过期</span>
+          </div>
+          <div class="flex items-start">
+            <i class="fa fa-shield text-primary mt-1 mr-3"></i>
+            <span data-i18n="security_reminder">请勿与他人分享您的验证码</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

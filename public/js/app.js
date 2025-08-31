@@ -85,33 +85,6 @@ class GiftCardApp {
             console.log('Detected local stored login state, cleaning old data');
             this.clearSession();
             return;
-            
-            /*
-            this.sessionShouldBeCleared = true;
-            fetch('/api/auth/member/cancel', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ 
-                    loginId: this.currentLoginId,
-                    memberId: this.currentMemberId
-                })
-            }).then(response => {
-                if (response.ok) {
-                    this.clearSession();
-                } else {
-                    console.log('Cancel request returned error, but still cleaning local state');
-                    this.clearSession();
-                    return response.text().then(text => {
-                        console.log('Cancel response error:', text);
-                    });
-                }
-            }).catch(error => {
-                console.log('Cancel request network error, cleaning local state:', error);
-                this.clearSession();
-            });
-            */
         }
     }
     

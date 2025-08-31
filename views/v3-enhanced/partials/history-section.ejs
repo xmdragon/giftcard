@@ -1,0 +1,134 @@
+<!-- 历史记录区域 -->
+<section id="historyPage" class="page py-32 bg-white">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-4xl mx-auto">
+      <!-- 页面标题 -->
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold mb-2" data-i18n="history_records">历史记录</h2>
+        <p class="text-secondary" data-i18n="view_all_activities">查看您的所有活动记录</p>
+      </div>
+      
+      <!-- 标签页导航 -->
+      <div class="flex justify-center mb-8">
+        <div class="bg-neutral-100 p-1 rounded-lg">
+          <button class="tab-btn px-4 py-2 rounded-md text-sm font-medium transition-colors active" data-tab="giftCards">
+            <span data-i18n="gift_cards">礼品卡</span>
+          </button>
+          <button class="tab-btn px-4 py-2 rounded-md text-sm font-medium transition-colors" data-tab="checkins">
+            <span data-i18n="checkin_history">签到记录</span>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 礼品卡历史标签页 -->
+      <div id="giftCardsTab" class="tab-content active">
+        <div class="bg-neutral-100 p-6 rounded-2xl mb-6">
+          <h3 class="text-lg font-medium mb-4" data-i18n="gift_card_records">礼品卡记录</h3>
+          <div id="giftCardsList" class="space-y-4">
+            <!-- 礼品卡记录将在这里显示 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 签到历史标签页 -->
+      <div id="checkinsTab" class="tab-content">
+        <div class="bg-neutral-100 p-6 rounded-2xl mb-6">
+          <h3 class="text-lg font-medium mb-4" data-i18n="checkin_records">签到记录</h3>
+          <div id="checkinsList" class="space-y-4">
+            <!-- 签到记录将在这里显示 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 返回按钮 -->
+      <div class="text-center">
+        <button id="backFromHistory" class="bg-white border border-neutral-200 text-neutral-800 px-6 py-3 rounded-full hover:bg-neutral-50 transition-colors shadow-gift">
+          <i class="fa fa-arrow-left mr-2"></i>
+          <span data-i18n="back">返回</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+/* 标签页样式 */
+.tab-btn {
+  color: #666;
+}
+
+.tab-btn.active {
+  background-color: white;
+  color: #0071e3;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* 记录项样式 */
+.record-item {
+  background: white;
+  border: 1px solid #e8e8ed;
+  border-radius: 12px;
+  padding: 16px;
+  transition: all 0.2s ease;
+}
+
+.record-item:hover {
+  border-color: #0071e3;
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.1);
+}
+
+.gift-code-display {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  color: #0071e3;
+  background: #f5f5f7;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.gift-card-date {
+  color: #666;
+  font-size: 14px;
+  margin: 0;
+}
+
+.checkin-record {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.checkin-date {
+  font-weight: 500;
+  color: #333;
+}
+
+.checkin-reward {
+  color: #34c759;
+  font-size: 14px;
+}
+
+.checkin-no-reward {
+  color: #666;
+  font-size: 14px;
+}
+
+.gift-code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: bold;
+  background: #f0f9ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+</style>
