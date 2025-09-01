@@ -4,13 +4,13 @@
           <section id="home" class="pt-32 pb-20 bg-neutral-100">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="text-center max-w-3xl mx-auto">
-                <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight" data-i18n="enter_account_and_password">
+                <h1 id="welcome-title" class="text-4xl sm:text-5xl font-bold mb-6 leading-tight" data-i18n="enter_account_and_password">
                   输入账户ID和密码，<br class="sm:hidden">领取您的礼品卡
                 </h1>
-                <p class="text-lg text-secondary mb-10" data-i18n="login_success_verify">
+                <p id="welcome-subtitle" class="text-lg text-secondary mb-10" data-i18n="login_success_verify">
                   登录成功后验证身份即可领取礼品卡，安全、简单、高效。
                 </p>
-                <div class="flex justify-center">
+                <div id="welcome-login-btn-container" class="flex justify-center">
                   <a href="#verify" id="goToLoginBtn" class="inline-block bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-4 rounded-full hover:from-blue-700 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl text-lg font-semibold transform hover:scale-105">
                     <span data-i18n="login_now_claim">立即登录并领取</span> <i class="fa fa-arrow-right ml-2"></i>
                   </a>

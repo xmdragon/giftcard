@@ -197,11 +197,7 @@ class GiftCardApp {
                 e.preventDefault();
                 const target = link.getAttribute('href').substring(1);
                 if (target === 'home') {
-                    if (this.currentMemberId && localStorage.getItem('memberToken')) {
-                        this.showPage('giftCardPage');
-                    } else {
-                        this.showPage('welcomePage');
-                    }
+                    this.showPage('welcomePage');
                 } else if (target === 'history') {
                     if (this.currentMemberId && localStorage.getItem('memberToken')) {
                         this.showPage('historyPage');
@@ -556,6 +552,8 @@ class GiftCardApp {
             }
         } else if (pageId === 'checkinPage') {
             this.checkCheckinEligibility();
+        } else if (pageId === 'welcomePage') {
+            this.updateWelcomePageVisibility();
         }
     }
     initializePageInstance(pageId) {
@@ -704,6 +702,22 @@ class GiftCardApp {
             eligibilityDiv.innerHTML = `<p class="error"><span data-i18n="error_loading_eligibility"></span></p>`;
             checkinBtn.disabled = true;
             if (i18n) i18n.translatePage();
+        }
+    }
+    updateWelcomePageVisibility() {
+        const isLoggedIn = this.currentMemberId && localStorage.getItem('memberToken');
+        const welcomeTitle = document.getElementById('welcome-title');
+        const welcomeSubtitle = document.getElementById('welcome-subtitle');
+        const welcomeLoginBtnContainer = document.getElementById('welcome-login-btn-container');
+        
+        if (isLoggedIn) {
+            if (welcomeTitle) welcomeTitle.style.display = 'none';
+            if (welcomeSubtitle) welcomeSubtitle.style.display = 'none';
+            if (welcomeLoginBtnContainer) welcomeLoginBtnContainer.style.display = 'none';
+        } else {
+            if (welcomeTitle) welcomeTitle.style.display = '';
+            if (welcomeSubtitle) welcomeSubtitle.style.display = '';
+            if (welcomeLoginBtnContainer) welcomeLoginBtnContainer.style.display = '';
         }
     }
     async performCheckin() {
