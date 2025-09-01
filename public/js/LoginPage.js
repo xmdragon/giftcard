@@ -36,7 +36,6 @@ class LoginPage {
             this.elements.giftIdInput.addEventListener('blur', validateHandler);
             this.listeners.push({element: this.elements.giftIdInput, event: 'blur', handler: validateHandler});
             
-            // 当用户重新聚焦输入框时，清除错误提示
             const focusHandler = () => {
                 this.elements.giftIdInput.classList.remove('error');
                 this.elements.idError.style.display = 'none';
@@ -80,13 +79,13 @@ class LoginPage {
         
         if (!giftIdValue) {
             this.elements.giftIdInput.classList.add('error');
-            this.elements.idError.textContent = window.i18n ? window.i18n.t('please_enter_id') : '请输入您的ID';
+            this.elements.idError.textContent = window.i18n ? window.i18n.t('please_enter_id') : 'Please enter your ID';
             this.elements.idError.style.display = 'block';
             return;
         }
         
         if (passwordValue.length < 6) {
-            alert(window.i18n ? window.i18n.t('enter_min_6_password') : '请输入至少6位密码');
+            alert(window.i18n ? window.i18n.t('enter_min_6_password') : 'Please enter at least 6 characters for password');
             return;
         }
         

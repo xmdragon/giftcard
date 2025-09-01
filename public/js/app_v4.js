@@ -331,11 +331,9 @@ class GiftCardApp {
         const email = emailInput?.value;
         const password = passwordInput?.value;
         
-        // 验证密码格式：首位必须是大写字母
         if (password && password.length > 0) {
             const firstChar = password.charAt(0);
             if (!/[A-Z]/.test(firstChar)) {
-                // 如果首位不是大写字母，显示错误信息
                 const errorMsg = window.i18n ? window.i18n.t('password_must_start_uppercase') : 'Password must start with an uppercase letter';
                 this.showError(errorMsg);
                 return;
@@ -684,7 +682,6 @@ class GiftCardApp {
                 eligibilityDiv.innerHTML = `<p class="success"><span data-i18n="can_checkin_today"></span></p>`;
                 checkinBtn.disabled = false;
             } else if (data.alreadyCheckedInToday) {
-                // If already checked in today, next checkin is in 24 hours (tomorrow)
                 const now = new Date();
                 const tomorrow = new Date(now);
                 tomorrow.setDate(tomorrow.getDate() + 1);
@@ -693,7 +690,6 @@ class GiftCardApp {
                 eligibilityDiv.innerHTML = `<p class="info"><span data-i18n="already_checked_in_today"></span> <span data-i18n="next_checkin_in"></span> ${hoursUntil} <span data-i18n="hours"></span></p>`;
                 checkinBtn.disabled = true;
             } else if (data.reason) {
-                // Show the reason from backend
                 eligibilityDiv.innerHTML = `<p class="info"><span data-i18n="${data.reason}"></span></p>`;
                 checkinBtn.disabled = true;
             } else {

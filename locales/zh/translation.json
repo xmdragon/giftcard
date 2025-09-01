@@ -7,5 +7,18 @@
   "already_checked_in_today": "今天已经签到过了",
   "no_checkin_eligibility": "没有签到资格",
   "checkin_period_expired": "签到期限已过",
-  "received_beginner_package_today": "您今天已领取新手礼包，明天才能签到"
-}
+  "received_beginner_package_today": "您今天已领取新手礼包，明天才能签到",
+  "missing_required_parameters": "缺少必要参数",
+  "login_record_processed": "登录记录已处理或清理",
+  "request_cancelled": "请求已成功取消",
+  "request_processed": "请求已处理",
+  "no_token": "没有令牌",
+  "invalid_or_expired_token": "无效或过期的令牌",
+  "please_enter_account_id": "请输入您的账户ID",
+  "gift_card_copied": "礼品卡代码已复制到剪贴板",
+  "gift_card": "礼品卡",
+  "gift_card_code": "礼品卡代码",
+  "browser_no_share": "您的浏览器不支持分享功能",
+  "balance": "余额",
+  "valid_until": "有效期至",
+  "gift_card_downloaded": "礼品卡信息已下载"}

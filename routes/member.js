@@ -17,7 +17,6 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('already_checked_in_today') });
       }
 
-      // Check if user received beginner package today
       const todayBeginnerPackage = await db.query(
         'SELECT * FROM gift_cards WHERE distributed_to = ? AND category_id = 1 AND DATE(distributed_at) = ?',
         [memberId, today]
@@ -151,8 +150,7 @@ module.exports = (io) => {
       if (todayCheckin.length > 0) {
         reason = req.t('already_checked_in_today');
       } else if (todayBeginnerPackage.length > 0) {
-        // User received beginner package today, cannot check in
-        reason = req.t('received_beginner_package_today');
+          reason = req.t('received_beginner_package_today');
       } else if (giftCardHistory.length === 0) {
         reason = req.t('no_checkin_eligibility');
       } else {

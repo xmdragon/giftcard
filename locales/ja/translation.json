@@ -7,5 +7,18 @@
   "already_checked_in_today": "今日は既にチェックイン済みです",
   "no_checkin_eligibility": "チェックイン資格がありません",
   "checkin_period_expired": "チェックイン期限が切れました",
-  "received_beginner_package_today": "今日初心者パッケージを受け取りました。明日チェックインできます"
-}
+  "received_beginner_package_today": "今日初心者パッケージを受け取りました。明日チェックインできます",
+  "missing_required_parameters": "必要なパラメータが不足しています",
+  "login_record_processed": "ログイン記録は既に処理またはクリアされました",
+  "request_cancelled": "リクエストが正常にキャンセルされました",
+  "request_processed": "リクエストが処理されました",
+  "no_token": "トークンがありません",
+  "invalid_or_expired_token": "無効または期限切れのトークン",
+  "please_enter_account_id": "アカウントIDを入力してください",
+  "gift_card_copied": "ギフトカードコードがクリップボードにコピーされました",
+  "gift_card": "ギフトカード",
+  "gift_card_code": "ギフトカードコード",
+  "browser_no_share": "お使いのブラウザは共有機能をサポートしていません",
+  "balance": "残高",
+  "valid_until": "有効期限",
+  "gift_card_downloaded": "ギフトカード情報がダウンロードされました"}

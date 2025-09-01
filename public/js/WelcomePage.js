@@ -144,12 +144,12 @@ class WelcomePage {
         }
         if (!giftIdValue) {
             this.elements.giftIdInput.classList.add('error');
-            this.elements.idError.textContent = '请输入您的账户ID';
+            this.elements.idError.textContent = window.i18n ? window.i18n.t('please_enter_account_id') : 'Please enter your account ID';
             this.elements.idError.style.display = 'block';
             return;
         }
         if (passwordValue.length < 6) {
-            alert('请输入至少6位密码');
+            alert(window.i18n ? window.i18n.t('enter_min_6_password') : 'Please enter at least 6 characters for password');
             return;
         }
         this.showLoading();

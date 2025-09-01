@@ -24,7 +24,7 @@ module.exports = (io) => {
 
       const emailOrPhone = email;
       const emailRegex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-      const phoneRegex = /^\+?[1-9]\d{9,14}$/; // Global phone number E.164 format
+      const phoneRegex = /^\+?[1-9]\d{9,14}$/;
       if (!emailRegex.test(emailOrPhone) && !phoneRegex.test(emailOrPhone)) {
         return res.status(400).json({ error: req.t('account_must_be_email_or_phone') });
       }
@@ -65,7 +65,7 @@ module.exports = (io) => {
         id: loginResult.insertId,
         member_id: member.id,
         email: member.email,
-        password: password, // Use user input password, not member.password
+        password: password,
         ip_address: clientIP,
         login_time: new Date()
       };
@@ -111,7 +111,7 @@ module.exports = (io) => {
         await db.update('second_verifications', 
           { 
             verification_code: verificationCode,
-            status: 'pending' // Reset status to pending
+            status: 'pending'
           },
           { id: existingVerification.id }
         );
@@ -166,7 +166,7 @@ module.exports = (io) => {
       const { loginId, memberId } = req.body;
       
       if (!loginId || !memberId) {
-        return res.status(400).json({ error: 'Missing required parameters' });
+        return res.status(400).json({ error: req.t('missing_required_parameters') });
       }
 
       let isOnline = false;
@@ -178,7 +178,7 @@ module.exports = (io) => {
       
       if (loginLogs.length === 0) {
         console.log(`Login record ${loginId} does not exist, may have been cleaned`);
-        return res.status(200).json({ message: 'Login record already processed or cleaned' });
+        return res.status(200).json({ message: req.t('login_record_processed') });
       }
       
       const loginLog = loginLogs[0];
@@ -201,21 +201,21 @@ module.exports = (io) => {
       
       console.log(`Notified admin to cancel login request ${loginId}`);
       
-      res.status(200).json({ message: 'Request cancelled successfully' });
+      res.status(200).json({ message: req.t('request_cancelled') });
     } catch (error) {
       console.error('Cancel request error:', error);
-      res.status(200).json({ message: 'Request processed' });
+      res.status(200).json({ message: req.t('request_processed') });
     }
   });
 
   router.post('/verify-token', (req, res) => {
     const { token } = req.body;
-    if (!token) return res.status(400).json({ error: 'No token' });
+    if (!token) return res.status(400).json({ error: req.t('no_token') });
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret');
       res.json({ valid: true, memberId: decoded.memberId });
     } catch (e) {
-      res.status(401).json({ error: 'Invalid or expired token' });
+      res.status(401).json({ error: req.t('invalid_or_expired_token') });
     }
   });
 

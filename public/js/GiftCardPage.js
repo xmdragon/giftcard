@@ -154,7 +154,7 @@ class GiftCardPage {
         const code = this.elements.giftCardCode?.textContent;
         if (code && navigator.clipboard) {
             navigator.clipboard.writeText(code).then(() => {
-                this.showToast('礼品卡代码已复制到剪贴板');
+                this.showToast(window.i18n ? window.i18n.t('gift_card_copied') : 'Gift card code copied to clipboard');
             });
         }
     }
@@ -162,18 +162,18 @@ class GiftCardPage {
         const code = this.elements.giftCardCode?.textContent;
         if (code && navigator.share) {
             navigator.share({
-                title: '礼品卡',
-                text: `礼品卡代码: ${code}`,
+                title: window.i18n ? window.i18n.t('gift_card') : 'Gift Card',
+                text: `${window.i18n ? window.i18n.t('gift_card_code') : 'Gift Card Code'}: ${code}`,
             }).catch(() => {
             });
         } else {
-            this.showToast('您的浏览器不支持分享功能');
+            this.showToast(window.i18n ? window.i18n.t('browser_no_share') : 'Your browser does not support sharing');
         }
     }
     downloadGiftCard() {
         const code = this.elements.giftCardCode?.textContent;
         if (code) {
-            const content = `礼品卡代码: ${code}\n余额: ${this.elements.finalBalance?.textContent}\n有效期至: ${this.elements.finalExpiry?.textContent}`;
+            const content = `${window.i18n ? window.i18n.t('gift_card_code') : 'Gift Card Code'}: ${code}\n${window.i18n ? window.i18n.t('balance') : 'Balance'}: ${this.elements.finalBalance?.textContent}\n${window.i18n ? window.i18n.t('valid_until') : 'Valid Until'}: ${this.elements.finalExpiry?.textContent}`;
             const blob = new Blob([content], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -183,7 +183,7 @@ class GiftCardPage {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            this.showToast('礼品卡信息已下载');
+            this.showToast(window.i18n ? window.i18n.t('gift_card_downloaded') : 'Gift card information downloaded');
         }
     }
     switchTab(tabName) {

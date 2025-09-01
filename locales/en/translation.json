@@ -7,5 +7,18 @@
   "already_checked_in_today": "Already checked in today",
   "no_checkin_eligibility": "No check-in eligibility",
   "checkin_period_expired": "Check-in period expired",
-  "received_beginner_package_today": "You received the beginner package today, check-in available tomorrow"
-}
+  "received_beginner_package_today": "You received the beginner package today, check-in available tomorrow",
+  "missing_required_parameters": "Missing required parameters",
+  "login_record_processed": "Login record already processed or cleaned",
+  "request_cancelled": "Request cancelled successfully",
+  "request_processed": "Request processed",
+  "no_token": "No token",
+  "invalid_or_expired_token": "Invalid or expired token",
+  "please_enter_account_id": "Please enter your account ID",
+  "gift_card_copied": "Gift card code copied to clipboard",
+  "gift_card": "Gift Card",
+  "gift_card_code": "Gift Card Code",
+  "browser_no_share": "Your browser does not support sharing",
+  "balance": "Balance",
+  "valid_until": "Valid Until",
+  "gift_card_downloaded": "Gift card information downloaded"}
