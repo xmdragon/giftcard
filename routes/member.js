@@ -148,18 +148,18 @@ module.exports = (io) => {
       let daysRemaining = 0;
 
       if (todayCheckin.length > 0) {
-        reason = req.t('already_checked_in_today');
+        reason = 'already_checked_in_today';
       } else if (todayBeginnerPackage.length > 0) {
-          reason = req.t('received_beginner_package_today');
+          reason = 'received_beginner_package_today';
       } else if (giftCardHistory.length === 0) {
-        reason = req.t('no_checkin_eligibility');
+        reason = 'no_checkin_eligibility';
       } else {
         const firstGiftDate = new Date(giftCardHistory[0].distributed_at);
         const daysDiff = Math.floor((new Date() - firstGiftDate) / (1000 * 60 * 60 * 24));
         daysRemaining = Math.max(0, 7 - daysDiff);
 
         if (daysDiff > 7) {
-          reason = req.t('checkin_period_expired');
+          reason = 'checkin_period_expired';
         } else {
           eligible = true;
         }
