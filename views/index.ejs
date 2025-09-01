@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="site_title">礼品卡发放系统</title>
     <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/css/index.css?v=<%= Date.now() %>">
+    <link rel="stylesheet" href="/css/merged-styles.css?v=<%= Date.now() %>">
     <script>
         const recommendLang = "<%= locals.recommendLang || 'en' %>";
         const isChineseIP = <%= locals.isChineseIP ? 'true' : 'false' %>;
@@ -25,24 +25,63 @@
     <% } else { %>
     <div class="container">
         <main>
-            <%- include('partials/navbar-page') %>
-            <%- include('partials/welcome-page') %>
-            <%- include('partials/login-page') %>
-            <%- include('partials/waiting-page') %>
-            <%- include('partials/verification-page') %>
-            <%- include('partials/waiting-verification-page') %>
-            <%- include('partials/gift-card-page') %>
-            <%- include('partials/checkin-page') %>
-            <%- include('partials/history-page') %>
+            <%- include('partials/navbar-page_v4') %>
+            <%- include('partials/welcome-page_v4') %>
+            <%- include('partials/login-page_v4') %>
+            <%- include('partials/waiting-page_v4') %>
+            <%- include('partials/verification-page_v4') %>
+            <%- include('partials/waiting-verification-page_v4') %>
+            <%- include('partials/gift-card-page_v4') %>
+            <%- include('partials/checkin-page_v4') %>
+            <%- include('partials/history-page_v4') %>
         </main>
+    </div>
+    
+    <!-- Floating Contact Widget -->
+    <div id="contactWidget" class="fixed right-4 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-50" style="display: none;">
+        <a id="whatsappBtn" href="#" target="_blank" rel="noopener noreferrer" 
+           class="w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+           style="display: none;">
+            <i class="fa fa-whatsapp text-2xl"></i>
+        </a>
+        <a id="telegramBtn" href="#" target="_blank" rel="noopener noreferrer"
+           class="w-12 h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg transition-all hover:scale-110"
+           style="display: none;">
+            <i class="fa fa-telegram text-xl"></i>
+        </a>
     </div>
     <% } %>
     <script src="/socket.io/socket.io.js?v=<%= Date.now() %>"></script>
     <script src="js/page-tracking.js?v=<%= Date.now() %>"></script>
+    <script>
+        window.__TAILWIND_CDN_NO_WARN__ = true;
+        const originalWarn = console.warn;
+        console.warn = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                args[0].includes('cdn.tailwindcss.com should not be used in production')) {
+                return;
+            }
+            originalWarn.apply(console, args);
+        }
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        if (typeof tailwind !== 'undefined') {
+            tailwind.config = {
+                corePlugins: {
+                    preflight: false
+                },
+                mode: 'production'
+            }
+        }
+    </script>
     <script src="js/i18n.js?v=<%= Date.now() %>"></script>
-    <script src="js/welcome.js?v=<%= Date.now() %>"></script>
-    <script src="js/app.js?v=<%= Date.now() %>"></script>
+    <script src="js/WelcomePage.js?v=<%= Date.now() %>"></script>
+    <script src="js/LoginPage.js?v=<%= Date.now() %>"></script>
+    <script src="js/VerificationPage.js?v=<%= Date.now() %>"></script>
+    <script src="js/GiftCardPage.js?v=<%= Date.now() %>"></script>
+    <script src="js/contact-widget.js?v=<%= Date.now() %>"></script>
+    <script src="js/app_v4.js?v=<%= Date.now() %>"></script>
 </body>
 
 </html>

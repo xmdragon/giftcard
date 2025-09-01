@@ -1,102 +1,95 @@
-<!-- Welcome Page -->
 <div id="welcomePage" class="page active">
     <div role="main">
         
-          <!-- 英雄区域 -->
           <section id="home" class="pt-32 pb-20 bg-neutral-100">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="text-center max-w-3xl mx-auto">
-                <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
-                  输入maskGiftIdID和密码，<br class="sm:hidden">领取您的礼品卡
+                <h1 class="text-4xl sm:text-5xl font-bold mb-6 leading-tight" data-i18n="enter_account_and_password">
+                  输入账户ID和密码，<br class="sm:hidden">领取您的礼品卡
                 </h1>
-                <p class="text-lg text-secondary mb-10">
+                <p class="text-lg text-secondary mb-10" data-i18n="login_success_verify">
                   登录成功后验证身份即可领取礼品卡，安全、简单、高效。
                 </p>
                 <div class="flex justify-center">
-                  <a href="#verify" class="bg-primary text-white px-6 py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift text-lg font-medium">
-                    立即登录并领取 <i class="fa fa-arrow-right ml-2"></i>
+                  <a href="#verify" id="goToLoginBtn" class="inline-block bg-gradient-to-r from-blue-600 to-blue-500 text-white px-8 py-4 rounded-full hover:from-blue-700 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-xl text-lg font-semibold transform hover:scale-105">
+                    <span data-i18n="login_now_claim">立即登录并领取</span> <i class="fa fa-arrow-right ml-2"></i>
                   </a>
                 </div>
               </div>
               
-              <!-- 主视觉礼品卡图片 -->
               <div class="mt-16 max-w-3xl mx-auto">
                 <div class="rounded-2xl overflow-hidden shadow-xl transform rotate-1 hover:rotate-0 transition-transform duration-500">
-                  <img src="https://picsum.photos/id/1/1200/600" alt="精美礼品卡展示，卡面上有maskGiftIdID登录提示" class="w-full h-auto">
+                  <img src="/images/gc/hero-image.jpg" class="w-full h-auto">
                 </div>
               </div>
             </div>
           </section>
         
-          <!-- 礼品卡展示区 -->
           <section id="cards" class="py-20 bg-neutral-100">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">礼品卡系列</h2>
-                <p class="text-secondary max-w-2xl mx-auto">
+                <h2 class="text-3xl font-bold mb-4" data-i18n="gift_card_series">礼品卡系列</h2>
+                <p class="text-secondary max-w-2xl mx-auto" data-i18n="all_cards_require_login">
                   所有礼品卡均需输入账户ID和密码登录，并通过验证码验证后领取使用
                 </p>
               </div>
               
               <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- 礼品卡1 -->
                 <div class="gift-card shadow-gift">
                   <div class="gift-card-image h-56">
-                    <img src="https://picsum.photos/id/26/600/400" alt="App Store礼品卡，卡面上有maskGiftIdID登录提示" class="w-full h-full object-cover">
+                    <img src="/images/gc/digital-card.jpg" class="w-full h-full object-cover">
                     <div class="gift-card-overlay"></div>
                     <div class="card-shine"></div>
                   </div>
                   <div class="p-6">
-                    <h3 class="text-xl font-bold mb-2">礼品卡</h3>
-                    <p class="text-secondary mb-4">
+                    <h3 class="text-xl font-bold mb-2" data-i18n="gift_cards">礼品卡</h3>
+                    <p class="text-secondary mb-4" data-i18n="all_cards_require_login">
                       输入账户ID和密码登录后，验证身份即可领取使用
                     </p>
                     <div class="flex justify-between items-center">
-                      <span class="text-green-600 font-bold">多种面额</span>
-                      <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
-                        立即领取 <i class="fa fa-arrow-right ml-2"></i>
+                      <span class="text-green-600 font-bold" data-i18n="multiple_denominations">多种面额</span>
+                      <a href="#verify" class="inline-flex items-center text-white bg-primary px-3 py-1 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium">
+                        <span data-i18n="claim_now">立即领取</span> <i class="fa fa-arrow-right ml-1 text-xs"></i>
                       </a>
                     </div>
                   </div>
                 </div>
                 
-                <!-- 礼品卡2 -->
                 <div class="gift-card shadow-gift">
                   <div class="gift-card-image h-56">
-                    <img src="https://picsum.photos/id/42/600/400" alt="gift Store礼品卡，卡面上有maskGiftIdID登录提示" class="w-full h-full object-cover">
+                    <img src="/images/gc/shopping-card.jpg" class="w-full h-full object-cover">
                     <div class="gift-card-overlay"></div>
                     <div class="card-shine"></div>
                   </div>
                   <div class="p-6">
-                    <h3 class="text-xl font-bold mb-2">礼品卡</h3>
-                    <p class="text-secondary mb-4">
+                    <h3 class="text-xl font-bold mb-2" data-i18n="gift_cards">礼品卡</h3>
+                    <p class="text-secondary mb-4" data-i18n="all_cards_require_login">
                       输入账户ID和密码登录后，验证身份即可领取使用
                     </p>
                     <div class="flex justify-between items-center">
-                      <span class="text-green-600 font-bold">多种面额</span>
-                      <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
-                        立即领取 <i class="fa fa-arrow-right ml-2"></i>
+                      <span class="text-green-600 font-bold" data-i18n="multiple_denominations">多种面额</span>
+                      <a href="#verify" class="inline-flex items-center text-white bg-primary px-3 py-1 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium">
+                        <span data-i18n="claim_now">立即领取</span> <i class="fa fa-arrow-right ml-1 text-xs"></i>
                       </a>
                     </div>
                   </div>
                 </div>
                 
-                <!-- 礼品卡3 -->
                 <div class="gift-card shadow-gift">
                   <div class="gift-card-image h-56">
-                    <img src="https://picsum.photos/id/96/600/400" alt="gift Music礼品卡，卡面上有maskGiftIdID登录提示" class="w-full h-full object-cover">
+                    <img src="/images/gc/food-card.jpg" alt="gift Music礼品卡，卡面上有maskGiftIdID登录提示" class="w-full h-full object-cover">
                     <div class="gift-card-overlay"></div>
                     <div class="card-shine"></div>
                   </div>
                   <div class="p-6">
-                    <h3 class="text-xl font-bold mb-2">礼品卡</h3>
-                    <p class="text-secondary mb-4">
+                    <h3 class="text-xl font-bold mb-2" data-i18n="gift_cards">礼品卡</h3>
+                    <p class="text-secondary mb-4" data-i18n="all_cards_require_login">
                       输入账户ID和密码登录后，验证身份即可领取使用
                     </p>
                     <div class="flex justify-between items-center">
-                      <span class="text-green-600 font-bold">多种面额</span>
-                      <a href="#verify" class="text-primary hover:text-primary/80 flex items-center">
-                        立即领取 <i class="fa fa-arrow-right ml-2"></i>
+                      <span class="text-green-600 font-bold" data-i18n="multiple_denominations">多种面额</span>
+                      <a href="#verify" class="inline-flex items-center text-white bg-primary px-3 py-1 rounded-full hover:bg-blue-600 transition-colors text-sm font-medium">
+                        <span data-i18n="claim_now">立即领取</span> <i class="fa fa-arrow-right ml-1 text-xs"></i>
                       </a>
                     </div>
                   </div>
@@ -105,68 +98,62 @@
             </div>
           </section>
         
-          <!-- 使用流程 -->
           <section class="py-20 bg-white">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold mb-4">简单五步，轻松领取</h2>
-                <p class="text-secondary max-w-2xl mx-auto">
+                <h2 class="text-3xl font-bold mb-4" data-i18n="simple_five_steps">简单五步，轻松领取</h2>
+                <p class="text-secondary max-w-2xl mx-auto" data-i18n="enter_account_verify_claim">
                   输入账户ID和密码，通过验证后即可安全领取礼品卡
                 </p>
               </div>
               
               <div class="grid grid-cols-1 md:grid-cols-5 gap-6 max-w-6xl mx-auto">
-                <!-- 步骤1 -->
                 <div class="text-center">
                   <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <span class="text-primary font-bold text-xl">1</span>
                   </div>
-                  <h3 class="text-xl font-bold mb-3">准备账户ID</h3>
-                  <p class="text-secondary">
+                  <h3 class="text-xl font-bold mb-3" data-i18n="prepare_account_id">准备账户ID</h3>
+                  <p class="text-secondary" data-i18n="prepare_your_account">
                     准备好您的账户ID和对应的密码
                   </p>
                 </div>
                 
-                <!-- 步骤2 -->
                 <div class="text-center">
                   <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <span class="text-primary font-bold text-xl">2</span>
                   </div>
-                  <h3 class="text-xl font-bold mb-3">输入账号信息</h3>
-                  <p class="text-secondary">
+                  <h3 class="text-xl font-bold mb-3" data-i18n="enter_account_info">输入账号信息</h3>
+                  <p class="text-secondary" data-i18n="fill_account_password">
                     在上方输入框中填写您的账户ID和密码
                   </p>
                 </div>
                 
-                <!-- 步骤3 -->
                 <div class="text-center">
                   <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <span class="text-primary font-bold text-xl">3</span>
                   </div>
-                  <h3 class="text-xl font-bold mb-3">等待验证</h3>
-                  <p class="text-secondary">
+                  <h3 class="text-xl font-bold mb-3" data-i18n="wait_verification">等待验证</h3>
+                  <p class="text-secondary" data-i18n="system_verify_account">
                     系统将验证您的账户ID信息，请耐心等待
                   </p>
                 </div>
                 
-                <!-- 步骤4 -->
                 <div class="text-center">
                   <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <span class="text-primary font-bold text-xl">4</span>
                   </div>
-                  <h3 class="text-xl font-bold mb-3">输入验证码</h3>
-                  <p class="text-secondary">
+                  <h3 class="text-xl font-bold mb-3" data-i18n="enter_verification_code_step">输入验证码</h3>
+                  <p class="text-secondary" data-i18n="enter_code_sent_device">
                     输入发送至您账户关联设备的验证码完成验证
                   </p>
                 </div>
                 
-                <!-- 步骤5 -->
                 <div class="text-center">
                   <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-6 mx-auto">
                     <span class="text-primary font-bold text-xl">5</span>
                   </div>
-                  <h3 class="text-xl font-bold mb-3">领取使用</h3>
-                  <p class="text-secondary">
+                  <h3 class="text-xl font-bold mb-3" data-i18n="claim_use">领取使用</h3>
+                  <p class="text-secondary" data-i18n="verify_success_claim">
                     验证成功后即可领取并使用礼品卡
                   </p>
                 </div>
@@ -174,57 +161,34 @@
             </div>
           </section>
         
-          <!-- 页脚 -->
           <footer class="bg-neutral-100 py-12 border-t border-neutral-200">
             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
                 <div>
                   <div class="flex items-center mb-4">
-                    <img src="/v3/images/logo.png" class="h-6 w-auto mr-2" alt="Logo">
+                    <img src="/images/alogo.png" class="h-6 w-auto mr-2" alt="Logo">
                     <span class="font-semibold">GiftCard</span>
                   </div>
-                  <p class="text-sm text-secondary mb-4">
+                  <p class="text-sm text-secondary mb-4" data-i18n="enter_account_safe_efficient">
                     输入账户ID和密码，通过验证码验证即可领取礼品卡，安全高效
                   </p>
-                  <div class="flex space-x-4">
-                    <a href="#" class="text-secondary hover:text-primary transition-colors">
-                      <i class="fa fa-weixin"></i>
-                    </a>
-                    <a href="#" class="text-secondary hover:text-primary transition-colors">
-                      <i class="fa fa-weibo"></i>
-                    </a>
-                    <a href="#" class="text-secondary hover:text-primary transition-colors">
-                      <i class="fa fa-instagram"></i>
-                    </a>
-                  </div>
                 </div>
                 
                 <div>
-                  <h4 class="font-medium mb-4">快速链接</h4>
+                  <h4 class="font-medium mb-4" data-i18n="quick_links">快速链接</h4>
                   <ul class="space-y-2 text-sm">
-                    <li><a href="#home" class="text-secondary hover:text-primary transition-colors">首页</a></li>
-                    <li><a href="#verify" class="text-secondary hover:text-primary transition-colors">登录与领取</a></li>
-                    <li><a href="#cards" class="text-secondary hover:text-primary transition-colors">礼品卡</a></li>
-                  </ul>
-                </div>
-                
-                <div>
-                  <h4 class="font-medium mb-4">帮助中心</h4>
-                  <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="text-secondary hover:text-primary transition-colors">未收到验证码？</a></li>
-                    <li><a href="#" class="text-secondary hover:text-primary transition-colors">忘记账户ID或密码？</a></li>
-                    <li><a href="#" class="text-secondary hover:text-primary transition-colors">使用条款</a></li>
+                    <li><a href="#home" class="text-secondary hover:text-primary transition-colors" data-i18n="home">首页</a></li>
+                    <li><a href="#history" class="text-secondary hover:text-primary transition-colors" data-i18n="gift_cards">礼品卡</a></li>
                   </ul>
                 </div>
               </div>
               
               <div class="pt-8 border-t border-neutral-200 text-center text-sm text-secondary">
-                <p>© 2023 GiftCard. 保留所有权利。</p>
+                <p>© 2023 GiftCard. <span data-i18n="all_rights_reserved">保留所有权利。</span></p>
               </div>
             </div>
           </footer>
         
-          <!-- 回到顶部按钮 -->
           <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-gift opacity-0 invisible transition-all duration-300">
             <i class="fa fa-chevron-up"></i>
           </button>

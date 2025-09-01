@@ -1,0 +1,11 @@
+{
+  "already_received_beginner_package": "初心者パッケージは既に受け取っています",
+  "no_gift_cards_available": "利用可能なギフトカードがありません",
+  "server_error": "サーバーエラー",
+  "no_permission": "権限がありません",
+  "login_request_processed": "ログインリクエストが処理されました",
+  "already_checked_in_today": "今日は既にチェックイン済みです",
+  "no_checkin_eligibility": "チェックイン資格がありません",
+  "checkin_period_expired": "チェックイン期限が切れました",
+  "received_beginner_package_today": "今日初心者パッケージを受け取りました。明日チェックインできます"
+}

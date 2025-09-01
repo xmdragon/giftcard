@@ -1,0 +1,38 @@
+<div id="loginPage" class="page">
+    <section class="py-32 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="max-w-md mx-auto">
+            <div class="text-center mb-8">
+              <h1 class="text-2xl font-bold" data-i18n="login_your_account">登录您的账户ID</h1>
+              <p class="text-secondary mt-2" data-i18n="enter_account_to_claim">请输入您的账户ID和密码以领取礼品卡</p>
+            </div>
+            
+            <div class="steps-indicator">
+              <div class="step active"></div>
+              <div class="step"></div>
+              <div class="step"></div>
+            </div>
+            
+            <form id="login-form" class="mt-8">
+              <div class="input-container mb-2">
+                <i class="fa fa-user input-icon text-xl"></i>
+                <input type="email" id="gift-id" class="form-input w-full" data-i18n-placeholder="email_address" placeholder="邮箱地址" maxlength="100" required>
+              </div>
+              <div id="id-error" class="error-message" data-i18n="enter_valid_account">请输入有效的账户ID（例如：example@domain.com）</div>
+              
+              <div class="input-container mb-8 mt-6">
+                <i class="fa fa-lock input-icon text-xl"></i>
+                <input type="password" id="gift-password" class="form-input w-full" data-i18n-placeholder="password_placeholder" placeholder="密码" maxlength="20" required>
+                <i class="fa fa-eye toggle-password" id="toggle-password"></i>
+              </div>
+              
+              <div class="space-y-4">
+                <button type="submit" class="primary-btn w-full py-3 rounded-full hover:bg-primary/90 transition-colors shadow-gift text-lg font-medium">
+                  <span data-i18n="continue">继续</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+</div>

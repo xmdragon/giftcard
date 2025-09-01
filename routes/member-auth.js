@@ -2,14 +2,13 @@ const express = require('express');
 const db = require('../utils/db');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const getRealIP = require('../utils/get-real-ip');
 
 module.exports = (io) => {
   router.post('/login', async (req, res) => {
     try {
       const { email, password } = req.body;
-      let clientIP = req.ip || req.connection.remoteAddress;
-      if (clientIP && clientIP.startsWith('::ffff:')) clientIP = clientIP.substring(7);
-      if (clientIP && clientIP.includes(':')) clientIP = '';
+      let clientIP = getRealIP(req);
 
       const bannedIPs = await db.query(
         'SELECT * FROM ip_blacklist WHERE ip_address = ? AND status = "active"',

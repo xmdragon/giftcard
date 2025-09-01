@@ -17,6 +17,16 @@ module.exports = (io) => {
         return res.status(400).json({ error: req.t('already_checked_in_today') });
       }
 
+      // Check if user received beginner package today
+      const todayBeginnerPackage = await db.query(
+        'SELECT * FROM gift_cards WHERE distributed_to = ? AND category_id = 1 AND DATE(distributed_at) = ?',
+        [memberId, today]
+      );
+
+      if (todayBeginnerPackage.length > 0) {
+        return res.status(400).json({ error: req.t('received_beginner_package_today') });
+      }
+
       const giftCardHistory = await db.query(
         'SELECT * FROM gift_cards WHERE distributed_to = ? AND status = "distributed" LIMIT 1',
         [memberId]
@@ -128,12 +138,21 @@ module.exports = (io) => {
         [memberId]
       );
 
+      // Check if user received beginner package (category_id = 1) today
+      const todayBeginnerPackage = await db.query(
+        'SELECT * FROM gift_cards WHERE distributed_to = ? AND category_id = 1 AND DATE(distributed_at) = ?',
+        [memberId, today]
+      );
+
       let eligible = false;
       let reason = '';
       let daysRemaining = 0;
 
       if (todayCheckin.length > 0) {
         reason = req.t('already_checked_in_today');
+      } else if (todayBeginnerPackage.length > 0) {
+        // User received beginner package today, cannot check in
+        reason = req.t('received_beginner_package_today');
       } else if (giftCardHistory.length === 0) {
         reason = req.t('no_checkin_eligibility');
       } else {

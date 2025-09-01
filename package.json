@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "build-css": "tailwindcss -i tailwind-input.css -o public/css/app-v4-tailwind.css --minify",
+    "watch-css": "tailwindcss -i tailwind-input.css -o public/css/app-v4-tailwind.css --watch"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

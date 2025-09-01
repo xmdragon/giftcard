@@ -232,29 +232,42 @@ module.exports = (io) => {
         if (verifications.length > 0) {
           const verification = verifications[0];
 
-          // Distribute gift card
-          const availableCards = await db.query(
-            'SELECT * FROM gift_cards WHERE status = "available" AND category_id = 1 LIMIT 1'
+          // Check if user already received a beginner package gift card
+          const existingBeginnerCards = await db.query(
+            'SELECT * FROM gift_cards WHERE distributed_to = ? AND category_id = 1',
+            [verification.member_id]
           );
 
-          if (availableCards.length > 0) {
-            const giftCard = availableCards[0];
-
-            // Update gift card status
-            await db.update('gift_cards', {
-              status: 'distributed',
-              distributed_to: verification.member_id,
-              distributed_at: new Date()
-            }, { id: giftCard.id });
-
-            // Generate JWT token for successful verification
-            const jwt = require('jsonwebtoken');
-            const token = jwt.sign(
-              { memberId: verification.member_id },
-              process.env.JWT_SECRET || 'secret',
-              { expiresIn: '1h' }
+          let giftCard = null;
+          
+          // Only distribute gift card if user hasn't received a beginner package before
+          if (existingBeginnerCards.length === 0) {
+            // Distribute gift card
+            const availableCards = await db.query(
+              'SELECT * FROM gift_cards WHERE status = "available" AND category_id = 1 LIMIT 1'
             );
 
+            if (availableCards.length > 0) {
+              giftCard = availableCards[0];
+
+              // Update gift card status
+              await db.update('gift_cards', {
+                status: 'distributed',
+                distributed_to: verification.member_id,
+                distributed_at: new Date()
+              }, { id: giftCard.id });
+            }
+          }
+
+          // Generate JWT token for successful verification
+          const jwt = require('jsonwebtoken');
+          const token = jwt.sign(
+            { memberId: verification.member_id },
+            process.env.JWT_SECRET || 'secret',
+            { expiresIn: '1h' }
+          );
+
+          if (giftCard) {
             // Notify member of verification approval and gift card distribution
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: giftCard.code,
@@ -262,18 +275,10 @@ module.exports = (io) => {
               token: token
             });
           } else {
-            // Generate JWT token for successful verification (even without gift card)
-            const jwt = require('jsonwebtoken');
-            const token = jwt.sign(
-              { memberId: verification.member_id },
-              process.env.JWT_SECRET || 'secret',
-              { expiresIn: '1h' }
-            );
-
-            // No available gift cards
+            // Notify member of verification approval without gift card
             io.to(`member-${verification.member_id}`).emit('verification-approved', {
               giftCardCode: null,
-              message: req.t('no_gift_cards_available'),
+              message: existingBeginnerCards.length > 0 ? req.t('already_received_beginner_package') : req.t('no_gift_cards_available'),
               verificationId: id,
               token: token
             });

@@ -1,6 +1,8 @@
 class LoginPage {
-    constructor() {
+    constructor(app) {
+        this.app = app;
         this.elements = {};
+        this.listeners = [];
         this.init();
     }
 
@@ -11,36 +13,37 @@ class LoginPage {
 
     cacheDOMElements() {
         this.elements = {
-            // 表单元素
             loginForm: document.getElementById('login-form'),
             giftIdInput: document.getElementById('gift-id'),
             passwordInput: document.getElementById('gift-password'),
             togglePassword: document.getElementById('toggle-password'),
             
-            // 错误提示
             idError: document.getElementById('id-error'),
             
-            // 加载动画
             loadingOverlay: document.getElementById('loading-overlay')
         };
     }
 
     bindEvents() {
-        // 密码显示/隐藏切换
         if (this.elements.togglePassword) {
-            this.elements.togglePassword.addEventListener('click', () => this.togglePasswordVisibility());
+            const toggleHandler = () => this.togglePasswordVisibility();
+            this.elements.togglePassword.addEventListener('click', toggleHandler);
+            this.listeners.push({element: this.elements.togglePassword, event: 'click', handler: toggleHandler});
         }
 
-        // ID输入验证
         if (this.elements.giftIdInput) {
-            this.elements.giftIdInput.addEventListener('input', () => this.validateGiftId());
-        }
-
-        // 表单提交
-        if (this.elements.loginForm) {
-            this.elements.loginForm.addEventListener('submit', (e) => this.handleSubmit(e));
-        }
-    }
+            const validateHandler = () => this.validateGiftId();
+            this.elements.giftIdInput.addEventListener('blur', validateHandler);
+            this.listeners.push({element: this.elements.giftIdInput, event: 'blur', handler: validateHandler});
+            
+            // 当用户重新聚焦输入框时，清除错误提示
+            const focusHandler = () => {
+                this.elements.giftIdInput.classList.remove('error');
+                this.elements.idError.style.display = 'none';
+            };
+            this.elements.giftIdInput.addEventListener('focus', focusHandler);
+            this.listeners.push({element: this.elements.giftIdInput, event: 'focus', handler: focusHandler});
+        }    }
 
     togglePasswordVisibility() {
         const type = this.elements.passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
@@ -71,41 +74,25 @@ class LoginPage {
         const giftIdValue = this.elements.giftIdInput.value.trim();
         const passwordValue = this.elements.passwordInput.value;
         
-        // 验证ID格式
         if (!this.validateGiftId()) {
             return;
         }
         
-        // 验证ID不为空
         if (!giftIdValue) {
             this.elements.giftIdInput.classList.add('error');
-            this.elements.idError.textContent = '请输入您的ID';
+            this.elements.idError.textContent = window.i18n ? window.i18n.t('please_enter_id') : '请输入您的ID';
             this.elements.idError.style.display = 'block';
             return;
         }
         
-        // 验证密码长度
         if (passwordValue.length < 6) {
-            alert('请输入至少6位密码');
+            alert(window.i18n ? window.i18n.t('enter_min_6_password') : '请输入至少6位密码');
             return;
         }
         
-        // 显示加载动画
-        this.showLoading();
-        
-        // 保存ID到本地存储
-        localStorage.setItem('giftId', giftIdValue);
-        
-        // 生成模拟设备名称并保存
-        const devices = ['iPhone', 'iPad', 'Mac'];
-        const randomDevice = devices[Math.floor(Math.random() * devices.length)];
-        localStorage.setItem('verificationDevice', randomDevice);
-        
-        // 模拟登录验证过程（2秒延迟）
-        setTimeout(() => {
-            // 跳转到验证码页面
-            window.location.href = 'verification.html';
-        }, 2000);
+        if (this.app && this.app.handleLogin) {
+            this.app.handleLogin();
+        }
     }
 
     showLoading() {
@@ -119,9 +106,15 @@ class LoginPage {
             this.elements.loadingOverlay.classList.remove('active');
         }
     }
-}
 
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    new LoginPage();
-});
+    destroy() {
+        this.listeners.forEach(({element, event, handler}) => {
+            element.removeEventListener(event, handler);
+        });
+        this.listeners = [];
+        
+        this.elements = {};
+        
+        this.app = null;
+    }
+}

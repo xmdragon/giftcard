@@ -1,0 +1,11 @@
+{
+  "already_received_beginner_package": "You have already received the beginner package",
+  "no_gift_cards_available": "No gift cards available",
+  "server_error": "Server error",
+  "no_permission": "No permission",
+  "login_request_processed": "Login request processed",
+  "already_checked_in_today": "Already checked in today",
+  "no_checkin_eligibility": "No check-in eligibility",
+  "checkin_period_expired": "Check-in period expired",
+  "received_beginner_package_today": "You received the beginner package today, check-in available tomorrow"
+}

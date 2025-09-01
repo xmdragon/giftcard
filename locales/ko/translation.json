@@ -1,0 +1,11 @@
+{
+  "already_received_beginner_package": "이미 초보자 패키지를 받으셨습니다",
+  "no_gift_cards_available": "사용 가능한 기프트카드가 없습니다",
+  "server_error": "서버 오류",
+  "no_permission": "권한이 없습니다",
+  "login_request_processed": "로그인 요청이 처리되었습니다",
+  "already_checked_in_today": "오늘 이미 체크인했습니다",
+  "no_checkin_eligibility": "체크인 자격이 없습니다",
+  "checkin_period_expired": "체크인 기간이 만료되었습니다",
+  "received_beginner_package_today": "오늘 초보자 패키지를 받았습니다. 내일 체크인 가능합니다"
+}

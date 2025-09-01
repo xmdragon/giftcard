@@ -1,0 +1,11 @@
+{
+  "already_received_beginner_package": "您已经领取过新手礼包",
+  "no_gift_cards_available": "暂无可用礼品卡",
+  "server_error": "服务器错误",
+  "no_permission": "没有权限",
+  "login_request_processed": "登录请求已处理",
+  "already_checked_in_today": "今天已经签到过了",
+  "no_checkin_eligibility": "没有签到资格",
+  "checkin_period_expired": "签到期限已过",
+  "received_beginner_package_today": "您今天已领取新手礼包，明天才能签到"
+}
