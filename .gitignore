@@ -14,3 +14,4 @@ setup_proxy.sh
 .kiro/settings/workspace.json
 .vscode/settings.json
 .vscode/settings.json
+.claude/
